@@ -62,7 +62,7 @@ You can now do things on Windows you *can't* do on Linux:
 
   - LCOW: "Linux Containers on Windows" came with the ([Fall 2017 Creators Update](https://blog.docker.com/2018/02/docker-for-windows-18-02-with-windows-10-fall-creators-update/))
   - Run Linux and Windows containers side-by-side on Win10
-  - No longer required to swtich to "Linux Containers"
+  - No longer required to switch to "Linux Containers"
 
 --
 
