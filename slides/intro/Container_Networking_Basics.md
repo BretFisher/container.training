@@ -49,13 +49,13 @@ We will use `docker ps`:
 ```bash
 $ docker ps
 CONTAINER ID  IMAGE  ...  PORTS                  ...
-e40ffb406c9e  nginx  ...  0.0.0.0:32768->80/tcp  ...
+e40ffb406c9e  nginx  ...  0.0.0.0:3000->80/tcp  ...
 ```
 
 
 * The web server is running on port 80 inside the container.
 
-* This port is mapped to port 32768 on our Docker host.
+* This port is mapped to port 3000 on our Docker host.
 
 We will explain the whys and hows of this port mapping.
 
@@ -81,7 +81,7 @@ Make sure to use the right port number if it is different
 from the example below:
 
 ```bash
-$ curl localhost:32768
+$ curl localhost:3000
 <!DOCTYPE html>
 <html>
 <head>
@@ -138,7 +138,7 @@ There is a command to help us:
 
 ```bash
 $ docker port <containerID> 80
-32768
+3000
 ```
 
 ---
