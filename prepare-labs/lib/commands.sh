@@ -55,7 +55,7 @@ _cmd_codeserver() {
     need_tag
 
     ARCH=${ARCHITECTURE-amd64}
-    CODESERVER_VERSION=4.96.4
+    CODESERVER_VERSION=4.137.0
     CODESERVER_URL=\$GITHUB/coder/code-server/releases/download/v${CODESERVER_VERSION}/code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz
     pssh "
     set -e
@@ -783,7 +783,7 @@ _cmd_kubetools() {
 
     # Install Flux CLI
     ##VERSION## https://github.com/fluxcd/flux2/releases
-    FLUX_VERSION=2.3.0
+    FLUX_VERSION=2.9.5
     FILENAME=flux_${FLUX_VERSION}_linux_${ARCH}
     URL=\$GITHUB/fluxcd/flux2/releases/download/v$FLUX_VERSION/$FILENAME.tar.gz
     pssh "
@@ -826,7 +826,7 @@ EOF
 
     # Install stern
     ##VERSION## https://github.com/stern/stern/releases
-    STERN_VERSION=1.29.0
+    STERN_VERSION=1.34.0
     FILENAME=stern_${STERN_VERSION}_linux_${ARCH}
     URL=\$GITHUB/stern/stern/releases/download/v$STERN_VERSION/$FILENAME.tar.gz
     pssh "
@@ -839,7 +839,7 @@ EOF
     fi"
 
     # Install helm
-    HELM_VERSION=3.19.1
+    HELM_VERSION=4.3.0
     pssh "
     if [ ! -x /usr/local/bin/helm ]; then
         curl -fsSL https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz |
@@ -884,6 +884,7 @@ EOF
     fi"
 
     # Install jless (jless.io)
+    ##VERSION## https://github.com/PaulJuliusMartinez/jless/releases
     pssh "
     if [ ! -x /usr/local/bin/jless ]; then
         ##VERSION##
@@ -905,7 +906,8 @@ EOF
     fi"
 
     # Install kubecolor
-    KUBECOLOR_VERSION=0.4.0
+    # https://github.com/kubecolor/kubecolor/releases
+    KUBECOLOR_VERSION=0.7.1
     URL=\$GITHUB/kubecolor/kubecolor/releases/download/v${KUBECOLOR_VERSION}/kubecolor_${KUBECOLOR_VERSION}_linux_${ARCH}.tar.gz
     pssh "
     if [ ! -x /usr/local/bin/kubecolor ]; then
@@ -915,7 +917,8 @@ EOF
     fi"
 
     # Install sofka
-    SOFKA_VERSION=0.25.3
+    # https://github.com/nklmilojevic/sofka/releases
+    SOFKA_VERSION=0.28.0
     URL=\$GITHUB/nklmilojevic/sofka/releases/download
     pssh "
     if [ ! -x /usr/local/bin/sofka ]; then
@@ -947,9 +950,10 @@ EOF
     # Official instructions:
     # curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
     # But the install script is not arch-aware (see https://github.com/tilt-dev/tilt/pull/5050).
+    # https://github.com/tilt-dev/tilt/releases
     pssh "
     if [ ! -x /usr/local/bin/tilt ]; then
-        TILT_VERSION=0.33.13
+        TILT_VERSION=0.37.7
         FILENAME=tilt.\$TILT_VERSION.linux.$TILT_ARCH.tar.gz
         curl -fsSL \$GITHUB/tilt-dev/tilt/releases/download/v\$TILT_VERSION/\$FILENAME |
         sudo tar -C /usr/local/bin -zx tilt
@@ -994,7 +998,7 @@ EOF
     fi"
 
     ##VERSION## https://github.com/bitnami-labs/sealed-secrets/releases
-    KUBESEAL_VERSION=0.37.0
+    KUBESEAL_VERSION=0.40.0
     URL=\$GITHUB/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-${ARCH}.tar.gz
     pssh "
     if [ ! -x /usr/local/bin/kubeseal ]; then
@@ -1004,7 +1008,7 @@ EOF
     fi"
 
     ##VERSION## https://github.com/vmware-tanzu/velero/releases
-    VELERO_VERSION=1.13.2
+    VELERO_VERSION=1.18.2
     pssh "
     if [ ! -x /usr/local/bin/velero ]; then
         curl -fsSL \$GITHUB/vmware-tanzu/velero/releases/download/v$VELERO_VERSION/velero-v$VELERO_VERSION-linux-$ARCH.tar.gz |
