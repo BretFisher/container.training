@@ -1,4 +1,9 @@
 [build]
-  base = "slides"
-  publish = "slides"
+  base = "slides/"
+  # Paths are relative to "base"; an empty publish path deploys slides/ itself.
+  publish = ""
   command = "./build.sh once"
+
+[build.environment]
+  # Also create slides.zip (not needed for local dev, see slides/build.sh).
+  SLIDES_ZIP = "1"

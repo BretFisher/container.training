@@ -28,27 +28,40 @@ Markdown files. If you have never used Remark before:
 - use `.foo[bla]` if you want `bla` to have CSS class `foo`,
 - define (or edit) CSS classes in [workshop.css](workshop.css).
 
-After making changes, run `./build.sh once`; it will
-compile each `foo.yml` file into `foo.yml.html`.
+After making changes, run `make build` (or `./build.sh once`);
+it will compile each `foo.yml` file into `foo.yml.html`.
+It needs Python 3 with the packages in `requirements.txt`.
+It exits non-zero if any deck fails to build.
 
-You can also run `./build.sh forever`: it will monitor the current
-directory and rebuild slides automatically when files are modified.
+For a live dev server that rebuilds on every save, run `make serve`
+(or `docker compose up --build --watch`) in this directory. It runs one
+container that:
 
-If you have problems running `./build.sh` (because of
-Python dependencies or whatever),
-you can also run `docker-compose up` in this directory.
-It will start the `./build.sh forever` script in a container.
-It will also start a web server exposing the slides
-(but the slides should also work if you load them from your
-local filesystem).
+- is built from `Dockerfile` with Python, the build dependencies, and a
+  baseline copy of `slides/` and `k8s/` (slides pull manifests from `k8s/`
+  with `@@INCLUDE[...]`),
+- builds every deck at startup and serves this directory on
+  http://localhost:8080/ (set `SLIDES_PORT` in `.env` or the environment
+  to change the port),
+- receives each source edit through Compose watch (file sync, no bind
+  mount) and re-runs `./build.sh once`. Build errors show in the same
+  terminal, and the previous HTML stays served until the build passes.
+
+Generated files stay inside the container. Always start with `--build`
+(which `make serve` does) so the baseline matches your checkout; the sync
+only carries edits made while the watcher runs.
+
+Stop with Ctrl-C, then `make down` to remove the container.
+`make clean` also deletes generated files from a local, non-Docker build.
+`make help` lists all targets.
 
 
 ## Publishing pipeline
 
 Each time we push to `master`, a webhook pings
 [Netlify](https://www.netlify.com/), which will pull
-the repo, build the slides (by running `build.sh once`),
-and publish them to http://container.training/.
+the repo, build the slides (by running `build.sh once` with
+`SLIDES_ZIP=1`, which also creates `slides.zip`), and publish them to http://container.training/.
 
 Pull requests are automatically deployed to testing
 subdomains. I had no idea that I would ever say this

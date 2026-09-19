@@ -212,34 +212,35 @@ def processcontent(content, filename):
 
 # Try to figure out the URL of the repo on GitHub.
 # This is used to generate "edit me on GitHub"-style links.
+# Each value can be set with an environment variable (REPOSITORY_URL, BRANCH,
+# COMMIT) for builds that run without a git checkout, e.g. in a container
+# where Compose watch syncs only the source files.
+def git(*args):
+    return subprocess.check_output(["git"] + list(args),
+        stderr=subprocess.DEVNULL).decode("ascii").strip()
+
 try:
-    if "REPOSITORY_URL" in os.environ:
-        repo = os.environ["REPOSITORY_URL"]
-    else:
-        repo = subprocess.check_output(["git", "config", "remote.origin.url"]).decode("ascii")
-    repo = repo.strip().replace("git@github.com:", "https://github.com/")
-    if "BRANCH" in os.environ:
-        branch = os.environ["BRANCH"]
-    else:
-        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("ascii")
-        branch = branch.strip()
-    base = subprocess.check_output(["git", "rev-parse", "--show-prefix"]).decode("ascii")
-    base = base.strip().strip("/")
+    repo = os.environ.get("REPOSITORY_URL") or git("config", "remote.origin.url")
+    repo = repo.replace("git@github.com:", "https://github.com/").removesuffix(".git")
+    branch = os.environ.get("BRANCH") or git("rev-parse", "--abbrev-ref", "HEAD")
+    try:
+        base = git("rev-parse", "--show-prefix").strip("/")
+    except Exception:
+        base = os.path.basename(os.getcwd())
     urltemplate = ("{repo}/tree/{branch}/{base}/{filename}"
         .format(repo=repo, branch=branch, base=base, filename="{}"))
-except:
-    logging.exception("Could not generate repository URL; generating local URLs instead.")
-    urltemplate = "file://{pwd}/{filename}".format(pwd=os.environ["PWD"], filename="{}")
+except Exception:
+    logging.warning("Could not determine repository URL or branch; generating local URLs instead.")
+    urltemplate = "file://{pwd}/{filename}".format(pwd=os.getcwd(), filename="{}")
 try:
-    commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii")
-except:
-    logging.exception("Could not figure out HEAD commit.")
+    commit = os.environ.get("COMMIT") or git("rev-parse", "--short", "HEAD")
+except Exception:
+    logging.warning("Could not determine HEAD commit.")
     commit = "??????"
 try:
-    dirtyfiles = subprocess.check_output(["git", "status", "--porcelain"]).decode("ascii")
-except:
-    logging.exception("Could not figure out repository cleanliness.")
-    dirtyfiles = "?? git status --porcelain failed"
+    dirtyfiles = git("status", "--porcelain")
+except Exception:
+    dirtyfiles = "(git status unavailable in this build environment)"
 
 def makelink(filename):
     if os.path.isfile(filename):

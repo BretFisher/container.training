@@ -1,14 +1,49 @@
+# Local slide development. Start with: make serve   (or: docker compose up --build --watch)
+#
+# One container. No bind mounts, no volumes. The image carries a baseline
+# copy of slides/ and k8s/, builds every deck at startup, and serves the
+# result with Python's HTTP server. Compose watch syncs each source edit into
+# the container (faster than a macOS bind mount) and re-runs ./build.sh once.
+# Generated files never touch the host.
+#
+# Always start with --build so the baseline matches your checkout; sync only
+# carries changes made while the watcher is running.
 services:
-  www:
-    image: nginx
-    volumes:
-    - .:/usr/share/nginx/html
+  slides:
+    build:
+      context: ..
+      dockerfile: slides/Dockerfile
     ports:
-    - 80
-  builder:
-    build: .
-    volumes:
-    - ..:/repo
-    working_dir: /repo/slides
-    command: ./build.sh forever
-
+      - "${SLIDES_PORT:-8080}:80"
+    # markmaker.py normally asks git for these. There is no .git in the
+    # container, so the Makefile passes them in from the host.
+    environment:
+      REPOSITORY_URL: ${REPOSITORY_URL:-}
+      BRANCH: ${BRANCH:-}
+      COMMIT: ${COMMIT:-}
+    develop:
+      watch:
+        # Slide sources: manifests, markdown, images, CSS, JS, templates.
+        - path: .
+          target: /repo/slides
+          action: sync+exec
+          exec:
+            command: ./build.sh once
+          ignore:
+            - "*.yml.html"
+            - "*.tmp"
+            - index.html
+            - past.html
+            - slides.zip
+            - fragments/
+            - autopilot/state.yaml
+            - .env
+            - Dockerfile*
+            - compose.yaml
+            - Makefile
+        # Manifests pulled into slides with @@INCLUDE[k8s/...].
+        - path: ../k8s
+          target: /repo/k8s
+          action: sync+exec
+          exec:
+            command: ./build.sh once

@@ -1,0 +1,16 @@
+# Context is the repository root. Send only what the slide build reads.
+# Compose watch has its own ignore list in compose.yaml.
+*
+!k8s/
+!slides/
+slides/*.yml.html
+slides/*.tmp
+slides/index.html
+slides/past.html
+slides/slides.zip
+slides/fragments/
+slides/autopilot/state.yaml
+slides/.env
+slides/Dockerfile*
+slides/compose.yaml
+slides/Makefile

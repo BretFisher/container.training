@@ -30,14 +30,16 @@ From the repository root, with Docker and Compose available:
 
 ```sh
 cd slides
-docker compose up --build
+make serve        # same as: docker compose up --build --watch
 ```
 
-The builder watches sources and regenerates HTML; nginx serves the results.
-In another terminal, run `cd slides && docker compose port www 80`.
-Open `http://localhost:<reported-port>/` (the host port is dynamically assigned),
-or a deck such as `/intro-fullday.yml.html`. Refresh after rebuilding.
-Stop with Ctrl-C; run `docker compose down` from `slides/` to remove containers.
+One container builds every deck at startup and serves them at
+`http://localhost:8080/` (override with `SLIDES_PORT`). Compose watch syncs
+edits under `slides/` and `k8s/` into the container and re-runs `./build.sh once`.
+Generated HTML stays in the container; open a deck such as `/intro-fullday.yml.html`
+and refresh after a rebuild. Build errors appear in the same terminal. Stop with
+Ctrl-C, then `make down`. Always use `--build` so the baked-in baseline matches
+the checkout.
 
 ## Edit and validate slides
 
@@ -48,11 +50,11 @@ Stop with Ctrl-C; run `docker compose down` from `slides/` to remove containers.
 3. For styling, edit `slides/workshop.css`; the HTML template is `slides/workshop.html`.
    Course logistics live in `slides/logistics*.md`; the landing-page catalog is `slides/index.yaml`.
 4. Rebuild and inspect every affected deck in the browser for overflow, broken
-   images, and exercise formatting. Check build logs: `build.sh` can mask a deck failure.
+   images, and exercise formatting. `build.sh` exits non-zero on the first failing deck.
 
 For a one-shot build without Docker, use Python 3 with dependencies from
-`slides/requirements.txt`, plus `zip`, then run `cd slides && ./build.sh once`.
-`./build.sh forever` additionally requires `entr`; it rebuilds but does not serve HTTP.
+`slides/requirements.txt`, then run `cd slides && make build` (or `./build.sh once`).
+Set `SLIDES_ZIP=1` to also produce `slides.zip` (needs `zip`); Netlify does this.
 Edit sources rather than generated `*.yml.html`, `index.html`, `past.html`, or `slides.zip`.
 
 ## Provision lab infrastructure
