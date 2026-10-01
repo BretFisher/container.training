@@ -63,19 +63,6 @@
         state: restarted
       when: docker_opts is defined and docker_opts.changed
 
-    - name: install docker-compose from official github repo
-      get_url:
-        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
-        dest: /usr/local/bin/docker-compose
-        mode: "u+x,g+x"
-
-    - name:
-      file: path="/usr/local/bin/docker-compose"
-        state=file
-        mode=0755
-        owner=vagrant
-        group=docker
-
     - name: building the /etc/hosts file with all nodes
       lineinfile:
         dest: /etc/hosts

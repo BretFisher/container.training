@@ -10,6 +10,11 @@ fi
 
 # Load all scriptlets.
 cd "$SCRIPT_DIR"
+
+# "tags" is a symlink to terraform/tags, which is gitignored and
+# therefore missing in a fresh clone. Create it so that commands
+# using "tags/..." don't fail on a dangling symlink.
+mkdir -p terraform/tags
 for lib in lib/*.sh; do
     . $lib
 done

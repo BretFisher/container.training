@@ -36,6 +36,10 @@ pssh() {
         --timeout 300 \
         -O LogLevel=ERROR \
         -O IdentityFile=tags/$TAG/id_rsa \
+        -O IdentitiesOnly=yes \
+        -O ControlMaster=no \
+        -O ControlPath=none \
+        -O IdentityAgent=SSH_AUTH_SOCK \
         -O UserKnownHostsFile=/dev/null \
         -O StrictHostKeyChecking=no \
         -O ForwardAgent=yes \
