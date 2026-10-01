@@ -1160,8 +1160,8 @@ class: prom-auto
 
 - Build, ship, and run the Prometheus stack:
   ```bash
-  docker-compose -f prometheus.yml build
-  docker-compose -f prometheus.yml push
+  docker compose -f prometheus.yml build
+  docker compose -f prometheus.yml push
   docker stack deploy -c prometheus.yml prometheus
   ```
 

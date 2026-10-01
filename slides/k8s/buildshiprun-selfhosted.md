@@ -154,8 +154,8 @@ The curl command should now output:
   ```bash
   export REGISTRY
   export TAG=v0.1
-  docker-compose -f dockercoins.yml build
-  docker-compose -f dockercoins.yml push
+  docker compose -f dockercoins.yml build
+  docker compose -f dockercoins.yml push
   ```
 
 ]

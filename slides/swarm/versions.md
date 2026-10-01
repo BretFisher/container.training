@@ -9,7 +9,7 @@
 - Check all installed versions:
   ```bash
   docker version
-  docker-compose -v
+  docker compose version
   docker-machine -v
   ```
 

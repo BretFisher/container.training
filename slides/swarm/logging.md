@@ -185,8 +185,8 @@ class: elk-auto
 
 - Build, ship, and run our ELK stack:
   ```bash
-  docker-compose -f elk.yml build
-  docker-compose -f elk.yml push
+  docker compose -f elk.yml build
+  docker compose -f elk.yml push
   docker stack deploy -c elk.yml elk
   ```
 

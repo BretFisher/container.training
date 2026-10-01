@@ -271,7 +271,7 @@ class: extra-details
 
 - Start the control plane:
   ```bash
-  docker-compose up
+  docker compose up
   ```
 
 ]

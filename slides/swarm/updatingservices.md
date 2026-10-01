@@ -37,8 +37,8 @@
 - With the Compose integration, all we have to do is:
   ```bash
   export TAG=v0.2
-  docker-compose -f composefile.yml build
-  docker-compose -f composefile.yml push
+  docker compose -f composefile.yml build
+  docker compose -f composefile.yml push
   docker stack deploy -c composefile.yml nameofstack
   ```
 
@@ -72,8 +72,8 @@
 - Four steps:
 
   1. Set (and export!) the `TAG` environment variable
-  2. `docker-compose build`
-  3. `docker-compose push`
+  2. `docker compose build`
+  3. `docker compose push`
   4. `docker stack deploy`
 
 .lab[
@@ -81,8 +81,8 @@
 - Build, ship, and run:
   ```bash
   export TAG=v0.2
-  docker-compose -f dockercoins.yml build
-  docker-compose -f dockercoins.yml push
+  docker compose -f dockercoins.yml build
+  docker compose -f dockercoins.yml push
   docker stack deploy -c dockercoins.yml dockercoins
   ```
 

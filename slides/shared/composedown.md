@@ -6,7 +6,7 @@
 
 - Tell Compose to remove everything:
   ```bash
-  docker-compose down
+  docker compose down
   ```
 
 ]

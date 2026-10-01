@@ -55,13 +55,13 @@ Note: only works with interpreted languages.
 - Preparation
 
   - write Dockerfiles + Compose file
-  - `docker-compose up`
+  - `docker compose up`
 
 - Iteration
 
   - edit code
   - test
-  - `docker-compose up` (as needed)
+  - `docker compose up` (as needed)
 
 Simplifies complex scenarios (multiple containers).
 <br/>

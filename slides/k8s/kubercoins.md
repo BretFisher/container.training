@@ -110,8 +110,8 @@ Without further ado, let's start this application!
   - `redis` = data store (holds a counter updated by `worker`)
 
 - These 5 services are visible in the application's Compose file,
-  [docker-compose.yml](
-  https://@@GITREPO@@/blob/master/dockercoins/docker-compose.yml)
+  [compose.yml](
+  https://@@GITREPO@@/blob/master/dockercoins/compose.yml)
 
 ---
 
@@ -185,8 +185,8 @@ def hash_bytes(data):
   https://@@GITREPO@@/tree/master/dockercoins)
   subdirectory
 
-- The Compose file ([docker-compose.yml](
-  https://@@GITREPO@@/blob/master/dockercoins/docker-compose.yml))
+- The Compose file ([compose.yml](
+  https://@@GITREPO@@/blob/master/dockercoins/compose.yml))
   lists all 5 services
 
 - `redis` is using an official image from the Docker Hub

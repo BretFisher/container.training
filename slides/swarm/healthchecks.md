@@ -149,8 +149,8 @@ We need to update our services with a healthcheck.
 - Build, ship, and run the new image:
   ```bash
   export TAG=v0.3
-  docker-compose -f dockercoins+healthcheck.yml build
-  docker-compose -f dockercoins+healthcheck.yml push
+  docker compose -f dockercoins+healthcheck.yml build
+  docker compose -f dockercoins+healthcheck.yml push
   docker service update --image=127.0.0.1:5000/hasher:$TAG dockercoins_hasher
   ```
 

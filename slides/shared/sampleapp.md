@@ -39,7 +39,7 @@ Let's start this before we look around, as downloading will take a little time..
 
 - Use Compose to build and run all containers:
   ```bash
-  docker-compose up
+  docker compose up
   ```
 
 <!--
@@ -99,8 +99,8 @@ and displays aggregated logs.
   - `redis` = data store (holds a counter updated by `worker`)
 
 - These 5 services are visible in the application's Compose file,
-  [docker-compose.yml](
-  https://@@GITREPO@@/blob/master/dockercoins/docker-compose.yml)
+  [compose.yml](
+  https://@@GITREPO@@/blob/master/dockercoins/compose.yml)
 
 ---
 
@@ -194,8 +194,8 @@ class: extra-details
   https://@@GITREPO@@/tree/master/dockercoins)
   subdirectory
 
-- The Compose file ([docker-compose.yml](
-  https://@@GITREPO@@/blob/master/dockercoins/docker-compose.yml))
+- The Compose file ([compose.yml](
+  https://@@GITREPO@@/blob/master/dockercoins/compose.yml))
   lists all 5 services
 
 - `redis` is using an official image from the Docker Hub

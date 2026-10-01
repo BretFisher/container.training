@@ -277,7 +277,7 @@ When running on Linux, we can even ping that IP address directly!
 
 - Compose will take care of exposing containers
 
-  (through a `ports:` section in the `docker-compose.yml` file)
+  (through a `ports:` section in the `compose.yaml` file)
 
 - It is, however, fairly common to use `docker run -P` for a quick test
 

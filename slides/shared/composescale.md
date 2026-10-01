@@ -6,17 +6,17 @@
 
 - Start the app in the background with the `-d` option:
   ```bash
-  docker-compose up -d
+  docker compose up -d
   ```
 
 - Check that our app is running with the `ps` command:
   ```bash
-  docker-compose ps
+  docker compose ps
   ```
 
 ]
 
-`docker-compose ps` also shows the ports exposed by the application.
+`docker compose ps` also shows the ports exposed by the application.
 
 ---
 
@@ -24,18 +24,18 @@ class: extra-details
 
 ## Viewing logs
 
-- The `docker-compose logs` command works like `docker logs`
+- The `docker compose logs` command works like `docker logs`
 
 .lab[
 
 - View all logs since container creation and exit when done:
   ```bash
-  docker-compose logs
+  docker compose logs
   ```
 
 - Stream container logs, starting at the last 10 lines for each container:
   ```bash
-  docker-compose logs --tail 10 --follow
+  docker compose logs --tail 10 --follow
   ```
 
 <!--
@@ -106,7 +106,7 @@ We have available resources.
 
 - Start one more `worker` container:
   ```bash
-  docker-compose up -d --scale worker=2
+  docker compose up -d --scale worker=2
   ```
 
 - Look at the performance graph (it should show a x2 improvement)
@@ -127,7 +127,7 @@ We have available resources.
 
 - Start eight more `worker` containers:
   ```bash
-  docker-compose up -d --scale worker=10
+  docker compose up -d --scale worker=10
   ```
 
 - Look at the performance graph: does it show a x10 improvement?

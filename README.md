@@ -133,7 +133,7 @@ for explaining different concepts of orchestration.
 
 To see it in action:
 
-- `cd dockercoins && docker-compose up -d`
+- `cd dockercoins && docker compose up -d`
 - this will build and start all the services
 - the web UI will be available on port 8000
 
@@ -241,7 +241,7 @@ content but you also know to skip during presentation.
   troubleshooting tools. Just focus on getting them from single-host to
   multi-host and multi-container.
 - Goal is first 30min on intro and Docker Compose and what dockercoins is,
-  and getting it up on one node in docker-compose.
+  and getting it up on one node with Docker Compose.
 - Next 60-75 minutes is getting dockercoins in Swarm Mode services across
   servers. Big Win.
 - Last 15-30 minutes is for stateful services, DAB files, and questions.

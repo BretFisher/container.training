@@ -267,7 +267,7 @@ cp ~/ngrok.env ~/container.training/webhooks/admission/.env
 
 - Start the webhook in Docker containers:
   ```bash
-  docker-compose up
+  docker compose up
   ```
 
 ]
@@ -354,7 +354,7 @@ Note: the webhook doesn't do anything (other than printing the request payload).
 
   - once that `color` label is set, it cannot be removed or changed
 
-- That Flask app was started when we did `docker-compose up` earlier
+- That Flask app was started when we did `docker compose up` earlier
 
 - It is exposed through its own ngrok tunnel
 
@@ -370,7 +370,7 @@ Note: the webhook doesn't do anything (other than printing the request payload).
 
 - First, check the ngrok URL of the tunnel for the Flask app:
   ```bash
-  docker-compose logs ngrok-flask
+  docker compose logs ngrok-flask
   ```
 
 - Then, edit the webhook configuration:

@@ -245,7 +245,7 @@ The curl command should now output:
     <br/>
     (instead of `<projectname>_<servicename>:latest`)
 
-  - it can be pushed to a registry with `docker-compose push`
+  - it can be pushed to a registry with `docker compose push`
 
 - Example:
 
@@ -263,8 +263,8 @@ The curl command should now output:
 
 - Try it:
   ```bash
-  docker-compose -f dockercoins.yml build
-  docker-compose -f dockercoins.yml push
+  docker compose -f dockercoins.yml build
+  docker compose -f dockercoins.yml push
   ```
 
 ]
@@ -317,7 +317,7 @@ We can now connect to any of our nodes on port 8000, and we will see the familia
 
 There are many ways to handle variations between environments.
 
-- Compose loads `docker-compose.yml` and (if it exists) `docker-compose.override.yml`
+- Compose loads `compose.yaml` and (if it exists) `compose.override.yaml`
 
 - Compose can load alternate file(s) by setting the `-f` flag or the `COMPOSE_FILE` environment variable
 
@@ -352,7 +352,7 @@ class: extra-details
 
 - `extends` doesn't work with `docker stack deploy`
 
-  (But you can use `docker-compose config` to "flatten" your configuration)
+  (But you can use `docker compose config` to "flatten" your configuration)
 
 ---
 

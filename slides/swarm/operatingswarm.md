@@ -36,8 +36,8 @@ done
 git clone https://@@GITREPO@@
 cd container.training/stacks
 docker stack deploy --compose-file registry.yml registry
-docker-compose -f dockercoins.yml build
-docker-compose -f dockercoins.yml push
+docker compose -f dockercoins.yml build
+docker compose -f dockercoins.yml push
 docker stack deploy --compose-file dockercoins.yml dockercoins
 ```
 

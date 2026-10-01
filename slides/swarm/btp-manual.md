@@ -192,7 +192,7 @@ It has been replaced by the new version, with port 80 accessible from outside.
 
 - We can change scaling parameters with `docker update` as well
 
-- We will do the equivalent of `docker-compose scale`
+- We will do the equivalent of `docker compose scale`
 
 .lab[
 

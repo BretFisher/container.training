@@ -12,7 +12,7 @@ In this part, we will:
 
 ## Why do we need to ship our images?
 
-- When we do `docker-compose up`, images are built for our services
+- When we do `docker compose up`, images are built for our services
 
 - These images are present only on the local node
 

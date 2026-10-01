@@ -442,7 +442,7 @@ class: extra-details
 - Run this simple-yet-beautiful visualization app:
   ```bash
   cd ~/container.training/stacks
-  docker-compose -f visualizer.yml up -d
+  docker compose -f visualizer.yml up -d
   ```
 
   <!-- ```longwait Creating dockerswarmvisualizer_viz_1``` -->

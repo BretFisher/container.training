@@ -12,7 +12,7 @@
   ```bash
   kubectl version
   docker version
-  docker-compose -v
+  docker compose version
   ```
 
 ]

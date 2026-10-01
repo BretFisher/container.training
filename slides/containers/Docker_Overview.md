@@ -162,7 +162,7 @@ Never again "worked in dev - ops problem now!"
 
 ```bash
 git clone ...
-docker-compose up
+docker compose up
 ```
 
 With this, you can create development, integration, QA environments in minutes!
