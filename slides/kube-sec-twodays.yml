@@ -70,7 +70,7 @@ chat: "In person!"
 
 gitrepo: github.com/bretfisher/container.training
 
-slides: https://container.training/
+slides: https://k8sec.bretfisher.com/
 
 #slidenumberprefix: "#SomeHashTag &mdash; "
 
@@ -80,12 +80,12 @@ exclude:
 content:
 - shared/title.md
 - logistics.md
-- shared/chat-room-im.md
+#- shared/chat-room-im.md
 #- shared/chat-room-slack.md
 #- shared/chat-room-zoom-meeting.md
 #- shared/chat-room-zoom-webinar.md
 - shared/about-slides.md
-- k8s/prereqs-basic.md
+#- k8s/prereqs-basic.md
 - shared/handson.md
 - k8s/labs-live.md
 - shared/connecting.md
@@ -210,11 +210,15 @@ content:
   - k8s/helm-secrets.md
   #- k8s/exercise-helm.md
   #- k8s/ytt.md
-  # (ADD HERE: k8s/gitworkflows.md, k8s/flux.md, k8s/argocd.md for
-  # quote "GitOps: Flux & Argo CD", then k8s/cert-manager.md for
-  # quote "cert-manager". See ADD EXISTING FILES section at the bottom.)
-  # COMMENT OUT: quote uses Flux and Argo CD for GitOps, not GitLab CI/CD.
-  - k8s/gitlab.md
+  # Quote uses Flux and Argo CD for GitOps, not GitLab CI/CD.
+  #- k8s/gitlab.md
+  - k8s/cert-manager.md
+  # GitOps is the last lecture of day 1. The Flux and Argo CD chapters hold
+  # all the GitOps labs. Potential after-hours labs: uncomment one to offer it.
+  - k8s/gitworkflows.md
+  #- k8s/flux.md             # potential after-hours lab
+  #- k8s/argocd.md           # potential after-hours lab
+  #- k8s/argocd-advanced.md  # optional lecture for the Argo CD lab
 -
   # KEEP: quote "Network policies". Note the quote puts this under
   # "Workload and Network Policies", after the Auth and RBAC group.
@@ -286,9 +290,6 @@ content:
   #- k8s/operators-example.md
   #- k8s/staticpods.md
   #- k8s/owners-and-dependents.md
-  # (gitworkflows.md is listed under ADD EXISTING FILES for day 1 GitOps.
-  # Uncomment it there, or here, not both.)
-  #- k8s/gitworkflows.md
 -
   - k8s/whatsnext.md
   - k8s/lastwords.md
@@ -311,28 +312,6 @@ content:
 # Pair with access-eks-cluster.md, which is already in the template as a
 # comment in the "Working with Production Clusters" group.
 #- k8s/aws-eks.md
-#
-# --- Day 1, Deploying on Kubernetes: "GitOps: Flux & Argo CD" ---
-# k8s/gitworkflows.md (267 lines). Title "Git-based workflows (GitOps)".
-# Has "Flux vs ArgoCD" comparison slides and repo layout guidance. Use as
-# the intro. Also referenced as a comment in the last content group above.
-#- k8s/gitworkflows.md
-# k8s/flux.md (551 lines). Title "FluxCD". Hands-on with flux bootstrap
-# against a GitHub repo. Students need a GitHub account and token.
-#- k8s/flux.md
-# k8s/argocd.md (621 lines). Title "ArgoCD". Hands-on install and CLI.
-# Teaching both Flux and Argo CD hands-on is likely too long for day 1.
-# Pick one for hands-on and cover the other from gitworkflows.md.
-#- k8s/argocd.md
-# k8s/argocd-advanced.md (162 lines). App of Apps, ApplicationSets.
-# Optional. Only if argocd.md is the hands-on choice and time allows.
-#- k8s/argocd-advanced.md
-#
-# --- Day 1, Deploying on Kubernetes: "cert-manager" ---
-# k8s/cert-manager.md (259 lines). Install, ClusterIssuer, Certificate.
-# Place at the end of day 1. Also works as the bridge into day 2 (TLS,
-# certificates, user-cert.md, csr-api.md).
-#- k8s/cert-manager.md
 #
 # --- Day 2, Auth and RBAC: "Generating user certificates" ---
 # k8s/user-cert.md (276 lines). Title "Generating user certificates".

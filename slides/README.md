@@ -51,6 +51,13 @@ Generated files stay inside the container. Always start with `--build`
 (which `make serve` does) so the baseline matches your checkout; the sync
 only carries edits made while the watcher runs.
 
+The dev server builds in dev mode (`SLIDES_DEV=1`): the footer of each
+slide shows its source file name and its `name:` anchor, for example
+`install.md · #install`. Open `deck.yml.html#install` to go back to that
+slide. For a local build in dev mode, run `make build-dev`. To turn dev
+mode off in the container, run `SLIDES_DEV=0 make serve`. Netlify does not
+set `SLIDES_DEV`, so published slides keep the hidden footer.
+
 Stop with Ctrl-C, then `make down` to remove the container.
 `make clean` also deletes generated files from a local, non-Docker build.
 `make help` lists all targets.

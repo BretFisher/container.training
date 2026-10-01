@@ -13,6 +13,11 @@ import yaml
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 
+# Dev mode (SLIDES_DEV=1, set by compose.yaml): each slide footer shows its
+# source file name and its "#anchor" (a "name:" property, or a generated
+# title or TOC anchor), and the footer is always visible.
+dev = os.environ.get("SLIDES_DEV") == "1"
+
 
 def anchor(title):
     title = title.lower().replace(' ', '-')
@@ -71,8 +76,9 @@ class: title
 [Next part](#{nextlink})
 ]
 
-.debug[(automatically generated title slide)]
-""".format(anchor=anchor(title), interstitial=interstitial, title=title, toclink=toclink, previouslink=previouslink, nextlink=nextlink)
+.debug[{debug}]
+""".format(anchor=anchor(title), interstitial=interstitial, title=title, toclink=toclink, previouslink=previouslink, nextlink=nextlink,
+           debug="(title slide) · #" + anchor(title) if dev else "(automatically generated title slide)")
     after = markdown[slide_position:]
     return before + extra_slide + after
 
@@ -111,6 +117,7 @@ def generatefromyaml(manifest, filename):
     html = html.replace("@@MARKDOWN@@", markdown)
     html = html.replace("@@EXCLUDE@@", exclude)
     html = html.replace("@@SLIDENUMBERPREFIX@@", manifest.get("slidenumberprefix", ""))
+    html = html.replace("@@BODYCLASS@@", "dev" if dev else "")
     return html
 
 def processAtAtStrings(text):
@@ -171,7 +178,7 @@ def gentoc(tree):
             # (Otherwise, we display the titles smooched together.)
             if len(part) < 10:
                 slide += "\n"
-        slide += "\n.debug[(auto-generated TOC)]"
+        slide += "\n.debug[{}]".format("(TOC) · #toc-part-{}".format(i+1) if dev else "(auto-generated TOC)")
         parts.append(slide)
     return "\n---\n".join(parts)
 
@@ -188,6 +195,10 @@ def processcontent(content, filename):
     if isinstance(content, str):
         if "\n" in content:
             titles = re.findall("^# (.*)", content, re.MULTILINE)
+            if dev:
+                slides = content.split("\n---\n")
+                slides = [s + "\n" + devfooter(s, filename) for s in slides]
+                return ("\n---\n".join(slides), titles)
             slidefooter = ".debug[{}]".format(makelink(filename))
             content = content.replace("\n---\n", "\n{}\n---\n".format(slidefooter))
             content += "\n" + slidefooter
@@ -248,6 +259,22 @@ def makelink(filename):
         return "[{}]({})".format(filename, url)
     else:
         return filename
+
+# Dev footer: "file.md · #anchor", as plain text (the dev server runs in a
+# container, so a file link would not open). The anchor comes from the
+# slide's "name:" property; Remark properties are the "key: value" lines at
+# the top of a slide.
+def devfooter(slide, filename):
+    text = os.path.basename(filename)
+    for line in slide.lstrip("\n").split("\n"):
+        match = re.match(r"^(\w+):\s*(.*)$", line)
+        if not match:
+            break
+        if match.group(1) == "name":
+            text += " · #" + match.group(2).strip()
+    # Escape Markdown emphasis characters, e.g. in Container_Networking_Basics.md.
+    text = re.sub(r"([_*])", r"\\\1", text)
+    return ".debug[{}]".format(text)
 
 if len(sys.argv) != 2:
     logging.error("This program takes one and only one argument: the YAML file to process.")

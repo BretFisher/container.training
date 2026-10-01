@@ -72,6 +72,14 @@ div.remark-slide-number {
 .debug:hover {
   opacity: 1;
 }
+/* Dev mode (SLIDES_DEV=1): always show the footer, small and on the left,
+   so it does not cover the slide number. */
+.dev .debug {
+  opacity: 0.7;
+  right: auto;
+  padding: 0 0.5em;
+  font-size: 0.6em;
+}
 
 a {
   text-decoration: none;

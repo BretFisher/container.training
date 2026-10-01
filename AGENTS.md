@@ -84,3 +84,83 @@ After confirming the exact deployment to remove, use `./labctl destroy <tag>`
 (Terraform destruction is auto-approved by the script).
 Keep cloud credentials, generated access cards, SSH keys, and Terraform state out
 of commits; preserve deployment state until cleanup is complete.
+
+## Current project: two-day Kubernetes security workshop
+
+Deck: `slides/kube-sec-twodays.yml` ("Kubernetes Architecture and Security").
+Day 1 is Kubernetes fundamentals; day 2 is platform and workload security.
+The client quote in the manifest header is the source of truth for topics.
+The `REVIEW:`, `ADD EXISTING FILES`, and `NET NEW SLIDES` comments in the
+manifest hold the per-file reasons; this section holds the order of work.
+
+The goal is a **tested** workshop: every `.lab[]` block runs clean on the
+student lab environment, in deck order, from a fresh lab. A slide that reads
+well but fails on a lab is a bug. When a phase is done, tick its box here and
+delete its comments from the manifest.
+
+### Decisions
+
+- Deck file: `slides/kube-sec-twodays.yml`. Make workshop changes there, not in
+  `kube-twodays.yml`.
+- Lab platform: kubeadm clusters on AWS VMs, not EKS. Provision with
+  `labctl create --provider aws --settings settings/kubernetes.env`. Test every
+  exercise on this platform. This keeps `user-cert.md`, `control-plane-auth.md`,
+  and encryption at rest hands-on, because they need `/etc/kubernetes` and the
+  cluster CA.
+- GitOps: `gitworkflows.md` is the last lecture of day 1, after `cert-manager.md`.
+  `flux.md`, `argocd.md`, and `argocd-advanced.md` stay in the manifest as
+  commented-out lines, marked as potential after-hours labs. Bret uncomments
+  one to offer students self-paced hands-on outside class time. Keep both chapters runnable on the lab, and
+  do not split them: `kube-twodays`, `kube-fullday`, and `kube-selfpaced` also
+  use them. Known self-paced gaps: `flux.md:193` has no `blue.yaml` content,
+  `argocd admin dashboard` listens on the VM's localhost, and both chapters ask
+  for two clusters but use one.
+- EKS: students get no EKS access. The class has 100+ students whose names are
+  known only on the day, so per-student IAM setup (`prepare-eks/`,
+  `access-eks-cluster.md`) cannot work. Bret gives instructor-only EKS demos
+  that compare EKS with the students' kubeadm clusters. Students watch.
+
+### Open decisions (ask Bret)
+
+- EKS scope: which `aws-eks.md` slides stay, where they go (day 1 or day 2
+  next to `authn-authz.md`), and which demos Bret gives.
+- OpenID Connect demo: which OIDC provider the students use.
+
+### Plan
+
+1. [ ] **Manifest match.** Apply every `REVIEW:` comment and move each
+   `ADD EXISTING FILES` line into its `(ADD HERE: ...)` group. Move `netpol.md`
+   below the auth chapters to match the quote order. Done when each quote topic
+   maps to one active file or sub-chapter and `./build.sh once` passes.
+2. [ ] **Day 1 time budget.** Day 1 has 33 quote topics plus EKS, GitOps, and
+   cert-manager. Trim the Helm chart-authoring files (`helm-create-basic-chart`,
+   `helm-create-better-chart`, `helm-dependencies`,
+   `helm-values-schema-validation`). Done when Bret approves the day 1 list.
+3. [ ] **Existing hands-on test.** Run every exercise in deck order on one
+   lab. Record each failure with file, slide title, command, and output. Known
+   risk: `pod-security-policies.md` edits API server flags and fails on 1.25+;
+   teach it as history and remove its exercises. Done when all exercises pass
+   or each failure has a fix or a removal.
+4. [ ] **Net new slides.** Write the seven files in `NET NEW SLIDES`, in this
+   order: `pod-hardening`, `encryption-at-rest`, `external-secrets`,
+   `kyverno-security-policies`, `linting`, `gitops-pr-gating`,
+   `supply-chain-security`. Each hands-on uses dockercoins, so it builds on the
+   day 1 app. Done per file when its exercises pass on a fresh lab.
+5. [ ] **Lab setup.** Pre-install on the lab image each tool that the day 2
+   exercises need (Kyverno CLI, kubeconform, kube-linter, cosign, trivy, syft,
+   kubeseal) so students spend class time on security, not installs. Done when
+   a fresh `labctl create` lab runs phase 3 and 4 exercises with no manual step.
+6. [ ] **Full dry run.** Run both days end to end on a fresh lab with the
+   final deck, and note the time per chapter. Inspect the built deck in the
+   browser for overflow and broken images. Done when no exercise fails and the
+   time fits two days.
+
+### Test exercises
+
+Hands-on steps live in `.lab[]` blocks. `slides/autopilot/autotest.py` searches
+for `.exercise[]` blocks, which no slide uses now, so it finds no snippets until
+it is updated. Its argument is the generated deck HTML (it reads `excludedClasses`
+from it). It drives a shell through tmux, so start a tmux session on or to a
+lab node first; the script prints the setup options when tmux is missing.
+Commands that must succeed need a clean exit code. Output the student reads
+must match the slide text.

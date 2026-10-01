@@ -18,6 +18,9 @@ services:
     # markmaker.py normally asks git for these. There is no .git in the
     # container, so the Makefile passes them in from the host.
     environment:
+      # Show each slide's source file and "name:" anchor in its footer.
+      # Netlify does not set this, so production slides do not change.
+      SLIDES_DEV: ${SLIDES_DEV:-1}
       REPOSITORY_URL: ${REPOSITORY_URL:-}
       BRANCH: ${BRANCH:-}
       COMMIT: ${COMMIT:-}
