@@ -156,7 +156,9 @@ div.pic img {
   max-width: 1210px;
   max-height: 550px;
 }
-div.pic p:first-child img {
+/* "1 of :not(...)" skips the dev-mode footer paragraph (.debug), which
+   markmaker.py puts at the top of each slide. */
+div.pic p:nth-child(1 of :not(p:has(> .debug:only-child))) img {
   max-width: 1210px;
   max-height: 681px;
 }
@@ -174,7 +176,7 @@ div.title img {
 div.title {
   vertical-align: middle; 
 }
-div.title > p:first-child {
+div.title > p:nth-child(1 of :not(p:has(> .debug:only-child))) {
   text-align: center;
   font-size: 300%;
 }
