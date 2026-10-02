@@ -89,7 +89,6 @@ content:
 #- shared/chat-room-zoom-meeting.md
 #- shared/chat-room-zoom-webinar.md
 - shared/about-slides.md
-# LEFT OFF HERE------------------------------------------------------------
 #- k8s/prereqs-basic.md
 - shared/handson.md
 #- k8s/labs-live.md
@@ -99,6 +98,7 @@ content:
 -
   # KEEP: quote "Our sample application"
   - shared/sampleapp.md
+  # LEFT OFF HERE-------------------------------------------------------------
   #- shared/composescale.md
   #- shared/hastyconclusions.md
   - shared/composedown.md

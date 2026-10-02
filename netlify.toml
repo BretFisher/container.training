@@ -6,7 +6,7 @@
 
 [build.environment]
   # Python used by the build. Matches PYTHON_VERSION in slides/Dockerfile.
-  # Netlify resolves "3.13" to the latest 3.13.x release.
-  PYTHON_VERSION = "3.13"
+  # Netlify resolves "3.14" to the latest 3.14.x release.
+  PYTHON_VERSION = "3.14"
   # Also create slides.zip (not needed for local dev, see slides/build.sh).
   SLIDES_ZIP = "1"

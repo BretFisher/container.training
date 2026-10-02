@@ -5,8 +5,8 @@
 # ../k8s with @@INCLUDE[k8s/...]. Dockerfile.dockerignore limits the context
 # to slides/ and k8s/. The sources baked in here are the baseline; Compose
 # watch syncs edits on top and re-runs ./build.sh once.
-ARG PYTHON_VERSION=3.13-alpine
-ARG PYTHON_DIGEST=sha256:1a63a53928ce53d2b0baf08092a703f4840ac5dfbd61fd48802dbf48e08c801e
+ARG PYTHON_VERSION=3.14-alpine
+ARG PYTHON_DIGEST=sha256:2e740b2c28a426e74f11396c05e38afb3191acced75045b8d62df573c1dc8ce8
 
 FROM python:${PYTHON_VERSION}@${PYTHON_DIGEST} AS builder
 
