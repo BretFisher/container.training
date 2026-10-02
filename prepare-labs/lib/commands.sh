@@ -130,13 +130,10 @@ _cmd_createuser() {
     fi
     "
 
-    # FIXME this is a gross hack to add the deployment key to our SSH agent,
-    # so that it can be used to bounce from host to host (which is necessary
-    # in the next deployment step). In the long run, we probably want to
-    # generate these keys locally and push them to the machines instead
-    # (once we move everything to Terraform).
-    ssh-add tags/$TAG/id_rsa
-    pssh "
+    # The nodes bounce to the first node with the forwarded deployment key.
+    # In the long run, we probably want to generate these keys locally and
+    # push them to the machines instead (once we move everything to Terraform).
+    with_tag_agent pssh "
     set -e
     cd /home/$USER_LOGIN
     if ! i_am_first_node; then
@@ -145,7 +142,6 @@ _cmd_createuser() {
       sudo -u $USER_LOGIN tar -xf-
     fi
     "
-    ssh-add -d tags/$TAG/id_rsa
 
     # FIXME do this only once.
     pssh -I "sudo -u $USER_LOGIN tee -a /home/$USER_LOGIN/.bashrc" <<"SQRL"
@@ -718,24 +714,14 @@ EOF
     fi"
     # https://github.com/cilium/cilium/releases
 
-    # FIXME this is a gross hack to add the deployment key to our SSH agent,
-    # so that it can be used to bounce from host to host (which is necessary
-    # in the next deployment step). In the long run, we probably want to
-    # generate these keys locally and push them to the machines instead
-    # (once we move everything to Terraform).
-    if [ -f "tags/$TAG/id_rsa" ]; then
-        ssh-add tags/$TAG/id_rsa
-    fi
-    # Join the other nodes to the cluster
-    pssh --timeout 200 "
+    # Join the other nodes to the cluster.
+    # The nodes bounce to the first node with the forwarded deployment key.
+    with_tag_agent pssh --timeout 200 "
     if ! i_am_first_node && [ ! -f /etc/kubernetes/kubelet.conf ]; then
         FIRSTNODE=\$(cat /etc/name_of_first_node) &&
         ssh $SSHOPTS \$FIRSTNODE cat /tmp/kubeadm-config.yaml > /tmp/kubeadm-config.yaml &&
         sudo kubeadm join --config /tmp/kubeadm-config.yaml
     fi"
-    if [ -f "tags/$TAG/id_rsa" ]; then
-        ssh-add -d tags/$TAG/id_rsa
-    fi
 
     # Install metrics server
     pssh -I <../k8s/metrics-server.yaml "
@@ -1742,6 +1728,22 @@ test_vm() {
         printf "$errors"
     fi
     info "Test VM was $ip."
+}
+
+# Run a command with a temporary ssh-agent that holds only the deployment key.
+# pssh forwards this agent, so nodes can SSH to the first node.
+# A separate agent is necessary because some agents (e.g. 1Password) refuse
+# keys added with ssh-add. It also keeps the user's own agent clean, and
+# their personal keys are not forwarded to the VMs.
+with_tag_agent() {
+    (
+        eval "$(ssh-agent -s)" >/dev/null
+        trap 'ssh-agent -k >/dev/null' EXIT
+        if [ -f "tags/$TAG/id_rsa" ]; then
+            ssh-add -q "tags/$TAG/id_rsa"
+        fi
+        "$@"
+    )
 }
 
 make_key_name() {
