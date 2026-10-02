@@ -44,13 +44,119 @@
       var tmplTITLE = tmpl('@@TITLE@@', '"@@TITLE@@"', document.title);
       var tmplSLIDENUMBERPREFIX = tmpl('@@SLIDENUMBERPREFIX@@', '"@@SLIDENUMBERPREFIX@@"', "");
       document.title = tmplTITLE;
+
+      /*
+      Slide numbers vs. steps. Remark makes one internal "slide" per step
+      of an incremental slide ("--"). With countIncrementalSlides: false,
+      the top-right number counts real slides, but Remark still uses step
+      indexes in the URL hash and in "number + Enter". The code below makes
+      the URL hash (#N) and "N + Enter" use the slide number that is shown.
+      Named anchors (#toc) and presenter mode (#pN) also work.
+      */
+      const slideHash = /^#(p?)(\d+)$/;
+      // Map step index (0-based) <-> slide number (1-based), with the same
+      // rule as Remark's slide number: steps with "count: false" don't count.
+      // Filled after remark.create(); empty until then.
+      const stepToSlide = [];
+      const slideFirstStep = [];
+      const slideStepCount = [];
+      // Remark writes the hash only with history.replaceState("#<step>")
+      // (and "#p<step>" in presenter mode). Wrap it, so the URL shows the
+      // slide number instead. Our own calls use setHash(), the original.
+      const setHash = history.replaceState.bind(history);
+      history.replaceState = function (state, title, url) {
+        const m = typeof url === 'string' && slideHash.exec(url);
+        if (m && stepToSlide.length) {
+          url = '#' + m[1] + (stepToSlide[+m[2] - 1] || m[2]);
+        }
+        return setHash(state, title, url);
+      };
+      // Remark reads the hash in remark.create(), before we can map it.
+      // Hold it back, and go to the matching step after create().
+      const initialHash = slideHash.exec(window.location.hash);
+      if (initialHash) {
+        setHash(undefined, undefined, '#1');
+      }
+      // Registered before remark.create(), so it runs before Remark's own
+      // hashchange listener and changes the hash that Remark then reads.
+      window.addEventListener('hashchange', function () {
+        const m = slideHash.exec(window.location.hash);
+        if (m) {
+          setHash(undefined, undefined, '#' + m[1] + stepForSlide(+m[2]));
+          // If Remark does not move (same slide), put the number back.
+          setTimeout(function () {
+            if (window.location.hash === '#' + m[1] + stepForSlide(+m[2])) {
+              setHash(undefined, undefined, '#' + m[1] + m[2]);
+            }
+          });
+        }
+      });
+
       var slideshow = remark.create({
         ratio: '16:9',
         highlightSpans: true,
+        countIncrementalSlides: false,
         slideNumberFormat: `${tmplSLIDENUMBERPREFIX}%current%/%total%`,
         excludedClasses: tmplEXCLUDE
       });
       document.querySelector('#loading').style.display = 'none';
+
+      // Fill the step <-> slide number maps (declared above).
+      {
+        let n = 0;
+        slideshow.getSlides().forEach(function (slide, i) {
+          if (slide.properties.count !== 'false') n++;
+          const no = Math.max(1, n);
+          stepToSlide[i] = no;
+          if (slideFirstStep[no] === undefined) slideFirstStep[no] = i;
+          slideStepCount[no] = (slideStepCount[no] || 0) + 1;
+        });
+      }
+      function stepForSlide(no) {
+        no = Math.min(Math.max(no, 1), slideFirstStep.length - 1);
+        return slideFirstStep[no] + 1;
+      }
+      if (initialHash) {
+        window.location.hash = '#' + initialHash[1] + initialHash[2];
+      }
+
+      // "N + Enter" goes to step N in Remark. Track the digits, and after
+      // Remark has moved, go to the first step of slide N instead.
+      let typedNumber = '';
+      document.addEventListener('keydown', function (event) {
+        if (/^[0-9]$/.test(event.key)) {
+          typedNumber += event.key;
+        } else if (event.key === 'Enter' && typedNumber) {
+          const no = +typedNumber;
+          setTimeout(function () { slideshow.gotoSlide(stepForSlide(no)); });
+          typedNumber = '';
+        } else {
+          typedNumber = '';
+        }
+      }, true);
+
+      // Step counter under the slide number: "step/total" on slides with
+      // more than one step. The "last" class marks the final step.
+      slideshow.on('afterShowSlide', function (slide) {
+        const index = slide.getSlideIndex();
+        const no = stepToSlide[index];
+        const total = slideStepCount[no];
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container) return;
+        let counter = container.querySelector('.remark-step-number');
+        if (total < 2) {
+          if (counter) counter.remove();
+          return;
+        }
+        if (!counter) {
+          counter = document.createElement('div');
+          counter.className = 'remark-step-number';
+          container.appendChild(counter);
+        }
+        const step = index - slideFirstStep[no] + 1;
+        counter.textContent = `${step}/${total}`;
+        counter.classList.toggle('last', step === total);
+      });
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: false });
         slideshow.on('afterShowSlide', function (slide) {

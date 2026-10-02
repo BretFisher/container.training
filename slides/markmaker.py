@@ -222,7 +222,7 @@ def processcontent(content, filename):
             titles = re.findall("^# (.*)", content, re.MULTILINE)
             if dev:
                 slides = content.split("\n---\n")
-                slides = [s + "\n" + devfooter(s, filename) for s in slides]
+                slides = [addfooter(s, devfooter(s, filename)) for s in slides]
                 return ("\n---\n".join(slides), titles)
             slidefooter = ".debug[{}]".format(makelink(filename))
             content = content.replace("\n---\n", "\n{}\n---\n".format(slidefooter))
@@ -289,6 +289,22 @@ def makelink(filename):
 # container, so a file link would not open). The anchor comes from the
 # slide's "name:" property; Remark properties are the "key: value" lines at
 # the top of a slide.
+# Remark shows an incremental slide ("--") as several copies, each holding
+# only the content up to its step. A footer at the end would appear only at
+# the last step, so put it right after the slide properties (top of the slide).
+# The footer is absolutely positioned, so it still renders at the bottom.
+def addfooter(slide, footer):
+    if not footer:
+        return slide
+    lines = slide.split("\n")
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    while i < len(lines) and re.match(r"^\w+:\s*.*$", lines[i]):
+        i += 1
+    return "\n".join(lines[:i] + ["", footer, ""] + lines[i:])
+
+
 def devfooter(slide, filename):
     # TOC slides are generated later and carry their own footer (file name
     # and anchor in one line), so don't add a second one that would overlap.
