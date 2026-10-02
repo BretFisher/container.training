@@ -5,6 +5,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="workshop.css">
     <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <script>
+      // Apply the saved theme (see the 🎨 button below) before the page
+      // draws, so it doesn't flash the default colors first.
+      try {
+        const theme = localStorage.getItem('slides-theme');
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch (e) { /* no storage (private window, etc.): use default */ }
+    </script>
   </head>
   <body class="@@BODYCLASS@@">
     <script src="remark.min.js" type="text/javascript">
@@ -156,6 +164,67 @@
         const step = index - slideFirstStep[no] + 1;
         counter.textContent = `${step}/${total}`;
         counter.classList.toggle('last', step === total);
+      });
+
+      // "?" button in the bottom-right corner of each slide. It opens the
+      // same help screen as the "?" key, for people who don't know that key.
+      slideshow.on('afterShowSlide', function () {
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container || container.querySelector('.remark-help-button')) return;
+        const button = document.createElement('button');
+        button.className = 'remark-help-button';
+        button.textContent = '?';
+        button.title = 'Keyboard shortcuts (?)';
+        button.addEventListener('click', function (event) {
+          event.stopPropagation();
+          slideshow.toggleHelp();
+        });
+        container.appendChild(button);
+      });
+
+      // 🎨 button left of "?": cycle through color themes (workshop.css
+      // defines the colors). Light themes first, then dark from lightest to
+      // darkest. The choice is saved in this browser only.
+      const themes = [
+        { id: '', name: 'Default' },
+        { id: 'solarized-light', name: 'Solarized Light' },
+        { id: 'catppuccin-latte', name: 'Catppuccin Latte' },
+        { id: 'nord', name: 'Nord' },
+        { id: 'catppuccin-mocha', name: 'Catppuccin Mocha' },
+        { id: 'github-dark', name: 'GitHub Dark' },
+      ];
+      const toast = document.createElement('div');
+      toast.className = 'theme-toast';
+      document.body.appendChild(toast);
+      let toastTimer;
+      function nextTheme() {
+        const current = document.documentElement.dataset.theme || '';
+        const i = themes.findIndex(t => t.id === current);
+        const theme = themes[(i + 1) % themes.length];
+        if (theme.id) {
+          document.documentElement.dataset.theme = theme.id;
+        } else {
+          delete document.documentElement.dataset.theme;
+        }
+        try { localStorage.setItem('slides-theme', theme.id); } catch (e) {}
+        // Show the theme name, then fade it out (CSS transition).
+        toast.textContent = `🎨 ${theme.name}`;
+        toast.classList.add('visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('visible'), 1500);
+      }
+      slideshow.on('afterShowSlide', function () {
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container || container.querySelector('.remark-theme-button')) return;
+        const button = document.createElement('button');
+        button.className = 'remark-theme-button';
+        button.textContent = '🎨';
+        button.title = 'Change color theme';
+        button.addEventListener('click', function (event) {
+          event.stopPropagation();
+          nextTheme();
+        });
+        container.appendChild(button);
       });
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: false });
