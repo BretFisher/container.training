@@ -41,8 +41,6 @@ services:
             - fragments/
             - autopilot/state.yaml
             - .env
-            - Dockerfile*
-            - compose.yaml
             - Makefile
         # Manifests pulled into slides with @@INCLUDE[k8s/...].
         - path: ../k8s

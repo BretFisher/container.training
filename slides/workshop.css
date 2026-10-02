@@ -239,3 +239,14 @@ td {
 .hide {
   display: none;
 }
+
+/* Single-slide TOC (manifest option "toc: single"). */
+.toc-single {
+  column-count: 3;
+  column-gap: 1em;
+  font-size: 52%;
+  line-height: 1.15;
+}
+.toc-single p { margin: 0.5em 0 0.1em; break-after: avoid; }
+.toc-single ul { margin: 0; padding-left: 1.1em; }
+.toc-single li { break-inside: avoid; margin: 0; }

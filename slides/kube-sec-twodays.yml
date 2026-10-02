@@ -70,9 +70,13 @@ chat: "In person!"
 
 gitrepo: github.com/bretfisher/container.training
 
+gitbranch: k8sec-2day
+
 slides: https://k8sec.bretfisher.com/
 
 #slidenumberprefix: "#SomeHashTag &mdash; "
+
+toc: single
 
 exclude:
 - self-paced
@@ -85,11 +89,12 @@ content:
 #- shared/chat-room-zoom-meeting.md
 #- shared/chat-room-zoom-webinar.md
 - shared/about-slides.md
+# LEFT OFF HERE------------------------------------------------------------
 #- k8s/prereqs-basic.md
 - shared/handson.md
-- k8s/labs-live.md
-- shared/connecting.md
-- k8s/labs-async.md
+#- k8s/labs-live.md
+#- shared/connecting.md
+#- k8s/labs-async.md
 - shared/toc.md
 -
   # KEEP: quote "Our sample application"
@@ -145,12 +150,11 @@ content:
   # COMMENT IN: title is "Kubernetes distributions and installers".
   # Matches quote "Distros and installers".
   #- k8s/setup-selfhosted.md
-  # (ADD HERE: k8s/aws-eks.md then k8s/access-eks-cluster.md for
-  # quote "EKS on AWS". See ADD EXISTING FILES section at the bottom.)
+  - k8s/aws-eks.md
   # COMMENT OUT: not in the quote.
-  - k8s/dashboard.md
+  #- k8s/dashboard.md
   # COMMENT OUT: not in the quote.
-  - k8s/k9s.md
+  #- k8s/k9s.md
   #- k8s/tilt.md
   #- k8s/kubectlscale.md
   # COMMENT OUT: not in the quote.
@@ -306,12 +310,6 @@ content:
 # 2026-09-18 and give a rough idea of teaching time.
 # =============================================================================
 #
-# --- Day 1, Leveling Up: "EKS on AWS" ---
-# k8s/aws-eks.md (693 lines). Chapters "Amazon EKS" and "Provisioning
-# clusters" (AWS native, eksctl, IaC). Place after setup-selfhosted.md.
-# Pair with access-eks-cluster.md, which is already in the template as a
-# comment in the "Working with Production Clusters" group.
-#- k8s/aws-eks.md
 #
 # --- Day 2, Auth and RBAC: "Generating user certificates" ---
 # k8s/user-cert.md (276 lines). Title "Generating user certificates".

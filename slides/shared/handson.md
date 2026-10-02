@@ -1,4 +1,4 @@
-class: title
+class: title, self-paced
 
 *Tell me and I forget.*
 <br/>
@@ -12,7 +12,10 @@ Misattributed to Benjamin Franklin
 
 ---
 
+class: self-paced
+
 ## Hands-on, you shall practice
+
 
 - Nobody ever became a Jedi by spending their lives reading Wookiepedia
 

@@ -111,7 +111,7 @@ Without further ado, let's start this application!
 
 - These 5 services are visible in the application's Compose file,
   [compose.yml](
-  https://@@GITREPO@@/blob/master/dockercoins/compose.yml)
+  https://@@GITREPO@@/blob/@@GITBRANCH@@/dockercoins/compose.yml)
 
 ---
 
@@ -182,11 +182,11 @@ def hash_bytes(data):
   <br/>https://@@GITREPO@@
 
 - The application is in the [dockercoins](
-  https://@@GITREPO@@/tree/master/dockercoins)
+  https://@@GITREPO@@/tree/@@GITBRANCH@@/dockercoins)
   subdirectory
 
 - The Compose file ([compose.yml](
-  https://@@GITREPO@@/blob/master/dockercoins/compose.yml))
+  https://@@GITREPO@@/blob/@@GITBRANCH@@/dockercoins/compose.yml))
   lists all 5 services
 
 - `redis` is using an official image from the Docker Hub
@@ -195,8 +195,8 @@ def hash_bytes(data):
 
 - Each service's Dockerfile and source code is in its own directory
 
-  (`hasher` is in the [hasher](https://@@GITREPO@@/blob/master/dockercoins/hasher/) directory,
-  `rng` is in the [rng](https://@@GITREPO@@/blob/master/dockercoins/rng/)
+  (`hasher` is in the [hasher](https://@@GITREPO@@/blob/@@GITBRANCH@@/dockercoins/hasher/) directory,
+  `rng` is in the [rng](https://@@GITREPO@@/blob/@@GITBRANCH@@/dockercoins/rng/)
   directory, etc.)
 
 ---

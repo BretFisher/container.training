@@ -47,11 +47,12 @@ def insertslide(markdown, title):
 
     before = markdown[:slide_position]
 
-    toclink = "toc-part-{}".format(title2part[title])
+    toclink = "toc" if single_toc else "toc-section-{}".format(title2part[title])
     _titles_ = [""] + all_titles + [""]
     currentindex = _titles_.index(title)
-    previouslink = anchor(_titles_[currentindex-1])
-    nextlink = anchor(_titles_[currentindex+1])
+    # The first and last title slides link back to the TOC.
+    previouslink = anchor(_titles_[currentindex-1]) if _titles_[currentindex-1] else toclink
+    nextlink = anchor(_titles_[currentindex+1]) if _titles_[currentindex+1] else toclink
     interstitial = interstitials.next()
 
     extra_slide = """
@@ -59,7 +60,7 @@ def insertslide(markdown, title):
 
 class: pic
 
-.interstitial[![Image separating from the next part]({interstitial})]
+.interstitial[![Image separating from the next section]({interstitial})]
 
 ---
 
@@ -69,11 +70,11 @@ class: title
  {title}
 
 .nav[
-[Previous part](#{previouslink})
+[Previous Section](#{previouslink})
 |
-[Back to table of contents](#{toclink})
+[Table of Contents](#{toclink})
 |
-[Next part](#{nextlink})
+[Next Section](#{nextlink})
 ]
 
 .debug[{debug}]
@@ -93,6 +94,8 @@ def flatten(titles):
 
 
 def generatefromyaml(manifest, filename):
+    global single_toc
+    single_toc = manifest.get("toc") == "single"
     markdown, titles = processcontent(manifest["content"], filename)
     logging.debug("Found {} titles.".format(len(titles)))
     toc = gentoc(titles)
@@ -123,6 +126,7 @@ def generatefromyaml(manifest, filename):
 def processAtAtStrings(text):
     text = text.replace("@@CHAT@@", manifest["chat"])
     text = text.replace("@@GITREPO@@", manifest["gitrepo"])
+    text = text.replace("@@GITBRANCH@@", manifest["gitbranch"])
     text = text.replace("@@SLIDES@@", manifest["slides"])
     text = text.replace("@@ZIP@@", manifest["zip"])
     text = text.replace("@@HTML@@", manifest["html"])
@@ -130,7 +134,9 @@ def processAtAtStrings(text):
     # Process @@LINK[file] and @@INCLUDE[file] directives
     local_anchor_path = ".."
     # FIXME use dynamic repo and branch?
-    online_anchor_path = "https://github.com/jpetazzo/container.training/tree/main"
+    online_anchor_path = "https://{}/tree/{}".format(
+        manifest["gitrepo"] or "github.com/jpetazzo/container.training",
+        manifest["gitbranch"] if explicit_branch else "main")
     for atatlink in re.findall(r"@@LINK\[[^]]*\]", text):
         logging.debug("Processing {}".format(atatlink))
         file_name = atatlink[len("@@LINK["):-1]
@@ -144,43 +150,62 @@ def processAtAtStrings(text):
 
 
 # Maps a title (the string just after "^# ") to its position in the TOC
-# (to which part it belongs).
+# (to which section it belongs).
 title2part = {}
 all_titles = []
+
+# Set from the manifest ("toc: single"): one TOC slide for all sections.
+single_toc = False
 
 # Generate the table of contents for a tree of titles.
 # "tree" is a list of titles, potentially nested.
 # Each entry is either:
 # - a title (then it's a top-level section that doesn't show up in the TOC)
-# - a list (then it's a part that will show up in the TOC on its own slide)
+# - a list (then it's a section that will show up in the TOC on its own slide)
 # In a list, we can have:
 # - titles (simple entry)
-# - further lists (they are then flattened; we don't represent subsubparts)
+# - further lists (they are then flattened; we don't represent subsubsections)
 def gentoc(tree):
     # First, remove the top-level sections that don't show up in the TOC.
     tree = [ entry for entry in tree if type(entry)==list ]
     # Then, flatten the sublists.
     tree = [ list(flatten(entry)) for entry in tree ]
-    # Now, process each part.
+    # Now, process each section.
+    if single_toc:
+        return gentoc_single(tree)
     parts = []
     for i, part in enumerate(tree):
-        slide = "name: toc-part-{}\n\n".format(i+1)
+        slide = "name: toc-section-{}\n\n".format(i+1)
         if len(tree) == 1:
             slide += "## Table of contents\n\n"
         else:
-            slide += "## Part {}\n\n".format(i+1)
+            slide += "## Section {}\n\n".format(i+1)
         for title in part:
-            logging.debug("Generating TOC, part {}, title {}.".format(i+1, title))
+            logging.debug("Generating TOC, section {}, title {}.".format(i+1, title))
             title2part[title] = i+1
             all_titles.append(title)
             slide += "- [{}](#{})\n".format(title, anchor(title))
-            # If we don't have too many subparts, add some space to breathe.
+            # If we don't have too many subsections, add some space to breathe.
             # (Otherwise, we display the titles smooched together.)
             if len(part) < 10:
                 slide += "\n"
-        slide += "\n.debug[{}]".format("(TOC) · #toc-part-{}".format(i+1) if dev else "(auto-generated TOC)")
+        slide += "\n.debug[{}]".format("toc.md · #toc-section-{}".format(i+1) if dev else "(auto-generated TOC)")
         parts.append(slide)
     return "\n---\n".join(parts)
+
+
+# Single-slide TOC: every section on one slide, in small columns.
+# Each section keeps its number, so the slide shows which titles belong to it.
+def gentoc_single(tree):
+    slide = "name: toc\n\n## Table of contents\n\n.toc-single[\n"
+    for i, part in enumerate(tree):
+        slide += "\n**Section {}**\n\n".format(i+1)
+        for title in part:
+            title2part[title] = i+1
+            all_titles.append(title)
+            slide += "- [{}](#{})\n".format(title, anchor(title))
+    slide += "\n]\n\n.debug[{}]".format("toc.md · #toc" if dev else "(auto-generated TOC)")
+    return slide
 
 
 # Arguments:
@@ -265,6 +290,10 @@ def makelink(filename):
 # slide's "name:" property; Remark properties are the "key: value" lines at
 # the top of a slide.
 def devfooter(slide, filename):
+    # TOC slides are generated later and carry their own footer (file name
+    # and anchor in one line), so don't add a second one that would overlap.
+    if "@@TOC@@" in slide:
+        return ""
     text = os.path.basename(filename)
     for line in slide.lstrip("\n").split("\n"):
         match = re.match(r"^(\w+):\s*(.*)$", line)
@@ -295,6 +324,9 @@ else:
     for k in ["chat", "gitrepo", "slides", "title"]:
         if k not in manifest:
             manifest[k] = ""
+    # Branch used in generated GitHub links; decks that don't set it keep "master".
+    explicit_branch = "gitbranch" in manifest
+    manifest.setdefault("gitbranch", "master")
     if "zip" not in manifest:
         if manifest["slides"].endswith('/'):
             manifest["zip"] = manifest["slides"] + "slides.zip"

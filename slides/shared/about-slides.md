@@ -34,7 +34,7 @@
 
 <!--
 .lab[
-```open https://@@GITREPO@@/tree/master/slides/common/about-slides.md```
+```open https://@@GITREPO@@/tree/@@GITBRANCH@@/slides/common/about-slides.md```
 ]
 -->
 
@@ -58,6 +58,8 @@
 
 ---
 
+class: self-paced
+
 ## These slides are constantly updated
 
 - They are maintained by [Jérôme Petazzoni](https://hachyderm.io/@jpetazzo/) and [multiple contributors](https://@@GITREPO@@/graphs/contributors)
@@ -74,7 +76,7 @@
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Extra details
 
@@ -93,6 +95,8 @@ class: extra-details
 - You can review these slides another time if you want, they'll be waiting for you ☺
 
 ---
+
+class: self-paced
 
 ## Slides ≠ documentation
 
