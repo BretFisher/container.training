@@ -83,7 +83,7 @@ exclude:
 
 content:
 - shared/title.md
-- logistics.md
+- logistics-bret.md
 #- shared/chat-room-im.md
 #- shared/chat-room-slack.md
 #- shared/chat-room-zoom-meeting.md
