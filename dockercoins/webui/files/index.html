@@ -1,111 +1,338 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DockerCoin Miner WebUI</title>
-<link rel="stylesheet" type="text/css" href="rickshaw.min.css">
 <style>
-#graph {
-    background-color: #eee;
-    width: 800px;
-    height: 400px;
+:root {
+    color-scheme: light dark;
+    --bg: #f3f5fa;
+    --panel: #ffffff;
+    --border: #dce2ec;
+    --text: #1b2232;
+    --muted: #5d6980;
+    --instant: #1d63ed;
+    --instant-fill: rgba(29, 99, 237, 0.16);
+    --average: #d9480f;
+    --grid: #e7ebf2;
+    --ok: #2b8a3e;
+    --bad: #c92a2a;
+    --wait: #868e96;
 }
-#tweet {
-    color: royalblue;
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0e131d;
+        --panel: #161d2b;
+        --border: #283246;
+        --text: #e5e9f0;
+        --muted: #97a1b6;
+        --instant: #5b8cff;
+        --instant-fill: rgba(91, 140, 255, 0.20);
+        --average: #ff922b;
+        --grid: #222b3d;
+        --ok: #51cf66;
+        --bad: #ff6b6b;
+    }
 }
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    padding: 24px 16px 40px;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 1040px; margin: 0 auto; }
+header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+h1 { margin: 0; font-size: 26px; }
+h1 small { display: block; font-size: 14px; font-weight: normal; color: var(--muted); }
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 14px;
+}
+.status::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--wait);
+}
+.status.ok::before { background: var(--ok); }
+.status.bad::before { background: var(--bad); }
+.status.bad { color: var(--bad); }
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.card, .chart {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.cards.stale .value { opacity: 0.35; }
+.card .label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.card .value { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .value.small { font-size: 18px; padding-top: 8px; }
+.card .unit { font-size: 14px; font-weight: normal; color: var(--muted); }
+.chart-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+.legend span { margin-left: 14px; white-space: nowrap; }
+.legend span::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.legend .instant::before { background: var(--instant); }
+.legend .average::before { background: var(--average); }
+#graph { display: block; width: 100%; height: 400px; }
+#graph .grid line { stroke: var(--grid); }
+#graph .axis text { font-size: 15px; fill: var(--muted); }
+#graph .area { fill: var(--instant-fill); stroke: none; }
+#graph .line { fill: none; stroke: var(--instant); stroke-width: 2; stroke-linejoin: round; }
+#graph .avg { fill: none; stroke: var(--average); stroke-width: 2.5; stroke-linejoin: round; }
+#graph .empty { fill: var(--muted); font-size: 16px; text-anchor: middle; }
+footer { margin-top: 16px; font-size: 14px; color: var(--muted); }
+footer a { color: var(--instant); }
 </style>
-<script src="jquery-1.11.3.min.js"></script>
-<script src="d3.min.js"></script>
-<script src="rickshaw.min.js"></script>
-<script>
-
-String.prototype.format = function () {
-    var args = arguments;
-    return this.replace(/\{(\d+)\}/g, function (m, n) { return args[n]; });
-};
-
-var series = [];
-var points = []
-var graph = null;
-
-function refresh () {
-    $.ajax({ url: "json" }).done(function (data) {
-        series.push(data);
-        while (series.length < 250) {
-            data = JSON.parse(JSON.stringify(data));
-            data.now -= 1;
-            series.unshift(data);
-        }
-        while (series.length > 250) {
-            series.shift();
-        }
-        while (points.length > 0) {
-            points.pop();
-        }
-        var speed;
-        for (var i=0; i<series.length-1; i++) {
-            // Compute instantaneous speed
-            var s1 = series[i];
-            var s2 = series[i+1];
-            speed = (s2.hashes-s1.hashes)/(s2.now-s1.now);
-            points.push({ x: s2.now, y: speed });
-        }
-        $("#speed").text("~" + speed.toFixed(1) + " hashes/second");
-        var msg = ("I'm attending a @docker orchestration workshop, "
-                   + "and my #DockerCoins mining rig is crunching "
-                   + speed.toFixed(1) + " hashes/second! W00T!");
-        $("#tweet").attr(
-            "href",
-            "https://twitter.com/intent/tweet?text="+encodeURIComponent(msg)
-        );
-        if (graph == null) {
-            graph = new Rickshaw.Graph({
-                renderer: "area",
-                stroke: true,
-                width: 800,
-                height: 400,
-                element: $("#graph")[0],
-                preserve: true,
-                series: [
-                    { name: "Coins",
-                      color: "steelblue",
-                      data: points
-                    }
-                ]
-            });
-            graph.render();
-            var yAxis = new Rickshaw.Graph.Axis.Y({
-                graph: graph,
-                tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-                ticksTreatment: "glow"
-            });
-            yAxis.render();
-        } else {
-            graph.update();
-            $("text").css({
-                "font-size": "15px",
-                "font-weight": "normal",
-                "opacity": 0.5,
-            });
-        }
-    });
-}
-
-$(function () {
-    setInterval(refresh, 1000);
-});
-</script>
 </head>
 <body>
+<main>
 
-<h1>DockerCoin Miner WebUI</h1>
+<header>
+  <h1>DockerCoin Miner WebUI<small>Hashes computed by the workers, as reported by Redis</small></h1>
+  <span id="status" class="status">Waiting for data</span>
+</header>
 
-<div id="graph"></div>
+<section class="cards" id="cards">
+  <div class="card">
+    <div class="label">Current mining speed</div>
+    <div class="value"><span id="speed">-</span> <span class="unit">hashes/s</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Average (last 10 s)</div>
+    <div class="value"><span id="average">-</span> <span class="unit">hashes/s</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Coins mined</div>
+    <div class="value" id="coins">-</div>
+  </div>
+  <div class="card">
+    <div class="label">Total hashes</div>
+    <div class="value" id="hashes">-</div>
+  </div>
+  <div class="card">
+    <div class="label">Served by webui</div>
+    <div class="value small" id="hostname" title="Hostname of the webui container that answered">-</div>
+  </div>
+</section>
 
-<h2>
-  Current mining speed:
-  <span id="speed">-</span>
-  <a id="tweet" href="#">(Tweet this!)</a>
-</h2>
+<section class="chart">
+  <div class="chart-head">
+    <span>Hashing speed, last 5 minutes</span>
+    <span class="legend"><span class="instant">Instant speed</span><span class="average">10 s average</span></span>
+  </div>
+  <svg id="graph" role="img" aria-label="Hashing speed over time"></svg>
+</section>
 
+<footer>
+  <a id="share" href="#" target="_blank" rel="noopener">Share your mining speed on Bluesky</a>
+</footer>
+
+</main>
+<script>
+"use strict";
+
+var POLL_MS = 1000;        // how often we ask the server for the counters
+var WINDOW_S = 300;        // how much history the graph shows
+var AVERAGE_S = 10;        // window for the average speed
+var GAP_S = 3;             // a longer pause between samples breaks the line
+
+var samples = [];          // raw counters: { t, hashes }
+var instant = [];          // { t, v } speed between two consecutive samples
+var average = [];          // { t, v } speed over the last AVERAGE_S seconds
+var clockOffset = 0;       // server clock minus browser clock, in seconds
+
+var $ = function (id) { return document.getElementById(id); };
+var SVG_NS = "http://www.w3.org/2000/svg";
+
+function setStatus(text, kind) {
+    var el = $("status");
+    el.textContent = text;
+    el.className = "status " + (kind || "");
+}
+
+function fmt(n, digits) {
+    return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function addSample(data) {
+    var last = samples[samples.length - 1];
+    // The counter went down: Redis was flushed or replaced. Start over.
+    if (last && data.hashes < last.hashes) {
+        samples = []; instant = []; average = [];
+        last = undefined;
+    }
+    clockOffset = data.now - Date.now() / 1000;
+    var s = { t: data.now, hashes: data.hashes };
+    samples.push(s);
+    if (last && s.t > last.t) {
+        // The classic (h2-h1)/(t2-t1) instant speed.
+        instant.push({ t: s.t, v: (s.hashes - last.hashes) / (s.t - last.t) });
+        // Only show an average once we have (almost) a full window of samples.
+        var first = samples.find(function (p) { return p.t >= s.t - AVERAGE_S; });
+        if (first && s.t - first.t >= AVERAGE_S - 1.5) {
+            average.push({ t: s.t, v: (s.hashes - first.hashes) / (s.t - first.t) });
+        }
+    }
+    var oldest = s.t - WINDOW_S - 5;
+    var keep = function (p) { return p.t >= oldest; };
+    samples = samples.filter(keep);
+    instant = instant.filter(keep);
+    average = average.filter(keep);
+}
+
+function niceStep(range) {
+    var raw = range / 4;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var norm = raw / mag;
+    return (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+}
+
+// Build an SVG path, breaking it where samples are missing.
+function pathFor(points, x, y, closeTo) {
+    var d = "", segment = [];
+    function flush() {
+        if (segment.length > 1) {
+            d += "M" + segment.join("L");
+            if (closeTo !== undefined) {
+                d += "L" + segment[segment.length - 1].split(",")[0] + "," + closeTo
+                   + "L" + segment[0].split(",")[0] + "," + closeTo + "Z";
+            }
+        }
+        segment = [];
+    }
+    points.forEach(function (p, i) {
+        if (i > 0 && p.t - points[i - 1].t > GAP_S) flush();
+        segment.push(x(p.t).toFixed(1) + "," + y(p.v).toFixed(1));
+    });
+    flush();
+    return d;
+}
+
+function el(name, attrs, text) {
+    var node = document.createElementNS(SVG_NS, name);
+    for (var k in attrs) node.setAttribute(k, attrs[k]);
+    if (text !== undefined) node.textContent = text;
+    return node;
+}
+
+function render() {
+    var svg = $("graph");
+    var w = svg.clientWidth, h = svg.clientHeight;
+    var pad = { top: 10, bottom: 10 };
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    svg.replaceChildren();
+
+    if (instant.length < 2) {
+        svg.appendChild(el("text", { "class": "empty", x: w / 2, y: h / 2 },
+            "The graph appears after a few seconds of data"));
+        return;
+    }
+
+    // Use the server clock, but keep moving when the server does not answer,
+    // so that an outage shows as a gap in the graph.
+    var now = Date.now() / 1000 + clockOffset;
+    var max = Math.max.apply(null, instant.concat(average).map(function (p) { return p.v; }).concat([1]));
+    var step = niceStep(max * 1.1);
+    var top = Math.ceil(max * 1.1 / step) * step;
+    var x = function (t) { return (t - (now - WINDOW_S)) / WINDOW_S * w; };
+    var y = function (v) { return pad.top + (1 - v / top) * (h - pad.top - pad.bottom); };
+
+    // Grid lines, with the Y axis labels drawn inside the graph,
+    // just below each line, so that bigger labels never get cut off.
+    var grid = el("g", { "class": "grid" }), axis = el("g", { "class": "axis" });
+    for (var v = 0; v <= top + step / 2; v += step) {
+        grid.appendChild(el("line", { x1: 0, x2: w, y1: y(v), y2: y(v) }));
+        if (v > 0) axis.appendChild(el("text", { x: 6, y: y(v) + 4, "dominant-baseline": "hanging" }, fmt(v, step < 1 ? 1 : 0)));
+    }
+    svg.appendChild(grid);
+    svg.appendChild(el("path", { "class": "area", d: pathFor(instant, x, y, y(0)) }));
+    svg.appendChild(el("path", { "class": "line", d: pathFor(instant, x, y) }));
+    svg.appendChild(el("path", { "class": "avg", d: pathFor(average, x, y) }));
+    svg.appendChild(axis);
+}
+
+function showNumbers(data) {
+    var speed = instant.length ? instant[instant.length - 1].v : null;
+    var avg = average.length ? average[average.length - 1].v : null;
+    $("speed").textContent = speed === null ? "-" : "~" + fmt(speed, 1);
+    $("average").textContent = avg === null ? "-" : fmt(avg, 1);
+    $("coins").textContent = fmt(data.coins, 0);
+    $("hashes").textContent = fmt(data.hashes, 0);
+    $("hostname").textContent = data.hostname || "-";
+    if (avg !== null) {
+        var msg = "I'm attending a container orchestration workshop, "
+                + "and my #DockerCoins mining rig is crunching "
+                + fmt(avg, 1) + " hashes/second! W00T!";
+        $("share").href = "https://bsky.app/intent/compose?text=" + encodeURIComponent(msg);
+    }
+}
+
+async function refresh() {
+    var started = Date.now();
+    try {
+        // Relative URL: this keeps working behind a path prefix,
+        // e.g. through the Kubernetes API server proxy.
+        var res = await fetch("json", { cache: "no-store", signal: AbortSignal.timeout(2000) });
+        var data = await res.json().catch(function () { return {}; });
+        $("cards").classList.toggle("stale", !res.ok);
+        if (!res.ok) {
+            setStatus("webui is up, but it cannot reach Redis", "bad");
+            $("hostname").textContent = data.hostname || "-";
+        } else {
+            addSample(data);
+            showNumbers(data);
+            setStatus("Live", "ok");
+        }
+    } catch (err) {
+        $("cards").classList.add("stale");
+        setStatus("Cannot reach webui", "bad");
+    }
+    render();
+    // Wait for each answer before the next request, so a slow
+    // server does not get a pile of requests.
+    setTimeout(refresh, Math.max(0, POLL_MS - (Date.now() - started)));
+}
+
+window.addEventListener("resize", render);
+refresh();
+</script>
 </body>
 </html>
