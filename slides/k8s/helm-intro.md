@@ -226,45 +226,69 @@ class: extra-details
 
 ]
 
-Then go to → https://artifacthub.io/packages/helm/securecodebox/juice-shop
+We only find `multi-juicer`, not the Juice Shop chart itself!
+
+(Not every chart is listed on the Artifact Hub.)
+
+<!--
+CHANGED 2026-10-03: the secureCodeBox juice-shop chart is no longer on the
+Artifact Hub, so the search above finds only "multi-juicer".
+OLD: "Then go to → https://artifacthub.io/packages/helm/securecodebox/juice-shop"
+-->
 
 ---
 
 ## Finding charts on the web
 
-- We can also use the Artifact Hub search feature
+- Project docs and repos often tell us where their charts are
 
-.lab[
+- The Juice Shop chart is published by [secureCodeBox](https://github.com/secureCodeBox/secureCodeBox)
 
+  (in `demo-targets/juice-shop`)
+
+- It is stored in an *OCI registry* (GitHub's container registry):
+
+  `oci://ghcr.io/securecodebox/helm/juice-shop`
+
+- Helm can install charts from OCI registries, just like container images
+
+  (no `helm repo add` needed!)
+
+<!--
+CHANGED 2026-10-03: the Artifact Hub no longer lists this chart.
+OLD lab steps:
 - Go to https://artifacthub.io/
-
 - In the search box on top, enter "owasp juice"
-
 - Click on the "juice-shop" result (not "multi-juicer" or "juicy-ctf")
-
-]
+-->
 
 ---
 
 ## Installing the chart
 
-- Click on the "Install" button, it will show instructions
+- We pass the OCI reference of the chart to `helm install`
 
 .lab[
 
-- First, add the repository for that chart:
+- Install the chart:
   ```bash
-  helm repo add juice https://charts.securecodebox.io
-  ```
-
-- Then, install the chart:
-  ```bash
-  helm install my-juice-shop juice/juice-shop
+  helm install my-juice-shop oci://ghcr.io/securecodebox/helm/juice-shop
   ```
 
 ]
 
-Note: it is also possible to install directly a chart, with `--repo https://...`
+Note: charts in a classic (HTTP) repo are installed with `helm repo add` first,
+<br/>
+or directly with `--repo https://...`
+
+<!--
+CHANGED 2026-10-03: charts.securecodebox.io no longer resolves (NXDOMAIN).
+The chart moved to oci://ghcr.io/securecodebox/helm/juice-shop (same chart, v5.9.0 tested).
+OLD:
+  - Click on the "Install" button, it will show instructions
+  helm repo add juice https://charts.securecodebox.io
+  helm install my-juice-shop juice/juice-shop
+-->
 
 ---
 
@@ -315,7 +339,7 @@ It is defined in that chart. In other words, not all charts will provide this la
 
 ## Configuring a release
 
-- By default, `juice/juice-shop` creates a service of type `ClusterIP`
+- By default, the `juice-shop` chart creates a service of type `ClusterIP`
 
 - We would like to change that to a `NodePort`
 
@@ -341,15 +365,20 @@ It is defined in that chart. In other words, not all charts will provide this la
 
 - Look at the README for the app:
   ```bash
-  helm show readme juice/juice-shop
+  helm show readme oci://ghcr.io/securecodebox/helm/juice-shop
   ```
 
 - Look at the values and their defaults:
   ```bash
-  helm show values juice/juice-shop
+  helm show values oci://ghcr.io/securecodebox/helm/juice-shop
   ```
 
 ]
+
+<!--
+CHANGED 2026-10-03: chart moved to OCI.
+OLD: helm show readme juice/juice-shop ; helm show values juice/juice-shop
+-->
 
 The `values` may or may not have useful comments.
 
@@ -369,14 +398,20 @@ The `readme` may or may not have (accurate) explanations for the values.
 
 - Update `my-juice-shop`:
   ```bash
-  helm upgrade my-juice-shop juice/juice-shop \
+  helm upgrade my-juice-shop oci://ghcr.io/securecodebox/helm/juice-shop \
        --set service.type=NodePort
   ```
 
 ]
 
-Note that we have to specify the chart that we use (`juice/my-juice-shop`),
+Note that we have to specify the chart that we use,
 even if we just want to update some values.
+
+<!--
+CHANGED 2026-10-03: chart moved to OCI.
+OLD: helm upgrade my-juice-shop juice/juice-shop --set service.type=NodePort
+OLD note: "we have to specify the chart that we use (`juice/my-juice-shop`)"
+-->
 
 We can set multiple values. If we want to set many values, we can use `-f`/`--values` and pass a YAML file with all the values.
 

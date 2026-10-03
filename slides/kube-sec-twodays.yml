@@ -1,8 +1,8 @@
 # =============================================================================
 # kube-sec-twodays.yml - WORK IN PROGRESS
 #
-# Copied from kube-twodays.yml on 2026-09-18. No content lines have been
-# changed yet. Every "REVIEW:" comment above a .md line is a proposed change
+# Copied from kube-twodays.yml on 2026-09-18.
+# Every "REVIEW:" comment above a .md line is a proposed change
 # and the reason for it. Work through them, then delete the comments.
 #
 # Client quote (topic list this deck must match):
@@ -42,12 +42,6 @@
 #     KEEP         = active in template, matches the quote
 #     SUB-CHAPTER  = quote item is a section inside this file, no change needed
 #
-# - Day 1 is heavy. The quote has 33 topics for day 1 and adds EKS, Flux,
-#   Argo CD, and cert-manager (about 2,100 lines together). Plan to cut demo
-#   depth in the Helm chapters (7 files today) to make room.
-#
-# - Day 2 replaces the storage and observability content of the template.
-#   Most of the last two content groups get commented out.
 #
 # - Pod Security Policies were removed in Kubernetes 1.25. The PSP exercise
 #   edits API server flags and will not work on EKS or a current cluster.

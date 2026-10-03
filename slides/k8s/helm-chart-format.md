@@ -44,18 +44,20 @@
 
 ---
 
-## Adding the repo
+## Where is the chart?
 
-- If you haven't done it before, you need to add the repo for that chart
+- We will use the chart for the OWASP Juice Shop
 
-.lab[
+- It is stored in an OCI registry, so we don't need `helm repo add`:
 
-- Add the repo that holds the chart for the OWASP Juice Shop:
-  ```bash
-  helm repo add juice https://charts.securecodebox.io
-  ```
+  `oci://ghcr.io/securecodebox/helm/juice-shop`
 
-]
+<!--
+CHANGED 2026-10-03: charts.securecodebox.io no longer resolves (NXDOMAIN).
+The chart moved to oci://ghcr.io/securecodebox/helm/juice-shop.
+OLD slide title: "Adding the repo"
+OLD lab: helm repo add juice https://charts.securecodebox.io
+-->
 
 ---
 
@@ -65,19 +67,24 @@
 
 .lab[
 
-- Download the tarball for `juice/juice-shop`:
+- Download the tarball for the `juice-shop` chart:
   ```bash
-  helm pull juice/juice-shop
+  helm pull oci://ghcr.io/securecodebox/helm/juice-shop
   ```
   (This will create a file named `juice-shop-X.Y.Z.tgz`.)
 
-- Or, download + untar `juice/juice-shop`:
+- Or, download + untar the chart:
   ```bash
-  helm pull juice/juice-shop --untar
+  helm pull oci://ghcr.io/securecodebox/helm/juice-shop --untar
   ```
   (This will create a directory named `juice-shop`.)
 
 ]
+
+<!--
+CHANGED 2026-10-03: chart moved to OCI.
+OLD: helm pull juice/juice-shop ; helm pull juice/juice-shop --untar
+-->
 
 ---
 
@@ -204,7 +211,7 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
 - At the top-level of the chart, it's a good idea to have a README
 
-- It will be viewable with e.g. `helm show readme juice/juice-shop`
+- It will be viewable with e.g. `helm show readme oci://...`
 
 - In the `templates/` directory, we can also have a `NOTES.txt` file
 

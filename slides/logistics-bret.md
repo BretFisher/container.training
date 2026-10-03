@@ -2,22 +2,21 @@
 
 Welcome to the workshop! I'm glad you're here. Do these now, so we can start quickly:
 
+1. There are two pinned links in chat: slides, and server GSheet
+
 1. Open these slides in your browser: @@SLIDES@@
 
-2. Navigate those slides with <- and ->. Go to the next slide with ->.
+2. Navigate those slides with <- and ->
 
-3. Open the [lab Gsheet][labsheet] and pick a free row of servers
+3. Open the GSheet link and pick a free row of servers
 
 3. **Put your initials in that row**, so nobody else takes it
 
-4. Write down your node IPs, username, and password
+4. Copy down your node IPs, username, and password. Same user/pw for all nodes
 
 5. SSH into `node1`: `ssh <username>@<node1 IP>`
 
 6. No SSH client? Use the web terminal: `http://<node1 IP>:1080` (**http**, not https)
-
-<!-- TODO: put the real Google Sheet URL here. -->
-[labsheet]: https://docs.google.com/spreadsheets/TODO
 
 ---
 
@@ -27,45 +26,41 @@ Welcome to the workshop! I'm glad you're here. Do these now, so we can start qui
 
 - 👋 Hi, I'm **Bret Fisher**
 
-- 🛠️ DevOps Dude: trainer, consultant, and builder
+- 🛠️ DevOps dude, trainer, & consultant
 
-- 🐳 Docker Captain
+- 👨‍🎤 Your kids might call me a YouTuber 🙄
 
-- ☁️ CNCF Cloud Native Ambassador
+- 🐳 10-yr Docker Captain & CNCF Cloud Native Ambassador
 
-- 🎓 [bretfisher.com][bretfisher]: courses, workshops, and more
+- 🎓 [bretfisher.com][bretfisher]: courses, workshops, newsletter
 
-- 🤝 Join the [guild][guild]
+- 🤝 Learning Agents in SRE or Platform Engineering? Join the [Agentic DevOps Guild][guild]
 
 ]
 
 .column-half[
 
-<!-- TODO: replace this placeholder with a photo of Bret, for example
-     ![Bret Fisher](images/bret-fisher.jpg) -->
-<div style="margin: 1em auto; width: 60%; aspect-ratio: 1; border: 3px dashed #ccc;
-     display: flex; align-items: center; justify-content: center; color: #999;">
-📷 Photo of Bret
-</div>
+<!-- Markdown inside an HTML block (like <div>) is not parsed, so keep
+     the image as plain Markdown. -->
+.center[![Bret Fisher](images/bret-mad-science.jpeg)]
+
+<!-- Icons: Simple Icons (CC0), see images/social-*.svg. -->
+.social[
+[![](images/social-youtube.svg)][youtube] ·
+[![](images/social-linkedin.svg)][linkedin] ·
+[![](images/social-x.svg)][x] ·
+[![](images/social-bluesky.svg)][bluesky] ·
+[![](images/social-instagram.svg)][instagram] ·
+[![](images/social-github.svg)][github]
+]
 
 ]
 
-<!-- TODO: confirm the guild URL. -->
 [bretfisher]: https://www.bretfisher.com/
-[guild]: https://www.bretfisher.com/TODO
-
----
-
-## Exercises
-
-- At the end of each day, there is a series of exercises
-
-- To make the most out of the training, please try the exercises!
-
-  (it will help to practice and memorize the content of the day)
-
-- We recommend to take at least one hour to work on the exercises
-
-  (if you understood the content of the day, it will be much faster)
-
-- Each day will start with a quick review of the exercises of the previous day
+[youtube]: https://www.youtube.com/@BretFisher
+[linkedin]: https://www.linkedin.com/in/bretefisher
+[x]: https://x.com/bretfisher
+[bluesky]: https://bsky.app/profile/bretfisher.com
+[instagram]: https://www.instagram.com/bretfisher/
+[github]: https://github.com/bretfisher
+[guild]: https://www.bretfisher.com/theguild

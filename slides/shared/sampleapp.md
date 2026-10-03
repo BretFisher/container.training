@@ -122,7 +122,7 @@ and displays aggregated logs.
 
 class: pic
 
-![Diagram showing the 5 containers of the applications](images/dockercoins-diagram.png)
+![Diagram showing the 5 containers of the applications](images/dockercoins-diagram-transparent.png)
 
 ---
 
@@ -165,7 +165,7 @@ https://@@GITREPO@@/blob/8279a3bce9398f7c1a53bdd95187c53eda4e6435/dockercoins/wo
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Links, naming, and service discovery
 
@@ -184,6 +184,8 @@ class: extra-details
   - containers in the green app will resolve `database` to the IP of the green database
 
 ---
+
+class: self-paced
 
 ## Show me the code!
 
@@ -210,7 +212,7 @@ class: extra-details
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Compose file format version
 
@@ -353,4 +355,3 @@ class: extra-details
 Some containers exit immediately, others take longer.
 
 The containers that do not handle `SIGTERM` end up being killed after a 10s timeout. If we are very impatient, we can hit `^C` a second time!
-

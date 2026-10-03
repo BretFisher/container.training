@@ -461,3 +461,57 @@ html .remark-code-span-highlighted { background-color: var(--line-hl); }
   transition: opacity 0.4s;
 }
 .theme-toast.visible { opacity: 1; transition: none; }
+
+/* Images in a two-column layout fit their column. */
+.column-half img {
+  max-width: 100%;
+}
+/* Space between the two columns. */
+.column-half + .column-half {
+  padding-left: 1em;
+  box-sizing: border-box;
+}
+
+/* Social links with brand icons (images/social-*.svg). */
+.social {
+  text-align: center;
+}
+.social img {
+  height: 1em;
+  vertical-align: -0.15em;
+  margin-right: 0.2em;
+}
+/* The X and GitHub icons are black; make them white on dark themes. */
+:root[data-theme="nord"] .social img[src$="-x.svg"],
+:root[data-theme="nord"] .social img[src$="-github.svg"],
+:root[data-theme="catppuccin-mocha"] .social img[src$="-x.svg"],
+:root[data-theme="catppuccin-mocha"] .social img[src$="-github.svg"],
+:root[data-theme="github-dark"] .social img[src$="-x.svg"],
+:root[data-theme="github-dark"] .social img[src$="-github.svg"] {
+  filter: invert(1);
+}
+
+/* 📋 copy button on bash/shell code blocks (added by workshop.html). */
+pre:has(> .copy-button) {
+  position: relative;
+}
+.copy-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--box-border);
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 16px;
+  line-height: 1.2;
+  cursor: pointer;
+  opacity: 0.5;
+  user-select: none;
+}
+.copy-button:hover {
+  opacity: 1;
+}
+@media print {
+  .copy-button { display: none; }
+}
