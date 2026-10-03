@@ -11,6 +11,14 @@ resource "aws_instance" "_" {
     volume_size = var.root_disk_size
     volume_type = "gp3"
   }
+  # The node setup script from "labctl cloudinit", if the tag has one.
+  # cloud-init runs it once, at first boot.
+  user_data_base64 = fileexists("${path.module}/user_data.sh") ? base64gzip(file("${path.module}/user_data.sh")) : null
+  lifecycle {
+    # The script only matters at first boot. Don't change running VMs
+    # if it is generated again.
+    ignore_changes = [user_data, user_data_base64]
+  }
 }
 
 resource "aws_key_pair" "_" {

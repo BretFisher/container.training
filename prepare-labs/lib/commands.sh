@@ -55,6 +55,28 @@ _cmd_clean() {
 	done	
 }
 
+_cmd cloudinit "Generate the node setup script (cloud-init user data) from CLOUDINIT_STEPS"
+_cmd_cloudinit() {
+    TAG=$1
+    need_tag
+
+    # The steps in CLOUDINIT_STEPS only change the node itself, so each node
+    # can run them alone at first boot, with no SSH from this machine.
+    # Each step runs in pssh record mode: its commands go into the script.
+    [ "$CLOUDINIT_STEPS" ] || die "CLOUDINIT_STEPS is not set in the settings of $TAG."
+    SCRIPT=tags/$TAG/user_data.sh
+    cp lib/nodesetup-header $SCRIPT
+    for STEP in $CLOUDINIT_STEPS; do
+        PSSH_RECORD=$SCRIPT PSSH_RECORD_STEP=$STEP $0 $STEP $TAG
+    done
+    echo nodesetup_done >> $SCRIPT
+
+    # EC2 accepts at most 16 KB of user data; Terraform sends it gzipped.
+    SIZE=$(gzip -c $SCRIPT | wc -c | tr -d ' ')
+    info "Generated $SCRIPT: $(grep -c "^run_block [a-z]" $SCRIPT) blocks, $SIZE bytes gzipped."
+    [ $SIZE -le 16384 ] || die "$SCRIPT is larger than the EC2 user data limit (16 KB gzipped)."
+}
+
 _cmd codeserver "Install code-server on the clusters"
 _cmd_codeserver() {
     TAG=$1
@@ -95,6 +117,17 @@ _cmd_createuser() {
     TAG=$1
     need_tag
 
+    _cmd_usersetup $TAG
+    _cmd_userkeys $TAG
+}
+
+# The node-local part of createuser (it does not need the other nodes),
+# so that cloud-init can run it at first boot (see CLOUDINIT_STEPS).
+_cmd usersetup "Create the student user and their dotfiles, without SSH keys"
+_cmd_usersetup() {
+    TAG=$1
+    need_tag
+
     pssh "
     set -e
     # Create the user if it doesn't exist yet.
@@ -115,32 +148,6 @@ _cmd_createuser() {
     sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
     sudo sed -i 's/#MaxAuthTries 6/MaxAuthTries 42/' /etc/ssh/sshd_config
     sudo systemctl restart ssh.service
-    "
-
-    pssh "
-    set -e
-    cd /home/$USER_LOGIN
-    sudo -u $USER_LOGIN mkdir -p .ssh
-    if i_am_first_node; then
-      # Generate a key pair with an empty passphrase.
-      if ! sudo -u $USER_LOGIN [ -f .ssh/id_rsa ]; then
-        sudo -u $USER_LOGIN ssh-keygen -t rsa -f .ssh/id_rsa -P ''
-        sudo -u $USER_LOGIN cp .ssh/id_rsa.pub .ssh/authorized_keys
-      fi
-    fi
-    "
-
-    # The nodes bounce to the first node with the forwarded deployment key.
-    # In the long run, we probably want to generate these keys locally and
-    # push them to the machines instead (once we move everything to Terraform).
-    with_tag_agent pssh "
-    set -e
-    cd /home/$USER_LOGIN
-    if ! i_am_first_node; then
-      # Copy keys from the first node.
-      ssh $SSHOPTS \$(cat /etc/name_of_first_node) sudo -u $USER_LOGIN tar -C /home/$USER_LOGIN -cvf- .ssh |
-      sudo -u $USER_LOGIN tar -xf-
-    fi
     "
 
     # FIXME do this only once.
@@ -190,7 +197,40 @@ SQRL
     # Install docker-prompt script
     pssh -I sudo tee /usr/local/bin/docker-prompt <lib/docker-prompt
     pssh sudo chmod +x /usr/local/bin/docker-prompt
+}
 
+# The cluster-level part of createuser: all nodes of a cluster get the
+# same key pair for the student user. It needs clusterize first.
+_cmd userkeys "Share an SSH key pair for the student user in each cluster"
+_cmd_userkeys() {
+    TAG=$1
+    need_tag
+
+    pssh "
+    set -e
+    cd /home/$USER_LOGIN
+    sudo -u $USER_LOGIN mkdir -p .ssh
+    if i_am_first_node; then
+      # Generate a key pair with an empty passphrase.
+      if ! sudo -u $USER_LOGIN [ -f .ssh/id_rsa ]; then
+        sudo -u $USER_LOGIN ssh-keygen -t rsa -f .ssh/id_rsa -P ''
+        sudo -u $USER_LOGIN cp .ssh/id_rsa.pub .ssh/authorized_keys
+      fi
+    fi
+    "
+
+    # The nodes bounce to the first node with the forwarded deployment key.
+    # In the long run, we probably want to generate these keys locally and
+    # push them to the machines instead (once we move everything to Terraform).
+    with_tag_agent pssh "
+    set -e
+    cd /home/$USER_LOGIN
+    if ! i_am_first_node; then
+      # Copy keys from the first node.
+      ssh $SSHOPTS \$(cat /etc/name_of_first_node) sudo -u $USER_LOGIN tar -C /home/$USER_LOGIN -cvf- .ssh |
+      sudo -u $USER_LOGIN tar -xf-
+    fi
+    "
     echo user_ok > tags/$TAG/status
 }
 
@@ -367,7 +407,7 @@ _cmd_destroy() {
     need_tag
     cd tags/$TAG
     echo destroying > status
-    terraform destroy -auto-approve
+    terraform destroy -auto-approve -parallelism=${TERRAFORM_PARALLELISM-10}
     echo destroyed > status
 }
 
@@ -568,7 +608,8 @@ EOF"
     # (so that we can use it to install e.g. Cilium etc.)
     ARCH=${ARCHITECTURE-amd64}
     # https://github.com/helm/helm/releases
-    HELM_VERSION=4.2.0
+    # Keep the same version as in kubetools.
+    HELM_VERSION=4.3.0
     pssh "
     if [ ! -x /usr/local/bin/helm ]; then
         curl -fsSL https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz |
@@ -710,7 +751,7 @@ EOF
         helm upgrade -i cilium cilium --repo https://helm.cilium.io/ \
         --namespace kube-system \
         --values /tmp/cilium.yaml \
-        --version 1.19.4
+        --version 1.20.2
     fi"
     # https://github.com/cilium/cilium/releases
 
@@ -773,7 +814,7 @@ _cmd_kubetools() {
 
     # Install Flux CLI
     ##VERSION## https://github.com/fluxcd/flux2/releases
-    FLUX_VERSION=2.9.5
+    FLUX_VERSION=2.9.6
     FILENAME=flux_${FLUX_VERSION}_linux_${ARCH}
     URL=\$GITHUB/fluxcd/flux2/releases/download/v$FLUX_VERSION/$FILENAME.tar.gz
     pssh "
@@ -828,7 +869,8 @@ EOF
         stern --version
     fi"
 
-    # Install helm
+    # Install helm (if kubepkgs didn't: some settings don't run kubepkgs).
+    # Keep the same version as in kubepkgs.
     HELM_VERSION=4.3.0
     pssh "
     if [ ! -x /usr/local/bin/helm ]; then
@@ -840,7 +882,7 @@ EOF
 
     # Install kustomize
     ##VERSION## https://github.com/kubernetes-sigs/kustomize/releases
-    KUSTOMIZE_VERSION=v5.8.1
+    KUSTOMIZE_VERSION=v5.8.2
     URL=\$GITHUB/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_${ARCH}.tar.gz
     pssh "
     if [ ! -x /usr/local/bin/kustomize ]; then
@@ -850,20 +892,8 @@ EOF
         kustomize version
     fi"
 
-    # Install ship
-    # Note: 0.51.3 is the last version that doesn't display GIN-debug messages
-    # (don't want to get folks confused by that!)
-    # Only install ship on Intel platforms (no ARM 64 builds).
-    [ "$ARCH" = "amd64" ] &&
-    pssh "
-    if [ ! -x /usr/local/bin/ship ]; then
-        ##VERSION##
-        curl -fsSL \$GITHUB/replicatedhq/ship/releases/download/v0.51.3/ship_0.51.3_linux_$ARCH.tar.gz |
-            sudo tar -C /usr/local/bin -zx ship
-    fi"
-
     # Install the AWS IAM authenticator
-    AWSIAMAUTH_VERSION=0.7.8
+    AWSIAMAUTH_VERSION=0.7.20
     URL=\$GITHUB/kubernetes-sigs/aws-iam-authenticator/releases/download/v${AWSIAMAUTH_VERSION}/aws-iam-authenticator_${AWSIAMAUTH_VERSION}_linux_${ARCH}
     pssh "
     if [ ! -x /usr/local/bin/aws-iam-authenticator ]; then
@@ -897,7 +927,7 @@ EOF
 
     # Install kubecolor
     # https://github.com/kubecolor/kubecolor/releases
-    KUBECOLOR_VERSION=0.7.1
+    KUBECOLOR_VERSION=0.8.0
     URL=\$GITHUB/kubecolor/kubecolor/releases/download/v${KUBECOLOR_VERSION}/kubecolor_${KUBECOLOR_VERSION}_linux_${ARCH}.tar.gz
     pssh "
     if [ ! -x /usr/local/bin/kubecolor ]; then
@@ -908,7 +938,7 @@ EOF
 
     # Install sofka
     # https://github.com/nklmilojevic/sofka/releases
-    SOFKA_VERSION=0.28.0
+    SOFKA_VERSION=0.29.8
     URL=\$GITHUB/nklmilojevic/sofka/releases/download
     pssh "
     if [ ! -x /usr/local/bin/sofka ]; then
@@ -943,7 +973,7 @@ EOF
     # https://github.com/tilt-dev/tilt/releases
     pssh "
     if [ ! -x /usr/local/bin/tilt ]; then
-        TILT_VERSION=0.37.7
+        TILT_VERSION=0.37.8
         FILENAME=tilt.\$TILT_VERSION.linux.$TILT_ARCH.tar.gz
         curl -fsSL \$GITHUB/tilt-dev/tilt/releases/download/v\$TILT_VERSION/\$FILENAME |
         sudo tar -C /usr/local/bin -zx tilt
@@ -998,7 +1028,7 @@ EOF
     fi"
 
     ##VERSION## https://github.com/vmware-tanzu/velero/releases
-    VELERO_VERSION=1.18.2
+    VELERO_VERSION=1.18.4
     pssh "
     if [ ! -x /usr/local/bin/velero ]; then
         curl -fsSL \$GITHUB/vmware-tanzu/velero/releases/download/v$VELERO_VERSION/velero-v$VELERO_VERSION-linux-$ARCH.tar.gz |
@@ -1008,7 +1038,7 @@ EOF
     fi"
 
     ##VERSION## https://github.com/doitintl/kube-no-trouble/releases
-    KUBENT_VERSION=0.7.2
+    KUBENT_VERSION=0.7.3
     pssh "
     if [ ! -x /usr/local/bin/kubent ]; then
         curl -fsSL \$GITHUB/doitintl/kube-no-trouble/releases/download/${KUBENT_VERSION}/kubent-${KUBENT_VERSION}-linux-$ARCH.tar.gz |
@@ -1089,7 +1119,7 @@ _cmd_sectools() {
 
     # Install syft (generate SBOMs)
     ##VERSION## https://github.com/anchore/syft/releases
-    SYFT_VERSION=1.52.0
+    SYFT_VERSION=1.54.0
     pssh "
     if [ ! -x /usr/local/bin/syft ]; then
         curl -fsSL \$GITHUB/anchore/syft/releases/download/v$SYFT_VERSION/syft_${SYFT_VERSION}_linux_$ARCH.tar.gz |
@@ -1100,7 +1130,7 @@ _cmd_sectools() {
 
     # Install trivy (vulnerability scanner)
     ##VERSION## https://github.com/aquasecurity/trivy/releases
-    TRIVY_VERSION=0.74.0
+    TRIVY_VERSION=0.75.0
     pssh "
     if [ ! -x /usr/local/bin/trivy ]; then
         curl -fsSL \$GITHUB/aquasecurity/trivy/releases/download/v$TRIVY_VERSION/trivy_${TRIVY_VERSION}_Linux-$TRIVY_ARCH.tar.gz |
@@ -1143,10 +1173,13 @@ _cmd_kubetest() {
 
     # There are way too many backslashes in the command below.
     # Feel free to make that better ♥
+    # Nodes that just joined stay NotReady until their CNI agent is up,
+    # so wait for that first (kubetest can run right after kubeadm).
     pssh "
     set -e
     if i_am_first_node; then
       which kubectl
+      kubectl wait --for=condition=Ready node --all --timeout=300s
       for NODE in \$(grep [0-9]\$ /etc/hosts | grep -v ^127 | awk {print\ \\\$2}); do
         echo \$NODE ; kubectl get nodes | grep -w \$NODE | grep -w Ready
       done
@@ -1189,6 +1222,69 @@ _cmd_maketag() {
     fi
     MS=$(($(date +%N | tr -d 0)/1000000))
     date +%Y-%m-%d-%H-%M-$MS-$USER
+}
+
+_cmd nodesetup "Wait until cloud-init has run the node setup script on all nodes"
+_cmd_nodesetup() {
+    TAG=$1
+    need_tag
+
+    # Each node runs the script alone, so we only poll the status files that
+    # the script writes (see lib/nodesetup-header). The nodes run at about
+    # the same speed, so first we poll only a few random nodes (cheap).
+    # When they are done, we check all nodes, then only the nodes that are
+    # not done yet, so each check is smaller than the one before.
+    DEADLINE=$(( $(date +%s) + ${NODESETUP_TIMEOUT-1800} ))
+    TODO=tags/$TAG/nodesetup.todo
+    awk 'BEGIN { srand() } { print rand(), $0 }' tags/$TAG/ips.txt | sort -n | head -n 3 | cut -d " " -f 2 > $TODO
+    info "Waiting for the node setup on 3 random VMs..."
+    _nodesetup_wait $TODO
+    cp tags/$TAG/ips.txt $TODO
+    info "Checking the node setup on all $(wc -l < $TODO | tr -d ' ') VMs..."
+    _nodesetup_wait $TODO
+    rm -f $TODO $TODO.status
+}
+
+# Poll the VMs of the host file $1 until all of them are done. After each
+# poll, remove the VMs that are done from the file. Die if a VM failed.
+_nodesetup_wait() {
+    while true; do
+        _nodesetup_status $1 > $1.status
+        if grep -q " failed" $1.status; then
+            grep " failed" $1.status
+            die "Node setup failed. See /var/log/cloud-init-output.log on these VMs."
+        fi
+        grep -v " done$" $1.status | cut -d " " -f 1 > $1.next || true
+        mv $1.next $1
+        DONE=$(grep -c " done$" $1.status || true)
+        RUNNING=$(grep -c " running$" $1.status || true)
+        UNREACHABLE=$(grep -c " unreachable$" $1.status || true)
+        info "Node setup: $DONE done, $RUNNING running, $UNREACHABLE not reachable."
+        [ -s $1 ] || return 0
+        [ $(date +%s) -lt $DEADLINE ] || die "Node setup did not finish in ${NODESETUP_TIMEOUT-1800} seconds."
+        sleep ${NODESETUP_POLL-30}
+    done
+}
+
+# Print "<ip> <status>" for each VM of the host file $1. The status is done,
+# running, failed (with the failed block), or unreachable.
+# A VM that reboots after the setup still has /var/run/reboot-required
+# until the reboot is done, so it is still "running".
+# pssh echoes the command, so the marker is split ('') in the command.
+_nodesetup_status() {
+    PSSH_HOSTFILE=$1 pssh -i -t 15 "
+    if [ -f /var/lib/labctl/failed ]; then
+        echo NODE''SETUP=failed block \$(cat /var/lib/labctl/failed)
+    elif [ -f /var/lib/labctl/done ] && [ ! -f /var/run/reboot-required ]; then
+        echo NODE''SETUP=done
+    else
+        echo NODE''SETUP=running
+    fi" 2>/dev/null | awk '
+        NR == FNR { hosts[$1]; next }
+        /\[(SUCCESS|FAILURE)\]/ { ip = $4 }
+        /^NODESETUP=/ { sub(/^NODESETUP=/, ""); print ip, $0; seen[ip] }
+        END { for (h in hosts) if (!(h in seen)) print h, "unreachable" }
+        ' $1 - || true
 }
 
 _cmd netfix "Disable GRO and run a pinger job on the VMs"
@@ -1334,6 +1430,8 @@ _cmd_standardize() {
     # exit cleanly before the connection goes away.
     # pssh echoes the command, so the marker is split ('') in the command
     # and only appears whole in the output of a node that reboots.
+    # In record mode (cloud-init), the node setup script reboots at the end.
+    [ "$PSSH_RECORD" ] && return
     if pssh -i "
     if [ -f /var/run/reboot-required ]; then
       sudo systemd-run --on-active=3 systemctl reboot
@@ -1358,8 +1456,8 @@ _cmd_tailhist () {
     pssh "
     set -e
     sudo apt-get install unzip -y
-    wget -c \$GITHUB/joewalnes/websocketd/releases/download/v0.3.0/websocketd-0.3.0-linux_$ARCH.zip
-    unzip -o websocketd-0.3.0-linux_$ARCH.zip websocketd
+    wget -c \$GITHUB/joewalnes/websocketd/releases/download/v0.4.1/websocketd-0.4.1-linux_$ARCH.zip
+    unzip -o websocketd-0.4.1-linux_$ARCH.zip websocketd
     sudo mv websocketd /usr/local/bin/websocketd
     sudo mkdir -p /opt/tailhist
     sudo tee /opt/tailhist.service <<EOF
@@ -1407,7 +1505,9 @@ _cmd_terraform() {
     echo terraforming > tags/$TAG/status
     (
         cd tags/$TAG
-        terraform apply -auto-approve
+        # Terraform makes 10 API calls at a time by default. With hundreds
+        # of VMs, that is slow; settings can raise it (TERRAFORM_PARALLELISM).
+        terraform apply -auto-approve -parallelism=${TERRAFORM_PARALLELISM-10}
         # The Terraform provider for Proxmox has a bug; sometimes it fails
         # to obtain VM address from the QEMU agent. In that case, we put
         # ERROR in the ips.txt file (instead of the VM IP address). Detect
@@ -1431,6 +1531,25 @@ _cmd_tools() {
     sudo apt-get -qy install apache2-utils argon2 emacs-nox git gron httping htop jid joe jq mosh tree unzip
     # This is for VMs with broken PRNG (symptom: running docker-compose randomly hangs)
     sudo apt-get -qy install haveged
+    "
+
+    # Eternal Terminal (et) reconnects after network changes, like mosh.
+    # It is not in the Ubuntu archive, so we use the PPA of the ET project.
+    # The package enables et.service (etserver on TCP port 2022).
+    # Turn off its telemetry (error and usage reports to the ET developers).
+    # On CPUs with x86-64-v3, Ubuntu 26.04 apt reads the amd64v3 indexes,
+    # and the PPA has no packages in them. So we install with the plain
+    # amd64 indexes ("no variant"), then update again to go back.
+    pssh "
+    set -e
+    if ! [ -x /usr/bin/etserver ]; then
+        sudo add-apt-repository -y -n ppa:jgmath2000/et
+        sudo apt-get -q -o APT::Architecture-Variants= update
+        sudo apt-get -qy -o APT::Architecture-Variants= install et
+        sudo apt-get -q update
+    fi
+    sudo sed -i 's/^telemetry = true/telemetry = false/' /etc/et.cfg
+    sudo systemctl restart et.service
     "
 }
 
