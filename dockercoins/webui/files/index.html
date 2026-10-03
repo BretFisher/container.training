@@ -118,8 +118,6 @@ h1 small { display: block; font-size: 14px; font-weight: normal; color: var(--mu
 #graph .line { fill: none; stroke: var(--instant); stroke-width: 2; stroke-linejoin: round; }
 #graph .avg { fill: none; stroke: var(--average); stroke-width: 2.5; stroke-linejoin: round; }
 #graph .empty { fill: var(--muted); font-size: 16px; text-anchor: middle; }
-footer { margin-top: 16px; font-size: 14px; color: var(--muted); }
-footer a { color: var(--instant); }
 </style>
 </head>
 <body>
@@ -161,10 +159,6 @@ footer a { color: var(--instant); }
   <svg id="graph" role="img" aria-label="Hashing speed over time"></svg>
 </section>
 
-<footer>
-  <a id="share" href="#" target="_blank" rel="noopener">Share your mining speed on Bluesky</a>
-</footer>
-
 </main>
 <script>
 "use strict";
@@ -172,12 +166,17 @@ footer a { color: var(--instant); }
 var POLL_MS = 1000;        // how often we ask the server for the counters
 var WINDOW_S = 300;        // how much history the graph shows
 var AVERAGE_S = 10;        // window for the average speed
-var GAP_S = 3;             // a longer pause between samples breaks the line
+var GAP_S = 3;             // a longer pause between samples is an outage
 
-var samples = [];          // raw counters: { t, hashes }
+// The graph has its own clock, which only moves when we get a sample.
+// When webui or Redis is down, the graph pauses, and after the outage
+// it continues where it stopped, without a gap.
+var graphTime = 0;
+
+var samples = [];          // raw counters: { t, hashes }, t is server time
 var instant = [];          // { t, v } speed between two consecutive samples
 var average = [];          // { t, v } speed over the last AVERAGE_S seconds
-var clockOffset = 0;       // server clock minus browser clock, in seconds
+                           // (for instant and average, t is graph time)
 
 var $ = function (id) { return document.getElementById(id); };
 var SVG_NS = "http://www.w3.org/2000/svg";
@@ -199,21 +198,26 @@ function addSample(data) {
         samples = []; instant = []; average = [];
         last = undefined;
     }
-    clockOffset = data.now - Date.now() / 1000;
     var s = { t: data.now, hashes: data.hashes };
+    // After an outage, start the speed computation again from this sample,
+    // so that the outage does not show as one wrong (averaged) point.
+    if (last && s.t - last.t > GAP_S) {
+        samples = [];
+        last = undefined;
+    }
+    graphTime += last ? s.t - last.t : POLL_MS / 1000;
     samples.push(s);
     if (last && s.t > last.t) {
         // The classic (h2-h1)/(t2-t1) instant speed.
-        instant.push({ t: s.t, v: (s.hashes - last.hashes) / (s.t - last.t) });
+        instant.push({ t: graphTime, v: (s.hashes - last.hashes) / (s.t - last.t) });
         // Only show an average once we have (almost) a full window of samples.
         var first = samples.find(function (p) { return p.t >= s.t - AVERAGE_S; });
         if (first && s.t - first.t >= AVERAGE_S - 1.5) {
-            average.push({ t: s.t, v: (s.hashes - first.hashes) / (s.t - first.t) });
+            average.push({ t: graphTime, v: (s.hashes - first.hashes) / (s.t - first.t) });
         }
     }
-    var oldest = s.t - WINDOW_S - 5;
-    var keep = function (p) { return p.t >= oldest; };
-    samples = samples.filter(keep);
+    samples = samples.filter(function (p) { return p.t >= s.t - AVERAGE_S - 5; });
+    var keep = function (p) { return p.t >= graphTime - WINDOW_S - 5; };
     instant = instant.filter(keep);
     average = average.filter(keep);
 }
@@ -225,24 +229,16 @@ function niceStep(range) {
     return (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
 }
 
-// Build an SVG path, breaking it where samples are missing.
+// Build an SVG path from the points.
 function pathFor(points, x, y, closeTo) {
-    var d = "", segment = [];
-    function flush() {
-        if (segment.length > 1) {
-            d += "M" + segment.join("L");
-            if (closeTo !== undefined) {
-                d += "L" + segment[segment.length - 1].split(",")[0] + "," + closeTo
-                   + "L" + segment[0].split(",")[0] + "," + closeTo + "Z";
-            }
-        }
-        segment = [];
+    if (points.length < 2) return "";
+    var d = "M" + points.map(function (p) {
+        return x(p.t).toFixed(1) + "," + y(p.v).toFixed(1);
+    }).join("L");
+    if (closeTo !== undefined) {
+        d += "L" + x(points[points.length - 1].t).toFixed(1) + "," + closeTo
+           + "L" + x(points[0].t).toFixed(1) + "," + closeTo + "Z";
     }
-    points.forEach(function (p, i) {
-        if (i > 0 && p.t - points[i - 1].t > GAP_S) flush();
-        segment.push(x(p.t).toFixed(1) + "," + y(p.v).toFixed(1));
-    });
-    flush();
     return d;
 }
 
@@ -266,9 +262,7 @@ function render() {
         return;
     }
 
-    // Use the server clock, but keep moving when the server does not answer,
-    // so that an outage shows as a gap in the graph.
-    var now = Date.now() / 1000 + clockOffset;
+    var now = graphTime;
     var max = Math.max.apply(null, instant.concat(average).map(function (p) { return p.v; }).concat([1]));
     var step = niceStep(max * 1.1);
     var top = Math.ceil(max * 1.1 / step) * step;
@@ -297,12 +291,6 @@ function showNumbers(data) {
     $("coins").textContent = fmt(data.coins, 0);
     $("hashes").textContent = fmt(data.hashes, 0);
     $("hostname").textContent = data.hostname || "-";
-    if (avg !== null) {
-        var msg = "I'm attending a container orchestration workshop, "
-                + "and my #DockerCoins mining rig is crunching "
-                + fmt(avg, 1) + " hashes/second! W00T!";
-        $("share").href = "https://bsky.app/intent/compose?text=" + encodeURIComponent(msg);
-    }
 }
 
 async function refresh() {
