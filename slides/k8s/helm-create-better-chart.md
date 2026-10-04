@@ -172,6 +172,11 @@ class: extra-details
   stern worker
   ```
 
+<!--
+```longwait units of work done```
+```key ^C```
+-->
+
 - Look at the resources that were created:
   ```bash
   kubectl get all
@@ -416,6 +421,11 @@ Everything should now be running!
   ```bash
   stern worker
   ```
+
+<!--
+```wait redis```
+```key ^C```
+-->
 
 ]
 

@@ -14,9 +14,16 @@ Run these from the `slides/` directory.
 make labtest-plan DECK=kube-sec-twodays.yml
 ```
 
-Lists the commands of the deck per file, without a lab. It also lists the
-commands that will probably hang (`watch`, `vim`, `logs -f`, ...) because no
-directive after them tells the test what to do.
+Lists the commands of the deck per file, without a lab. It also lists three
+kinds of problems to fix before a run:
+
+- Commands that will probably hang (`watch`, `vim`, `logs -f`, `stern`,
+  `while` loops, `kubectl run -it` shells, ...) because no directive after
+  them tells the test what to do.
+- Placeholders that students replace by hand (`blue-xxxxxxxx-yyyyy`,
+  `IP-ADDRESS`, `nodeX`, `<name>`). Add `skip`, then a hidden command that
+  finds the real value.
+- Blocks with a comment that says the command fails, but no `expect-fail`.
 
 ```bash
 make labtest DECK=kube-sec-twodays.yml TAG=bret
@@ -116,6 +123,22 @@ step fails with "program still running", and the test sends Ctrl-C, Escape,
 and `:q!` to recover.
 
 Nested shells work: `ssh node2`, `kubectl exec -it ... -- sh`, and `exit`.
+For a shell in a new pod, add `longwait` with text from its prompt, because
+the image pull can be slow. Make sure that the lab ends the shell (`exit`,
+`key ^D`, or `hide exit`), or the next commands run in the pod.
+
+When a slide asks for a second terminal, use `tmux split-pane -v` before the
+command, and `key ^D` after it to close that pane. Do not send `^D` when only
+one pane is open: it ends the test shell.
+
+A hidden command can have several lines:
+
+````markdown
+<!-- ```hide
+kubectl wait deploy/rng --for condition=available
+kubectl wait deploy/worker --for condition=available
+``` -->
+````
 
 ## How it works
 

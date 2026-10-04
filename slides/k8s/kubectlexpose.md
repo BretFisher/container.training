@@ -114,6 +114,11 @@ class: extra-details
   curl http://`IP-ADDRESS`
   ```
 
+<!--
+```skip placeholder IP address```
+```hide curl http://$(kubectl get pods -l app=blue -o jsonpath='{.items[0].status.podIP}')```
+-->
+
 ]
 
 You should see a response from the Pod.
@@ -133,10 +138,20 @@ You should see a response from the Pod.
   watch kubectl get pods -o wide
   ```
 
+<!--
+```wait NAME```
+```key ^C```
+-->
+
 - Delete the Pod:
   ```bash
   kubectl delete pod `blue-xxxxxxxx-yyyyy`
   ```
+
+<!--
+```skip placeholder pod name```
+```hide kubectl delete $(kubectl get pods -l app=blue -o name | head -n 1)```
+-->
 
 - Check that the replacement Pod has a different IP address
 
@@ -211,11 +226,7 @@ class: extra-details
   CLUSTER_IP=$(kubectl get svc blue -o go-template='{{ .spec.clusterIP }}')
   ```
 
-<!--
-```hide kubectl wait deploy blue --for condition=available```
-```key ^D```
-```key ^C```
--->
+<!-- ```hide kubectl wait deploy blue --for condition=available``` -->
 
 - Send a few requests:
   ```bash
@@ -237,10 +248,22 @@ class: extra-details
   while sleep 0.3; do curl -m1 http://$CLUSTER_IP; done
   ```
 
+<!--
+```wait blue-```
+```tmux split-pane -v```
+-->
+
 - Meanwhile, delete the Pod:
   ```bash
   kubectl delete pod `blue-xxxxxxxx-yyyyy`
   ```
+
+<!--
+```skip placeholder pod name```
+```hide kubectl delete $(kubectl get pods -l app=blue -o name | head -n 1)```
+```key ^D```
+```key ^C```
+-->
 
 ]
 
@@ -291,10 +314,14 @@ class: extra-details
   kubectl run --rm -it --image=archlinux test-dns-integration
   ```
 
+<!-- ```longwait ]#``` -->
+
 - Try to resolve the `blue` Service from the Pod:
   ```bash
   curl blue
   ```
+
+<!-- ```hide exit``` -->
 
 ]
 

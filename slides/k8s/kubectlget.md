@@ -128,8 +128,6 @@ class: extra-details
 ## Exploring types and definitions
 
 - We can list all available resource types by running `kubectl api-resources`
-  <br/>
-  (In Kubernetes 1.10 and prior, this command used to be `kubectl get`)
 
 - We can view the definition for a resource type with:
   ```bash

@@ -74,6 +74,11 @@ So, what do we get?
   kubectl describe pod clock-xxxxxxxxxx-yyyyy
   ```
 
+<!--
+```skip placeholder pod name```
+```hide kubectl describe pod -l app=clock```
+-->
+
 ]
 
 So, what do we get?

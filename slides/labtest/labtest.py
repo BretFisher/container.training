@@ -72,7 +72,10 @@ LONGWAIT_TIMEOUT = 600
 LONG_RUNNING = re.compile(
     r"((?:^|[;&|(]\s*|\bsudo\s+(?:-\S+\s+)*)(?:watch|vim?|nano|k9s|stern|less|more|top)\b|"
     r"\s-w\b|--watch\b|\blogs\b.*\s-f\b|\blogs\b.*--follow|\bkubectl\s+edit\b|"
-    r"\bexec\s+-\w*t|\brun\s+-\w*t|\battach\b|\bport-forward\b)")
+    r"\b(?:kubectl|docker)\s+(?:run|exec)\b(?=.*\s(?:-\w*t\w*|--tty)\b)(?:.*\s(?:/bin/)?(?:ba)?sh|"
+    r"(?:\s+(?:-\S+|--image\s+\S+))*\s+[\w.-]+(?:\s+(?:-\S+|--image\s+\S+))*)$|"
+    r"\battach\b|\bport-forward\b|"
+    r"^while\b)")
 MODIFIERS = ("wait", "longwait", "expect-fail", "timeout", "skip", "check",
              "look")
 KEYISH = re.compile(r"^(\^.|C-.|M-.|Escape|Enter|Space|Tab|BSpace|Up|Down|"
@@ -118,7 +121,7 @@ def parse_markdown(relpath, exclude, meta):
     block = None
     for n, line in enumerate(lines, 1):
         if block is not None:
-            if line.strip() == "```":
+            if re.match(r"^```\s*(-->)?$", line.strip()):  # Also "``` -->" (hidden block)
                 body = "\n".join(l[block["indent"]:] if l[:block["indent"]].strip() == "" else l.lstrip()
                                  for l in block["lines"])
                 snippets.append(dict(block, data=body.strip("\n")))
@@ -165,10 +168,11 @@ def parse_markdown(relpath, exclude, meta):
             snippets.append(dict(common, method=m.group(1), data=atat(m.group(2) or "", meta),
                                  hidden=line.lstrip().startswith("<!--")))
             continue
-        m = re.match(r"^(\s*)```([\w-]*)\s*$", line)
+        # Fenced block, or hidden block: "<!-- ```hide" ... "``` -->".
+        m = re.match(r"^(\s*)(<!--\s*)?```([\w-]*)\s*$", line)
         if m:
-            block = dict(common, method=m.group(2) or "text", indent=len(m.group(1)),
-                         lines=[], hidden=False)
+            block = dict(common, method=m.group(3) or "text", indent=len(m.group(1)),
+                         lines=[], hidden=bool(m.group(2)))
             continue
     # The fenced block text may contain @@ strings; replace them now.
     for s in snippets:
@@ -203,7 +207,7 @@ def build_plan(snippets):
         # interactive. A plain command followed by keys (e.g. ^D to close a
         # tmux pane) still returns, so we keep checking its exit code.
         if method in ("key", "keys", "tmux") and prev_cmd is not None and not prev_cmd.get("wait") \
-                and LONG_RUNNING.search(split_commands(prev_cmd["data"].replace("`", ""))[-1].strip()):
+                and LONG_RUNNING.search(oneline(split_commands(prev_cmd["data"].replace("`", ""))[-1])):
             prev_cmd["interactive"] = True
         step = dict(s, method=method, data=data)
         if method in ("bash", "hide"):
@@ -237,15 +241,36 @@ def select(steps, only, start, stop):
     return out
 
 
+def oneline(cmd):
+    """Join lines that end with a backslash, for pattern checks."""
+    return re.sub(r"\\\n\s*", " ", cmd).strip()
+
+
+# Text that a student must replace before running the command.
+PLACEHOLDER = re.compile(r"(x{4,}|y{4,}|z{4,}|\bnode[XN]\b|<[A-Za-z][\w-]*>|\w\.\.\.(?!\.)|"
+                         r"\b[A-Z]{2,}-[A-Z]{2,}\b)")
+ERROR_COMMENT = re.compile(r"#.*\b(error|fails?|forbidden|denied)\b", re.IGNORECASE)
+
+
 def lint(steps):
-    warnings = []
+    """Return {kind: [(step, text)]} for problems found without a lab."""
+    found = {"Probably hangs (no key/keys/wait directive after it)": [],
+             "Placeholder to replace (add skip + a hidden real command)": [],
+             "Comment says it fails, but no expect-fail directive": []}
+    hangs, holders, errors = found.values()
     for step in steps:
-        if step["method"] not in ("bash", "hide") or step["mode"] != "normal" or step.get("skip"):
+        if step["method"] not in ("bash", "hide") or step.get("skip"):
             continue
         for cmd in split_commands(step["data"]):
-            if LONG_RUNNING.search(cmd.strip()) and not cmd.strip().endswith("&"):
-                warnings.append((step, cmd.strip()))
-    return warnings
+            cmd = oneline(cmd)
+            if step["mode"] == "normal" and LONG_RUNNING.search(cmd) and not cmd.endswith("&"):
+                hangs.append((step, cmd))
+            m = PLACEHOLDER.search(cmd)
+            if m:
+                holders.append((step, cmd))
+        if ERROR_COMMENT.search(step["data"]) and not step.get("expect_fail") and not step.get("wait"):
+            errors.append((step, step["data"]))
+    return found
 
 
 def make_plan(deck, only=(), start=None, stop=None):
@@ -287,11 +312,11 @@ def cmd_plan(args):
     else:
         for f, (cmds, others) in per_file.items():
             print("  {:<40} {:>3} commands {:>3} directives".format(f, cmds, others))
-    warnings = lint(steps)
-    if warnings:
-        print("\nProbably hangs (no key/keys/wait directive after it): {}".format(len(warnings)))
-        for step, cmd in warnings:
-            print("  {}:{}  {}".format(step["file"], step["line"], short(cmd, 80)))
+    for kind, items in lint(steps).items():
+        if items:
+            print("\n{}: {}".format(kind, len(items)))
+            for step, text in items:
+                print("  {}:{}  {}".format(step["file"], step["line"], short(text, 80)))
 
 
 # ---------------------------------------------------------------- exec ---

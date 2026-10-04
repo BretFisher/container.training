@@ -203,6 +203,11 @@ class: extra-details
   vim deployment-purple.yaml
   ```
 
+<!--
+```skip students edit the file by hand```
+```hide sed -i -E 's/^( *replicas:) [0-9]+$/\1 3/' deployment-purple.yaml```
+-->
+
 - Find the line with `replicas: 1` and update the number of replicas
 
 ]
@@ -220,6 +225,8 @@ class: extra-details
   kubectl create -f deployment-purple.yaml
   # This gives an error ("AlreadyExists")
   ```
+
+<!-- ```expect-fail``` -->
 
 ]
 
@@ -279,6 +286,11 @@ class: extra-details
   ```bash
   vim deployment-purple.yaml
   ```
+
+<!--
+```skip students edit the file by hand```
+```hide sed -i -E 's/^( *replicas:) [0-9]+$/\1 5/' deployment-purple.yaml```
+-->
 
 - Apply the new manifest:
   ```bash

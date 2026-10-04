@@ -644,6 +644,8 @@ class: extra-details
           --image nixery.dev/shell/curl/kubectl -- bash
   ```
 
+<!-- ```longwait bash-``` -->
+
 ]
 
 ---
@@ -658,6 +660,8 @@ class: extra-details
   ```bash
   kubectl get pods
   ```
+
+<!-- ```expect-fail``` -->
 
 ]
 
@@ -680,12 +684,16 @@ class: extra-details
 
 .lab[
 
-- Create the new role binding:
+<!-- ```tmux split-pane -v``` -->
+
+- In another terminal on node1 (not in the pod), create the new role binding:
   ```bash
   kubectl create rolebinding can-view \
           --clusterrole=view \
           --serviceaccount=default:default
   ```
+
+<!-- ```key ^D``` -->
 
 ]
 
@@ -747,6 +755,8 @@ It's important to note a couple of details in these flags...
   ```bash
   kubectl create deployment can-i-do-this --image=nginx
   ```
+
+<!-- ```expect-fail``` -->
 
 - Exit the container with `exit` or `^D`
 

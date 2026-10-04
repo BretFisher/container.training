@@ -147,6 +147,11 @@ We have to specify its namespace (or switch to that namespace).
   kubectl logs deploy/worker --tail=10 --follow --namespace=helmcoins
   ```
 
+<!--
+```longwait units of work done```
+```key ^C```
+-->
+
 ]
 
 Note: it might take a minute or two for the worker to start.
