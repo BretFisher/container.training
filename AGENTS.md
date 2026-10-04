@@ -9,7 +9,7 @@ MarkMaker scripts and rendered with Remark (not Slidev).
   - `containers/`, `swarm/`, `k8s/`, `terraform/`, `flux/`: topic-specific slide sources.
   - `shared/`: content reused across decks; edits can affect multiple courses.
   - `images/`, `exercises/`: slide assets and hands-on exercise materials.
-  - `autopilot/`: semi-automated exercise testing harness.
+  - `labtest/`: runs the `.lab[]` commands of a deck on a lab cluster (`make labtest`).
 - `dockercoins/`: microservices demo used throughout orchestration courses.
 - `k8s/`: runnable Kubernetes manifests and examples (distinct from `slides/k8s/`).
 - `compose/`: Compose-based Kubernetes control-plane and networking labs.
@@ -56,6 +56,29 @@ For a one-shot build without Docker, use Python 3 with dependencies from
 `slides/requirements.txt`, then run `cd slides && make build` (or `./build.sh once`).
 Set `SLIDES_ZIP=1` to also produce `slides.zip` (needs `zip`); Netlify does this.
 Edit sources rather than generated `*.yml.html`, `index.html`, `past.html`, or `slides.zip`.
+
+## Create slide diagrams
+
+- When creating or editing diagrams, use the `excalidraw-diagram-skill` skill
+  if available. Some environments list it as `excalidraw-diagram`.
+- Create `.excalidraw` JSON files directly; MCP access is not required. Use
+  editable shapes, text, and connectors so contributors can edit the diagrams
+  with the free Excalidraw editor.
+- Before creating a diagram, read `slides/images/k8s-arch3-2026.excalidraw`.
+  Use it as the template for the color palette and design standards, including
+  rounded shapes, clean lines, typography, spacing, and resource panels.
+  These project standards take precedence over a skill's default style.
+- Store all slide image assets in `slides/images/`. Save the editable source
+  and SVG export with the exact same base filename: `<name>.excalidraw` and
+  `<name>.svg`. For example, `k8s-arch3-2026.excalidraw` exports to
+  `k8s-arch3-2026.svg`.
+- Export the SVG from the latest Excalidraw source after each edit. Make the
+  canvas outside the diagram transparent (`appState.exportBackground: false`)
+  so it displays cleanly on dark backgrounds. Keep the shapes' intended fills.
+- Reference the SVG in slide Markdown. Keep the `.excalidraw` source beside
+  it for future edits. Create a PNG export only when requested.
+- Inspect the exported SVG for clipped text, connector placement, and
+  readability on light and dark backgrounds before completing the change.
 
 ## Provision lab infrastructure
 
@@ -157,10 +180,30 @@ delete its comments from the manifest.
 
 ### Test exercises
 
-Hands-on steps live in `.lab[]` blocks. `slides/autopilot/autotest.py` searches
-for `.exercise[]` blocks, which no slide uses now, so it finds no snippets until
-it is updated. Its argument is the generated deck HTML (it reads `excludedClasses`
-from it). It drives a shell through tmux, so start a tmux session on or to a
-lab node first; the script prints the setup options when tmux is missing.
+Use `slides/labtest/` (read its README for directives and result files).
+From `slides/`:
+
+- `make labtest-plan DECK=<deck>.yml [ONLY="k8s/a.md k8s/b.md"]`: no lab
+  needed. Lists commands per file and the commands that will probably hang.
+  Fix those first: add `wait`/`keys`/`key` directives after them.
+- `make labtest DECK=<deck>.yml TAG=<tag> [ONLY=... | FROM=file[:line] TO=file]`:
+  runs on node1 of `prepare-labs/tags/<tag>` as the student user. Use
+  `ONLY` to re-test one chapter after a fix. Run it in the background for
+  long selections.
+- Read `slides/labtest/runs/latest/summary.md` first. Open
+  `steps/NNNN.log` only for the failures and `PASS*` warnings in it.
+
+When a step fails, decide which case it is, and say so in the report:
+
+- Slide bug: the command or the expected output on the slide is wrong. Fix
+  the Markdown, then re-test that file.
+- Missing directive: the command is interactive or fails on purpose. Add a
+  hidden directive (`wait`, `keys`, `key`, `expect-fail`, `timeout`, `skip`).
+- Cluster state: the failure comes from state of an earlier test on a used
+  lab (an object that exists, a removed node). Confirm it before you blame
+  the slide; a fresh lab gives the reference result.
+- Lab setup: a tool or setting is missing on the lab image. Fix it in
+  `prepare-labs/`.
+
 Commands that must succeed need a clean exit code. Output the student reads
 must match the slide text.

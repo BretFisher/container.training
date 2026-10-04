@@ -39,7 +39,7 @@ services:
             - past.html
             - slides.zip
             - fragments/
-            - autopilot/state.yaml
+            - labtest/
             - .env
             - Makefile
         # Manifests pulled into slides with @@INCLUDE[k8s/...].

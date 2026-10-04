@@ -9,7 +9,7 @@ slides/index.html
 slides/past.html
 slides/slides.zip
 slides/fragments/
-slides/autopilot/state.yaml
+slides/labtest/
 slides/.env
 slides/Dockerfile*
 slides/compose.yaml

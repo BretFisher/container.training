@@ -13,12 +13,12 @@ prepare-labs/terraform/virtual-machines/proxmox/*.tfvars
 prepare-labs/www
 
 slides/*.yml.html
-slides/autopilot/state.yaml
 slides/index.html
 slides/past.html
 slides/slides.zip
 slides/_academy_*
 slides/fragments
+slides/labtest/runs/
 node_modules
 
 ### macOS ###
