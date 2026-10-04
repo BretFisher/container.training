@@ -269,11 +269,12 @@
           pre.appendChild(button);
         });
       });
-      // Dev mode (SLIDES_DEV=1, body class "dev"): show the image path when
-      // the mouse is on an image. One label for the page, placed over the
-      // image with fixed coordinates, so the slide HTML (and the CSS rules
-      // that select slide images) does not change.
-      if (document.body.classList.contains('dev')) {
+      // Body class "image-labels" (dev mode, or "imagelabels: true" in the
+      // deck manifest): show the image path when the mouse is on an image.
+      // One label for the page, placed over the image with fixed
+      // coordinates, so the slide HTML (and the CSS rules that select slide
+      // images) does not change.
+      if (document.body.classList.contains('image-labels')) {
         const label = document.createElement('div');
         label.className = 'image-label';
         document.body.appendChild(label);

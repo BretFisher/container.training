@@ -107,6 +107,8 @@ def generatefromyaml(manifest, filename):
     logging.debug("exclude={!r}".format(exclude))
     if not exclude:
         logging.warning("'exclude' is empty.")
+    markdown = removeexcluded(markdown, exclude)
+    markdown = removetitleonly(markdown)
     exclude = ",".join('"{}"'.format(c) for c in exclude)
 
     # Insert build info. This is super hackish.
@@ -120,8 +122,59 @@ def generatefromyaml(manifest, filename):
     html = html.replace("@@MARKDOWN@@", markdown)
     html = html.replace("@@EXCLUDE@@", exclude)
     html = html.replace("@@SLIDENUMBERPREFIX@@", manifest.get("slidenumberprefix", ""))
-    html = html.replace("@@BODYCLASS@@", "dev" if dev else "")
+    # CSS classes on <body>; workshop.html enables features from them.
+    bodyclass = []
+    if dev:
+        bodyclass.append("dev")
+    # Image path label on mouse hover: always in dev mode, and in production
+    # when the manifest has "imagelabels: true".
+    if dev or manifest.get("imagelabels"):
+        bodyclass.append("image-labels")
+    html = html.replace("@@BODYCLASS@@", " ".join(bodyclass))
     return html
+
+# Remove the slides that have an excluded class, with all their "--" steps.
+# Remark also excludes them (excludedClasses), but it checks each "--" step
+# on its own, and a step has no class of its own. So Remark shows the steps
+# after the first "--" of an excluded slide (with the content of an earlier
+# slide). Removing the whole slide here prevents that.
+def removeexcluded(markdown, exclude):
+    def excluded(slide):
+        # Slide properties ("key: value") are the first lines of the slide.
+        for line in slide.lstrip("\n").split("\n"):
+            m = re.match(r"(\w+):\s*(.*)$", line)
+            if not m:
+                return False
+            if m.group(1) == "layout" and m.group(2).strip() == "true":
+                return False
+            if m.group(1) == "class":
+                classes = re.split(r"[,\s]+", m.group(2).strip())
+                return any(c in exclude for c in classes)
+        return False
+    slides = markdown.split("\n---\n")
+    kept = [s for s in slides if not excluded(s)]
+    logging.debug("Removed {} excluded slides.".format(len(slides) - len(kept)))
+    return "\n---\n".join(kept)
+
+# Remove the slides that have only a section title ("# Title") and no other
+# content. insertslide() already adds a title slide for each section title,
+# so a title-only slide would show as an empty slide after it. With this,
+# a chapter can start with "# Title" alone, and its first slide can have
+# its own "## " title (or be excluded).
+def removetitleonly(markdown):
+    def titleonly(slide):
+        lines = [l.strip() for l in slide.strip("\n").split("\n")]
+        # Ignore slide properties (the first "key: value" lines), footers
+        # (.debug[...]), and empty lines.
+        while lines and re.match(r"\w+:\s", lines[0]):
+            lines.pop(0)
+        content = [l for l in lines if l
+                   and not (l.startswith(".debug[") and l.endswith("]"))]
+        return len(content) == 1 and content[0].startswith("# ")
+    slides = markdown.split("\n---\n")
+    kept = [s for s in slides if not titleonly(s)]
+    logging.debug("Removed {} title-only slides.".format(len(slides) - len(kept)))
+    return "\n---\n".join(kept)
 
 def processAtAtStrings(text):
     text = text.replace("@@CHAT@@", manifest["chat"])
