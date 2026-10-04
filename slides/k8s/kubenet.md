@@ -50,7 +50,7 @@
 
   - if we want network isolation, we need to add network policies
 
-  - some clusters (like AWS EKS) don't include a network policy controller out of the box
+  - some clusters don't include a network policy controller out of the box
 
 - There are literally dozens of Kubernetes network implementations out there
 

@@ -4,13 +4,11 @@
 
   `ClusterIP`, `NodePort`, `LoadBalancer`, `ExternalName`
 
-- There are also *headless services*
+- There are also *headless services* (which use DNS not LB IP to distribute traffic)
 
-- Services can also have optional *external IPs*
+- Some are internal to the cluster networks, and some can have *external IPs*
 
-- There is also another resource type called *Ingress*
-
-  (specifically for HTTP services)
+- There's also something called Gateway API that extends services features
 
 - Wow, that's a lot! Let's start with the basics ...
 
@@ -340,22 +338,22 @@ class: extra-details
 
 ---
 
-class: pic
+class: pic, extra-details
 ![](images/kubernetes-services/61-ING.png)
 
 ---
 
-class: pic
+class: pic, extra-details
 ![](images/kubernetes-services/62-ING-path.png)
 
 ---
 
-class: pic
+class: pic, extra-details
 ![](images/kubernetes-services/63-ING-policy.png)
 
 ---
 
-class: pic
+class: pic, extra-details
 ![](images/kubernetes-services/64-ING-nolocal.png)
 
 ---
@@ -380,6 +378,8 @@ class: extra-details
   - `spec.trafficDistribution` (alpha in 1.30, beta in 1.31)
 
 ---
+
+class: extra-details
 
 ## `internal / externalTrafficPolicy`
 
