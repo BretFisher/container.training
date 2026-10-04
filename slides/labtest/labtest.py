@@ -321,9 +321,15 @@ def cmd_plan(args):
 
 # ---------------------------------------------------------------- exec ---
 
+# Shell compound commands that continue on the next lines until their end
+# word: for/while/until ... done, if ... fi, case ... esac.
+COMPOUND_OPEN = re.compile(r"(?:^|[;&|(]\s*|\b(?:then|do|else)\s+)(for|while|until|if|case)\b")
+COMPOUND_CLOSE = re.compile(r"(?:^|[;&|]\s*|\s)(done|fi|esac)\b")
+
+
 def split_commands(text):
     """Split a block into the commands that a student types one at a time."""
-    cmds, cur, heredoc = [], [], None
+    cmds, cur, heredoc, depth = [], [], None, 0
     for line in text.split("\n"):
         cur.append(line)
         if heredoc:
@@ -336,8 +342,11 @@ def split_commands(text):
             if m:
                 heredoc = m.group(1)
                 continue
-        if re.search(r"(\\|\||&&|\|\||\{|\()\s*$", line):
+        code = line.strip().split(" #")[0]
+        depth += len(COMPOUND_OPEN.findall(code)) - len(COMPOUND_CLOSE.findall(code))
+        if depth > 0 or re.search(r"(\\|\||&&|\|\||\{|\()\s*$", line):
             continue
+        depth = 0
         if "".join(cur).strip():
             cmds.append("\n".join(cur))
         cur = []

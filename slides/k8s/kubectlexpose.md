@@ -116,6 +116,7 @@ class: extra-details
 
 <!--
 ```skip placeholder IP address```
+```hide kubectl wait deploy blue --for condition=available```
 ```hide curl http://$(kubectl get pods -l app=blue -o jsonpath='{.items[0].status.podIP}')```
 -->
 

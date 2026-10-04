@@ -454,10 +454,14 @@ class: extra-details
   curl -k https://$API
   ```
 
+<!-- ```wait Forbidden``` -->
+
 - Connect with the token:
   ```bash
   curl -k -H "Authorization: Bearer $TOKEN" https://$API
   ```
+
+<!-- ```wait Forbidden``` -->
 
 ]
 
