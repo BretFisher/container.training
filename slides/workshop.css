@@ -218,9 +218,12 @@ div.pic img {
 }
 /* "1 of :not(...)" skips the dev-mode footer paragraph (.debug), which
    markmaker.py puts at the top of each slide. */
+/* A picture alone uses 95% of the slide (1150x647 of 1210x681), so it
+   does not cover the slide number (top right) and the buttons (bottom
+   right). Before: 1210x681 (100%). */
 div.pic p:nth-child(1 of :not(p:has(> .debug:only-child))) img {
-  max-width: 1210px;
-  max-height: 681px;
+  max-width: 1150px;
+  max-height: 647px;
 }
 div.pic h1, div.pic h2, div.title h1, div.title h2 {
   text-align: center;
