@@ -335,7 +335,7 @@ EOF
 
 - Check the result:
   ```bash
-  kuectl get storageclasses
+  kubectl get storageclasses
   ```
 
 ]

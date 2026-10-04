@@ -216,12 +216,12 @@ This is the second file that we applied:
 
 - Try to connect to testweb from a pod with the `run=testcurl` label:
   ```bash
-  kubectl run testcurl --rm -i --image=centos -- curl -m3 $IP
+  kubectl run testcurl --rm -i --image=curlimages/curl -- curl -m3 $IP
   ```
 
 - Try to connect to testweb with a different label:
   ```bash
-  kubectl run testkurl --rm -i --image=centos -- curl -m3 $IP
+  kubectl run testkurl --rm -i --image=curlimages/curl -- curl -m3 $IP
   ```
 
 ]

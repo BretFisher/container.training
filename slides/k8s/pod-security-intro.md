@@ -186,11 +186,7 @@
 
 ## Acronym salad
 
-- PSP = Pod Security Policy **(deprecated)**
-
-  - an admission plugin called PodSecurityPolicy
-
-  - a resource named PodSecurityPolicy (`apiVersion: policy/v1beta1`)
+- PSP = Pod Security Policy **(removed in Kubernetes 1.25; replaced by PSA)**
 
 - PSA = Pod Security Admission
 

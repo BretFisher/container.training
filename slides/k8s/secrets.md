@@ -87,6 +87,7 @@
   - or reference that secret in a ServiceAccount used by a Pod
 
 ---
+class: registry-lab
 
 ## In practice
 
@@ -112,6 +113,7 @@
 ]
 
 ---
+class: registry-lab
 
 ## Creating a secret
 
@@ -134,6 +136,7 @@ Why do we have to specify the registry address?
 If we use multiple sets of credentials for different registries, it prevents leaking the credentials of one registry to *another* registry.
 
 ---
+class: registry-lab
 
 ## Using the secret
 
@@ -157,6 +160,7 @@ If we use multiple sets of credentials for different registries, it prevents lea
 ]
 
 ---
+class: registry-lab
 
 ## Checking the results
 
@@ -170,6 +174,7 @@ If we use multiple sets of credentials for different registries, it prevents lea
 ]
 
 ---
+class: registry-lab
 
 ## Another way to use the secret
 

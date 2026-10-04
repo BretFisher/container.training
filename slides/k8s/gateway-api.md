@@ -1,68 +1,22 @@
 # The Gateway API
 
-- Over time, Kubernetes has introduced multiple ways to expose containers
+- The Gateway API is how Kubernetes exposes HTTP (and other) services
 
-- In the first versions of Kubernetes, we would use a `Service` of type `LoadBalancer`
+- It is the successor of the `Ingress` resource:
 
-- HTTP services often need extra features, though:
+  - `Ingress` still works, but it is frozen (no new features)
 
-  - content-based routing (route requests with URI, HTTP headers...)
+  - the most used Ingress controller, ingress-nginx, reached end of life in March 2026
 
-  - TLS termination
+- Gateway API handles what Ingress could only do with vendor extensions:
 
-  - middlewares (e.g. authentication)
-
-  - etc.
-
-- This led to the introduction of the `Ingress` resource
-
----
-
-## History of Ingress
-
-- Kubernetes 1.8 (September 2017) introduced `Ingress` (v1beta1)
-
-- Kubernetes 1.19 (August 2020) graduated `Ingress` to GA (v1)
-
-- Ingress supports:
-
-  - content-based routing with URI or HTTP `Host:` header
-
-  - TLS termination (with neat integration with e.g. cert-manager)
-
-- Ingress doesn't support:
-
-  - content-based routing with other headers (e.g. cookies)
-
-  - middlewares
-
-  - traffic split for e.g. canary deployments
-
----
-
-## Everyone needed something better
-
-- Virtually *every* ingress controller added proprietary extensions:
-
-  - `nginx.ingress.kubernetes.io/configuration-snippet` annotation
-
-  - Traefik has CRDs like `IngressRoute`, `TraefikService`, `Middleware`...
-
-  - HAProxy has CRDs like `Backend`, `TCP`...
-
-  - etc.
-
-- Ingress was too specific to L7 (HTTP) traffic
-
-- We needed a totally new set of APIs and resources!
+  (header-based routing, traffic splitting, request rewrites...)
 
 ---
 
 ## Gateway API in a nutshell
 
-- Handle HTTP, GRPC, TCP, TLS, UDP routes
-
-  (note: as of October 2025, only HTTP and GRPC routes are in GA)
+- Handle HTTP, GRPC, TCP, TLS, UDP routes (HTTP and GRPC are the most supported)
 
 - Finer-grained permission model
 
@@ -82,13 +36,7 @@
 
 ## Gateway API personas
 
-- Ingress informally had two personas:
-
-  - cluster administrator (installs and manages the Ingress Controller)
-
-  - application developer (creates Ingress resources)
-
-- Gateway [formally defines three personas][gateway-personas]:
+- Gateway API [formally defines three personas][gateway-personas]:
 
   - infrastructure provider
     <br/>
@@ -99,6 +47,8 @@
     (~Kubernetes admin; potentially manages multiple clusters)
 
   - application developer
+
+- Each persona owns different resources (next slides)
 
 [gateway-personas]: https://gateway-api.sigs.k8s.io/concepts/roles-and-personas/
 
@@ -118,11 +68,11 @@ class: pic
 
 - `HTTPRoute` = describes which requests should go to which `Service`
 
-  (similar to the `Ingress` resource)
+  (created by application developers)
 
 - `Gateway` = how traffic enters the system
 
-  (could correspond to e.g. a `LoadBalancer` `Service`)
+  (could correspond to e.g. a `LoadBalancer` `Service`; created by cluster operators)
 
 - `GatewayClass` = represents different types of `Gateways`
 
@@ -150,208 +100,217 @@ class: pic
 
 ---
 
-## Minimal `HTTPRoute`
+## Our Gateway controller: Envoy Gateway
 
-```yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: xyz
-spec:
-  parentRefs:
-  - group: gateway.networking.k8s.io
-    kind: Gateway
-    name: my-gateway
-    namespace: my-gateway-namespace
-  hostnames: [ xyz.example.com ]
-  rules:
-  - backendRefs:
-    - name: xyz
-      port: 80
-```
+- Many controllers implement the Gateway API
+
+  (Envoy Gateway, NGINX Gateway Fabric, Istio, cloud load balancer controllers...)
+
+- We'll use [Envoy Gateway][envoy-gateway], the CNCF reference implementation
+
+  (it runs in any cluster, and it's common on EKS too)
+
+- It watches `Gateway` resources, and runs an Envoy proxy for each `Gateway`
+
+- Our lab clusters don't have a cloud load balancer
+
+- So we'll run the proxy on every node, receiving traffic on port 80 (`hostPort`)
+
+[envoy-gateway]: https://gateway.envoyproxy.io/
 
 ---
 
-## Gateway API in action
+## Installing Envoy Gateway
 
-- Let's deploy Traefik in Gateway API mode!
+<!-- ##VERSION## https://github.com/envoyproxy/gateway/releases -->
 
-- We'll use the [official Helm chart for Traefik][traefik-chart]
+.lab[
 
-- We'll need to set a few values
-
-- `providers.kubernetesGateway.enabled=true`
-
-  *enable Gateway API provisioning*
-
-- `gateway.listeners.web.namespacePolicy.from=All`
-
-  *allow `HTTPRoutes` in all namespaces to refer to the default `Gateway`*
-
-[traefik-chart]: https://artifacthub.io/packages/helm/traefik/traefik
-
----
-
-## `LoadBalancer` vs `hostPort`
-
-- If we're using a managed Kubernetes cluster, we'll use the default mode:
-
-  - Traefik runs with a `Deployment`
-
-  - Traefik `Service` has type `LoadBalancer`
-
-  - we connect to the `LoadBalancer` public IP address
-
-- If we don't have a CCM (or `LoadBalancer` `Service`), we'll do things differently:
-
-  - Traefik runs with a `DaemonSet`
-
-  - Traefik `Service` has type `ClusterIP` (not strictly necessary but cleaner)
-
-  - we connect to any node's public IP address
-
----
-
-## Installing Traefik (with `LoadBalancer`)
-
-Install the Helm chart:
-```bash
-helm upgrade --install --namespace traefik --create-namespace \
-  --repo https://traefik.github.io/charts traefik traefik \
-  --version 37.1.2 \
-  --set providers.kubernetesGateway.enabled=true \
-  --set gateway.listeners.web.namespacePolicy.from=All \
-  #
-```
-
-We'll connect by using the public IP address of the load balancer:
-```bash
-kubectl get services --namespace traefik
-```
-
----
-
-## Installing Traefik (with `hostPort`)
-
-Install the Helm chart:
-```bash
-helm upgrade --install --namespace traefik --create-namespace \
-  --repo https://traefik.github.io/charts traefik traefik \
-  --version 37.1.2 \
-  --set deployment.kind=DaemonSet \
-  --set ports.web.hostPort=80 \
-  --set ports.websecure.hostPort=443 \
-  --set service.type=ClusterIP \
-  --set providers.kubernetesGateway.enabled=true \
-  --set gateway.listeners.web.namespacePolicy.from=All \
-  #
-```
-
-We'll connect by using the public IP address of any node of the cluster.
-
----
-
-class: extra-details
-
-## Taints and tolerations
-
-- By default, Traefik Pods will respect node taints
-
-- If some nodes have taints (e.g. control plane nodes) we might need tolerations
-
-  (if we want to run Traefik on all nodes)
-
-- Adding the corresponding tolerations is left as an exercise for the reader!
-
----
-
-class: extra-details
-
-## Rolling updates with `hostPort`
-
-- It is not possible to have two pods on the same node using the same `hostPort`
-
-- Therefore, it is important to pay attention to the `DaemonSet` rolling update parameters
-
-- If `maxUnavailable` is non-zero:
-
-  - old pods will be shutdown first
-
-  - new pods will start without a problem
-
-  - there will be a short interruption of service
-
-- If `maxSurge` is non-zero:
-
-  - new pods will be created but won't be able to start (since the `hostPort` is taken)
-
-  - old pods will remain running and the rolling update will not proceed
-
----
-
-## Testing our Gateway controller
-
-- Send a test request to Traefik
-
-  (e.g. with `curl http://<ipaddress>`)
-
-- For now we should get a `404 not found`
-
-  (as there are no routes configured)
-
----
-
-## A basic HTTP route
-
-- Create a basic HTTP container and expose it with a Service; e.g.:
+- Install Envoy Gateway with its Helm chart (it also installs the Gateway API CRDs):
   ```bash
-  kubectl create deployment blue --image jpetazzo/color --port 80
-  kubectl expose deployment blue
+    helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
+         --version v1.9.2 --namespace envoy-gateway-system --create-namespace
   ```
 
+- Wait until the controller is ready:
+  ```bash
+    kubectl wait --namespace envoy-gateway-system \
+            deployment/envoy-gateway --for=condition=Available
+  ```
+
+]
+
+---
+
+## Creating our Gateway
+
+- @@LINK[k8s/envoy-gateway.yaml] defines an `EnvoyProxy` (one proxy per node, on port 80),
+
+  a `GatewayClass` named `eg`, and a `Gateway` named `eg` (accepting routes from all namespaces)
+
+.lab[
+
+- Create these resources, and wait until the `Gateway` is ready:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/envoy-gateway.yaml
+  kubectl wait --namespace envoy-gateway-system \
+          gateway/eg --for=condition=Programmed
+  ```
+
+- Send a request to the proxy (we should get a 404, since there are no routes yet):
+  ```bash
+  curl -i localhost
+  ```
+
+]
+
+---
+
+## Two apps to route to
+
+.lab[
+
+- Create a `blue` and a `green` Deployment and Service
+
+  (`blue` may already exist from an earlier chapter)
+  ```bash
+  kubectl create deployment blue --image=jpetazzo/color
+  kubectl expose deployment blue --port=80
+  kubectl create deployment green --image=jpetazzo/color
+  kubectl expose deployment green --port=80
+  ```
+
+]
+
 ---
 
 ## A basic HTTP route
 
-- Create an `HTTPRoute` with the following YAML:
-  ```yaml
+.lab[
+
+- Send all requests to `blue`:
+  ```bash
+  kubectl apply -f- <<EOF
   apiVersion: gateway.networking.k8s.io/v1
   kind: HTTPRoute
   metadata:
     name: blue
   spec:
-    parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: traefik-gateway
-      namespace: traefik
-    rules:
-    - backendRefs:
-      - name: blue
-        port: 80
+    parentRefs: [ { name: eg, namespace: envoy-gateway-system } ]
+    rules: [ { backendRefs: [ { name: blue, port: 80 } ] } ]
+  EOF
   ```
 
-- Our `curl` command should now show a response from the `blue` pod
+]
 
 ---
 
-class: extra-details
+## Testing our route
 
-## Traefik dashboard
+.lab[
 
-- By default, Traefik exposes a dashboard
-
-  (on a different port than the one used for "normal" traffic)
-
-- To access it:
+- Check that the route was accepted by the `Gateway`:
   ```bash
-  kubectl port-forward --namespace traefik daemonset/traefik 1234:8080
+  kubectl describe httproute blue | grep -A3 Conditions
   ```
 
-  (replace `daemonset` with `deployment` if necessary)
+- Send a request to the proxy:
+  ```bash
+  curl localhost
+  ```
 
- 
-- Then connect to http://localhost:1234/dashboard/ (pay attention to the final `/`!)
+- Send a request to any node, from our computer:
+
+  `http://A.B.C.D/` (with the IP address of any of our nodes)
+
+]
+
+We should get a response from the `blue` pod.
+
+---
+
+## Matching paths and headers
+
+```yaml
+@@INCLUDE[k8s/gateway-route-matches.yaml]
+```
+
+---
+
+## Matching paths and headers in action
+
+.lab[
+
+- Update our route:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/gateway-route-matches.yaml
+  ```
+
+- Check which pod answers each request:
+  ```bash
+  curl -s localhost | grep -o "This is pod [^ ]*"
+  curl -s localhost/green | grep -o "This is pod [^ ]*"
+  curl -s localhost/greenhouse | grep -o "This is pod [^ ]*"
+  curl -s -H "x-color: green" localhost | grep -o "This is pod [^ ]*"
+  ```
+
+]
+
+`/greenhouse` goes to `blue`: `PathPrefix` matches whole path elements, not characters.
+
+---
+
+## Traffic splitting
+
+- Let's send 90% of the requests to `blue` and 10% to `green` (e.g. for a canary)
+
+```yaml
+@@INCLUDE[k8s/gateway-route-canary.yaml]
+```
+
+---
+
+## Traffic splitting in action
+
+- This route only applies to requests for `canary.example.com`
+
+- We don't need a DNS record: we can set the `Host:` header with `curl`
+
+.lab[
+
+- Create the route:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/gateway-route-canary.yaml
+  ```
+
+- Send 100 requests, and count which pod answered:
+  ```bash
+    for i in $(seq 100); do
+      curl -s -H "Host: canary.example.com" localhost | grep -o "pod [a-z]*/[a-z]*"
+    done | sort | uniq -c
+  ```
+
+]
+
+---
+
+## On EKS
+
+- The `GatewayClass`, `Gateway`, and `HTTPRoute` resources stay the same
+
+- With Envoy Gateway, the only change is how traffic reaches the proxy:
+
+  - the proxy runs with a `Deployment` (the default) behind a `LoadBalancer` `Service`
+
+  - the AWS Load Balancer Controller provisions an NLB for that `Service`
+
+- AWS also has its own Gateway controller: the AWS Load Balancer Controller
+
+  - `GatewayClass` controller `gateway.k8s.aws/alb` provisions a managed ALB
+
+  - no proxy in the cluster; TLS certificates can come from ACM
+
+- Either way, application developers write the same `HTTPRoute` resources
 
 ---
 
@@ -471,7 +430,6 @@ requestMirror:
     name: log-some-requests
     namespace: my-observability-namespace # defaults to same namespace
     port: 80
-  hostname: newxyz.example.com
 ```
 
 Specify `percent` or `fraction`, not both. If neither is specified, all requests get mirrored.
@@ -514,7 +472,7 @@ Specify `percent` or `fraction`, not both. If neither is specified, all requests
 
   - only from specific namespaces matching a selector
 
-- That's why we specified `gateway.listeners.web.namespacePolicy.from=All` when deploying Traefik
+- That's why our `Gateway` has `allowedRoutes.namespaces.from: All` (see @@LINK[k8s/envoy-gateway.yaml])
 
 ???
 

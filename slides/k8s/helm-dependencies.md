@@ -91,7 +91,7 @@ use Bitnami's Redis chart.
 
 ## Lock & Load!
 
-- After adding the dependency, we ask Helm to pin an download it
+- After adding the dependency, we ask Helm to pin and download it
 
 .lab[
 
@@ -104,7 +104,7 @@ use Bitnami's Redis chart.
 
 ]
 
-- This wil create `Chart.lock` and fetch the dependency
+- This will create `Chart.lock` and fetch the dependency
 
 ---
 

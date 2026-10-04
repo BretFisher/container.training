@@ -58,44 +58,15 @@
 
 - There are many [types of volumes](https://kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes) available:
 
-  - public cloud storage (GCEPersistentDisk, AWSElasticBlockStore, AzureDisk...)
+  - built-in types (emptyDir, hostPath, configMap, secret, nfs, iscsi...)
 
-  - private cloud storage (Cinder, VsphereVolume...)
+  - CSI drivers for everything else (cloud disks like AWS EBS; Ceph; Portworx...)
 
-  - traditional storage systems (NFS, iSCSI, FC...)
+- Using a volume directly in a Pod requires:
 
-  - distributed storage (Ceph, Glusterfs, Portworx...)
+  - creating the storage out-of-band (outside of the Kubernetes API)
 
-- Using a persistent volume requires:
-
-  - creating the volume out-of-band (outside of the Kubernetes API)
-
-  - referencing the volume in the pod description, with all its parameters
-
----
-
-## Using a cloud volume
-
-A pod with an AWS EBS volume (old in-tree type, removed in 1.27; EKS uses EBS CSI):
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-using-my-ebs-volume
-spec:
-  containers:
-  - image: ...
-    name: container-using-my-ebs-volume
-    volumeMounts:
-    - mountPath: /my-ebs
-      name: my-ebs-volume
-  volumes:
-  - name: my-ebs-volume
-    awsElasticBlockStore:
-      volumeID: vol-049df61146c4d7901
-      fsType: ext4
-```
+  - referencing it in the pod description, with all its parameters
 
 ---
 

@@ -273,23 +273,21 @@ class: extra-details
 
 ---
 
-## Service account tokens evolution
+## Service account tokens
 
-- In Kubernetes 1.21 and above, pods use *bound service account tokens*:
+- Pods use *bound service account tokens*:
 
   - these tokens are *bound* to a specific object (e.g. a Pod)
 
   - they are automatically invalidated when the object is deleted
 
-  - these tokens also expire quickly (e.g. 1 hour) and gets rotated automatically
+  - these tokens also expire quickly (e.g. 1 hour) and get rotated automatically
 
-- In Kubernetes 1.24 and above, unbound tokens aren't created automatically
+- We can get a short-lived token with `kubectl create token`
 
-  - before 1.24, we would see unbound tokens with `kubectl get secrets`
+- Long-lived tokens stored in Secrets aren't created automatically anymore
 
-  - with 1.24 and above, these tokens can be created with `kubectl create token`
-
-  - ...or with a Secret with the right [type and annotation][create-token]
+  (avoid them; if needed, they can be created with a [Secret of the right type][create-token])
 
 [create-token]: https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#create-token
 
@@ -415,46 +413,25 @@ There should be just one service account in the default namespace: `default`.
 
 class: extra-details
 
-## Finding the secret
+## Getting a token
+
+- Let's request a short-lived token for the `default` service account
 
 .lab[
 
-- List the secrets for the `default` service account:
+- Create a token and store it in a variable:
   ```bash
-  kubectl get sa default -o yaml
-  SECRET=$(kubectl get sa default -o json | jq -r .secrets[0].name)
+  TOKEN=$(kubectl create token default)
+  ```
+
+- Check how long it is valid (it's a JWT; the payload is the second part):
+  ```bash
+  echo $TOKEN | cut -d. -f2 | base64 -d 2>/dev/null | jq .exp
   ```
 
 ]
 
-It should be named `default-token-XXXXX`.
-
-When running Kubernetes 1.24 and above, this Secret won't exist.
-<br/>
-Instead, create a token with `kubectl create token default`.
-
----
-
-class: extra-details
-
-## Extracting the token
-
-- The token is stored in the secret, wrapped with base64 encoding
-
-.lab[
-
-- View the secret:
-  ```bash
-  kubectl get secret $SECRET -o yaml
-  ```
-
-- Extract the token and decode it:
-  ```bash
-  TOKEN=$(kubectl get secret $SECRET -o json \
-          | jq -r .data.token | openssl base64 -d -A)
-  ```
-
-]
+The token expires after 1 hour by default (use `--duration` to change that).
 
 ---
 

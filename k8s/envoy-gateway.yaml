@@ -1,0 +1,61 @@
+# Envoy Gateway setup for our lab clusters.
+# Our clusters have no cloud load balancer, so the Envoy proxy runs on every
+# node (DaemonSet) and receives traffic on port 80 of each node (hostPort).
+# Envoy listens on container port 10080 for Gateway listener port 80, so it
+# doesn't need extra privileges to bind a low port.
+# On a cloud cluster (e.g. EKS), we would keep the default instead: a
+# Deployment and a Service of type LoadBalancer (e.g. an NLB).
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: hostport
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDaemonSet:
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              template:
+                spec:
+                  tolerations:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+                    effect: NoSchedule
+                  containers:
+                  - name: envoy
+                    ports:
+                    - containerPort: 10080
+                      hostPort: 80
+      envoyService:
+        type: ClusterIP
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: hostport
+    namespace: envoy-gateway-system
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      namespaces:
+        from: All

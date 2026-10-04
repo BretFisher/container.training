@@ -299,6 +299,8 @@ class: extra-details
 
 - Nothing special here; we're just creating a Deployment and a Service
 
+  (if `blue` already exists from an earlier chapter, we can skip this)
+
 .lab[
 
 - Create the Deployment:

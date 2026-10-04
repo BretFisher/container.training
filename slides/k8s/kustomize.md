@@ -225,7 +225,7 @@ General workflow:
 
 - Run `kustomize create` with the kustomcoins repository:
   ```bash
-  kustomize create --resources https://github.com/jpetazzo/kubercoins
+  kustomize create --resources "https://github.com/jpetazzo/kubercoins?ref=kustomize"
   ```
 
 <!-- ```look at the files``` -->

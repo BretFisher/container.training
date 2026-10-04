@@ -43,9 +43,10 @@
 #     SUB-CHAPTER  = quote item is a section inside this file, no change needed
 #
 #
-# - Pod Security Policies were removed in Kubernetes 1.25. The PSP exercise
-#   edits API server flags and will not work on EKS or a current cluster.
-#   Teach it as history only.
+# - Pod Security Policies were removed in Kubernetes 1.25. The quote's
+#   "PSP (legacy)" is covered by one line in the first slide of
+#   pod-security-admission.md ("PSA replaces PSP"). pod-security-policies.md
+#   stays out of this deck.
 #
 # - The "ADD EXISTING FILES" section near the bottom lists files that exist
 #   in k8s/ and shared/ but are not referenced in this template. Move each
@@ -76,6 +77,9 @@ exclude:
 - self-paced
 # Hands-on storage slides (e.g. in pv-pvc-sc.md); this deck covers concepts only.
 - storage-lab
+# Private registry lab in secrets.md (outside registry, public password;
+# EKS students pull from ECR instead, see the note next to aws-eks.md).
+- registry-lab
 
 content:
 - shared/title.md
@@ -147,6 +151,10 @@ content:
   # Matches quote "Distros and installers".
   #- k8s/setup-selfhosted.md
   - k8s/aws-eks.md
+  # TODO (EKS section): cover how pods pull images from ECR (node IAM role,
+  # no imagePullSecrets). The private registry lab in secrets.md is skipped.
+  # Gateway API on EKS (NLB in front of Envoy Gateway, or the ALB
+  # GatewayClass) is the "On EKS" slide in gateway-api.md; point to it.
   # COMMENT OUT: not in the quote.
   #- k8s/dashboard.md
   # COMMENT OUT: not in the quote.
@@ -184,13 +192,14 @@ content:
 -
   # KEEP: quote "Namespaces"
   - k8s/namespaces.md
-  # KEEP: quote "Exposing HTTP services"
-  - k8s/ingress.md
+  # Quote "Exposing HTTP services": Gateway API with Envoy Gateway (labs),
+  # plus an "On EKS" slide. Ingress is frozen (one line in gateway-api.md).
+  #- k8s/ingress.md
   #- k8s/ingress-setup.md
   #- k8s/ingress-advanced.md
   #- k8s/ingress-canary.md
   #- k8s/ingress-tls.md
-  #- k8s/gateway-api.md
+  - k8s/gateway-api.md
   # KEEP: intro to quote "Helm and Kustomize"
   - k8s/templating.md
   # KEEP: quote "Helm and Kustomize"
@@ -238,9 +247,8 @@ content:
   # COMMENT IN: title is "Restricting Pod Permissions", exact match with
   # the quote.
   #- k8s/pod-security-intro.md
-  # COMMENT IN: quote "Pod Security Policies (Legacy)". PSP was removed in
-  # Kubernetes 1.25. The exercise edits API server flags and will not run on
-  # EKS or a current cluster. Teach as history only, skip the hands-on.
+  # Out: PSP was removed in Kubernetes 1.25. Quote "PSP (legacy)" is one
+  # line in the first slide of pod-security-admission.md.
   #- k8s/pod-security-policies.md
   # COMMENT IN: quote "Pod Security Admission"
   #- k8s/pod-security-admission.md
@@ -260,8 +268,9 @@ content:
   # (ADD HERE: k8s/sealed-secrets.md for quote "Sealed secrets",
   # k8s/control-plane-auth.md for quote "Securing the control plane".
   # See ADD EXISTING FILES section at the bottom.)
-  # COMMENT OUT: not in the quote.
-  - k8s/logs-centralized.md
+  # Out: not in the quote, and its EFK stack (Elasticsearch 5, fluentd 2019)
+  # no longer works on containerd.
+  #- k8s/logs-centralized.md
   #- k8s/prometheus.md
   #- k8s/prometheus-stack.md
 -

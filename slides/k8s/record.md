@@ -1,35 +1,35 @@
 # Recording deployment actions
 
-- Some commands that modify a Deployment accept an optional `--record` flag
+- Each rollout of a Deployment creates a new ReplicaSet (a *revision*)
 
-  (Example: `kubectl set image deployment worker worker=alpine --record`)
+- `kubectl rollout history` lists these revisions
 
-- That flag will store the command line in the Deployment
+- Its `CHANGE-CAUSE` column comes from the annotation `kubernetes.io/change-cause`
 
-  (Technically, using the annotation `kubernetes.io/change-cause`)
+  (we set it on the Deployment; Kubernetes copies it to the current ReplicaSet)
 
-- It gets copied to the corresponding ReplicaSet
+- Kubernetes doesn't set it for us: we (or our tooling) set it at each change
 
-  (Allowing to keep track of which command created or promoted this ReplicaSet)
-
-- We can view this information with `kubectl rollout history`
+- Note: `kubectl --record` used to set it automatically; that flag is deprecated
 
 ---
 
-## Using `--record`
-
-- Let's make a couple of changes to a Deployment and record them
+## Recording a change
 
 .lab[
 
-- Roll back `worker` to image version 0.1:
+- Roll back `worker` to image version 0.1, and record why:
   ```bash
-  kubectl set image deployment worker worker=dockercoins/worker:v0.1 --record
+  kubectl set image deployment worker worker=dockercoins/worker:v0.1
+  kubectl annotate deployment worker --overwrite \
+          kubernetes.io/change-cause="Roll back to v0.1"
   ```
 
 - Promote it to version 0.2 again:
   ```bash
-  kubectl set image deployment worker worker=dockercoins/worker:v0.2 --record
+  kubectl set image deployment worker worker=dockercoins/worker:v0.2
+  kubectl annotate deployment worker --overwrite \
+          kubernetes.io/change-cause="Promote to v0.2"
   ```
 
 - View the change history:
@@ -41,129 +41,20 @@
 
 ---
 
-## Pitfall #1: forgetting `--record`
+## One change cause for each change
 
-- What happens if we don't specify `--record`?
+- Set the annotation *after* the change that creates the new revision
 
-.lab[
+  (an annotation alone doesn't create a revision; it updates the current one)
 
-- Promote `worker` to image version 0.3:
-  ```bash
-  kubectl set image deployment worker worker=dockercoins/worker:v0.3
-  ```
+- If we forget it, the new revision gets the *previous* change cause
 
-- View the change history:
-  ```bash
-  kubectl rollout history deployment worker
-  ```
+  (the history then shows a wrong reason for that revision)
 
-]
+- Changes that don't create a revision (e.g. `kubectl scale`) aren't in the history
 
---
+- In practice, set it in our tooling, in the same change as the update:
 
-It recorded version 0.2 instead of 0.3! Why?
+  - `metadata.annotations` in the YAML that our CI or GitOps tool applies
 
----
-
-## How `--record` really works
-
-- `kubectl` adds the annotation `kubernetes.io/change-cause` to the Deployment
-
-- The Deployment controller copies that annotation to the ReplicaSet
-
-- `kubectl rollout history` shows the ReplicaSets' annotations
-
-- If we don't specify `--record`, the annotation is not updated
-
-- The previous value of that annotation is copied to the new ReplicaSet
-
-- In that case, the ReplicaSet annotation does not reflect reality!
-
----
-
-## Pitfall #2: recording `scale` commands
-
-- What happens if we use `kubectl scale --record`?
-
-.lab[
-
-- Check the current history:
-  ```bash
-  kubectl rollout history deployment worker
-  ```
-
-- Scale the deployment:
-  ```bash
-  kubectl scale deployment worker --replicas=3 --record
-  ```
-
-- Check the change history again:
-  ```bash
-  kubectl rollout history deployment worker
-  ```
-
-]
-
---
-
-The last entry in the history was overwritten by the `scale` command! Why?
-
----
-
-## Actions that don't create a new ReplicaSet
-
-- The `scale` command updates the Deployment definition
-
-- But it doesn't create a new ReplicaSet
-
-- Using the `--record` flag sets the annotation like before
-
-- The annotation gets copied to the existing ReplicaSet
-
-- This overwrites the previous annotation that was there
-
-- In that case, we lose the previous change cause!
-
----
-
-## Updating the annotation directly
-
-- Let's see what happens if we set the annotation manually
-
-.lab[
-
-- Annotate the Deployment:
-  ```bash
-  kubectl annotate deployment worker kubernetes.io/change-cause="Just for fun"
-  ```
-
-- Check that our annotation shows up in the change history:
-  ```bash
-  kubectl rollout history deployment worker
-  ```
-
-]
-
---
-
-Our annotation shows up (and overwrote whatever was there before).
-
----
-
-## Using change cause
-
-- It sounds like a good idea to use `--record`, but:
-
-  *"Incorrect documentation is often worse than no documentation."*
-  <br/>
-  (Bertrand Meyer)
-
-- If we use `--record` once, we need to either:
-
-  - use it every single time after that
-
-  - or clear the Deployment annotation after using `--record`
-    <br/>
-    (subsequent changes will show up with a `<none>` change cause)
-
-- A safer way is to set it through our tooling
+  - for example, with the commit message or the pull request title

@@ -34,7 +34,7 @@
 
 <!--
 .lab[
-```open https://@@GITREPO@@/tree/@@GITBRANCH@@/slides/common/about-slides.md```
+```open https://@@GITREPO@@/tree/@@GITBRANCH@@/slides/shared/about-slides.md```
 ]
 -->
 

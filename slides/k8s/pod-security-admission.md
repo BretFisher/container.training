@@ -1,8 +1,8 @@
 # Pod Security Admission
 
-- "New" policies
+- Built-in admission controller that applies the Pod Security Standards
 
-  (available in alpha since Kubernetes 1.22, and GA since Kubernetes 1.25)
+- It replaces Pod Security Policies (PSP), which were removed in Kubernetes 1.25
 
 - Easier to use
 
