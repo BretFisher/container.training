@@ -1,4 +1,4 @@
-class: title, self-paced
+class: title, bret-skip
 
 *Tell me and I forget.*
 <br/>
@@ -12,7 +12,7 @@ Misattributed to Benjamin Franklin
 
 ---
 
-class: self-paced
+class: bret-skip
 
 ## Hands-on, you shall practice
 

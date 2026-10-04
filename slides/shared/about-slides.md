@@ -58,7 +58,7 @@
 
 ---
 
-class: self-paced
+class: bret-skip
 
 ## These slides are constantly updated
 
@@ -76,7 +76,7 @@ class: self-paced
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Extra details
 
@@ -96,7 +96,7 @@ class: extra-details, self-paced
 
 ---
 
-class: self-paced
+class: bret-skip
 
 ## Slides ≠ documentation
 

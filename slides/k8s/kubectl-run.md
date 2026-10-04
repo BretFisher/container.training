@@ -12,7 +12,7 @@
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## If you're running Kubernetes 1.17 (or older)...
 
@@ -154,7 +154,7 @@ Error from server (NotFound): the server could not find the requested resource
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## `NotFound`
 
@@ -355,6 +355,18 @@ class: extra-details
 - This is a *rolling update*, minimizing application downtime
 
 - When we scale up/down a Deployment, it scales up/down its ReplicaSet
+
+---
+
+class: pic
+
+![Kubernetes Deployment](images/k8s-deployment-2026.svg)
+
+---
+
+class: pic
+
+![Kubernetes Deployment](images/k8s-deployment-update-2026.svg)
 
 ---
 

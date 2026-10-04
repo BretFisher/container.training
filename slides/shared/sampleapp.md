@@ -165,7 +165,7 @@ https://@@GITREPO@@/blob/8279a3bce9398f7c1a53bdd95187c53eda4e6435/dockercoins/wo
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Links, naming, and service discovery
 
@@ -185,7 +185,7 @@ class: extra-details, self-paced
 
 ---
 
-class: self-paced
+class: bret-skip
 
 ## Show me the code!
 
@@ -212,7 +212,7 @@ class: self-paced
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Compose file format version
 
@@ -288,7 +288,7 @@ Stop the app with `^C`, edit `dockercoins.yml`, comment out the `volumes` sectio
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Why does the speed seem irregular?
 
@@ -300,7 +300,7 @@ class: extra-details, self-paced
 
 --
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 - The app actually has a constant, steady speed: 3.33 hashes/second
   <br/>
@@ -310,7 +310,7 @@ class: extra-details, self-paced
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## The reason why this graph is *not awesome*
 
@@ -327,7 +327,7 @@ class: extra-details, self-paced
 
 --
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 - "I'm clearly incapable of writing good frontend code!" 😀 — Jérôme
 

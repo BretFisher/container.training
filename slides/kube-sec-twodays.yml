@@ -73,8 +73,15 @@ slides: https://k8sec.bretfisher.com/
 
 toc: single
 
+# Show the image path when the mouse is on an image (always on in dev mode).
+imagelabels: true
+
 exclude:
+# Upstream class: content for self-paced learners only.
 - self-paced
+# Bret's class: slides Bret hides in his live class. It is a separate class,
+# so we know which slides Bret hid and which upstream hid.
+- bret-skip
 # Hands-on storage slides (e.g. in pv-pvc-sc.md); this deck covers concepts only.
 - storage-lab
 # Private registry lab in secrets.md (outside registry, public password;
@@ -96,50 +103,33 @@ content:
 #- k8s/labs-async.md
 - shared/toc.md
 -
-  # KEEP: quote "Our sample application"
+  - k8s/concepts-k8s.md
+  - k8s/kubectlget.md
+  - k8s/kubectl-run.md
+  #- k8s/batch-jobs.md
+  - k8s/batch-jobs-mini.md
+  #- k8s/labels-annotations.md
+  - k8s/labels-annotations-mini.md
+  - k8s/kubectl-logs.md
+  - k8s/logs-cli.md
+  - shared/declarative.md
+  - k8s/declarative.md
+  - k8s/deploymentslideshow.md
+  - k8s/kubectlexpose.md
+  - k8s/service-types.md
+  - k8s/kubenet.md
+-
   - shared/sampleapp.md
   #- shared/composescale.md
   #- shared/hastyconclusions.md
   - shared/composedown.md
-  # KEEP: quote "Kubernetes concepts"
-  - k8s/concepts-k8s.md
-  # KEEP: quote "First contact with kubectl"
-  - k8s/kubectlget.md
-  # LEFT OFF HERE-------------------------------------------------------------
--
-  # KEEP: quote "Running our first containers"
-  - k8s/kubectl-run.md
-  # KEEP: quote "Batch jobs"
-  - k8s/batch-jobs.md
-  # KEEP: quote "Labels and annotations"
-  - k8s/labels-annotations.md
-  # KEEP: quote "Accessing logs" (kubectl-logs.md and logs-cli.md together)
-  - k8s/kubectl-logs.md
-  - k8s/logs-cli.md
-  # KEEP: quote "Declarative vs imperative" (shared/declarative.md and
-  # k8s/declarative.md together)
-  - shared/declarative.md
-  - k8s/declarative.md
-  # COMMENT OUT (optional): not in the quote. The quote goes from
-  # "Declarative vs imperative" straight to "Kubernetes network model".
-  # These three are short and useful lead-ins to kubenet.md, so keeping
-  # them is a fair choice if time allows.
-  - k8s/deploymentslideshow.md
-  - k8s/kubectlexpose.md
-  - k8s/service-types.md
-  # KEEP: quote "Kubernetes network model"
-  - k8s/kubenet.md
-  # KEEP: quote "Container image registries" (title is "Shipping images
-  # with a registry")
   - k8s/shippingimages.md
   #- k8s/buildshiprun-selfhosted.md
-  # KEEP: hands-on half of "Container image registries"
   - k8s/buildshiprun-dockerhub.md
-  # KEEP: quote "Running our application on Kubernetes"
   - k8s/ourapponkube.md
   #- k8s/exercise-wordsmith.md
--
-  # KEEP: quote "Deploying with YAML"
+  # LEFT OFF HERE---------------------------------------------------------------
+
   - k8s/yamldeploy.md
   # KEEP: quote "Setting up Kubernetes"
   - k8s/setup-overview.md

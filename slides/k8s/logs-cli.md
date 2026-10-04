@@ -1,4 +1,11 @@
-# Accessing logs from the CLI
+
+# Accessing logs with other CLIs
+
+---
+
+class: bret-skip
+
+## Limits of `kubectl logs`
 
 - The `kubectl logs` command has limitations:
 
@@ -9,6 +16,8 @@
 - We are going to see how to do it better
 
 ---
+
+class: bret-skip
 
 ## Doing it manually
 
@@ -45,6 +54,8 @@ Exactly what we need!
 
 ---
 
+class: bret-skip
+
 ## Checking if Stern is installed
 
 - Run `stern` (without arguments) to check if it's installed:
@@ -60,6 +71,8 @@ Exactly what we need!
 - If it's missing, let's see how to install it
 
 ---
+
+class: bret-skip
 
 ## Installing Stern
 

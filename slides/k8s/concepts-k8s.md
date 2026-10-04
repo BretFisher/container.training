@@ -187,7 +187,7 @@ class: pic
 
 ---
 
-class: self-paced
+class: bret-skip
 
 ## Credits
 

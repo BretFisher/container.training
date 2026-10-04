@@ -69,13 +69,9 @@
 
 ]
 
-*Note: combining `-l` and `-f` is only possible since Kubernetes 1.14!*
-
-*Let's try to understand why ...*
-
 ---
 
-class: extra-details
+class: extra-details, bret-skip
 
 ## Streaming logs of many pods
 
@@ -106,7 +102,7 @@ use --max-log-requests to increase the limit
 
 ---
 
-class: extra-details
+class: extra-details, bret-skip
 
 ## Why can't we stream the logs of many pods?
 
@@ -118,9 +114,7 @@ class: extra-details
 
 - This could easily put a lot of stress on the API server
 
-- Prior Kubernetes 1.14, it was decided to *not* allow multiple connections
-
-- From Kubernetes 1.14, it is allowed, but limited to 5 connections
+- Default max log requests is 5
 
   (this can be changed with `--max-log-requests`)
 
@@ -130,6 +124,8 @@ class: extra-details
 ---
 
 ## Shortcomings of `kubectl logs`
+
+- Defaults to a max of 5 pods in query
 
 - We don't see which pod sent which log line
 
@@ -145,7 +141,7 @@ class: extra-details
 
 ---
 
-class: extra-details
+class: extra-details, bret-skip
 
 ## `kubectl logs -l ... --tail N`
 

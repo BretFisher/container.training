@@ -352,7 +352,7 @@ class: extra-details
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## What about `kube-public`?
 
@@ -371,7 +371,7 @@ Nothing!
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Exploring `kube-public`
 
@@ -397,7 +397,7 @@ We can use that!
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Accessing `cluster-info`
 
@@ -420,7 +420,7 @@ class: extra-details, self-paced
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## Retrieving `kubeconfig`
 
@@ -444,7 +444,7 @@ class: extra-details, self-paced
 
 ---
 
-class: extra-details, self-paced
+class: extra-details, bret-skip
 
 ## What about `kube-node-lease`?
 
