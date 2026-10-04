@@ -280,11 +280,9 @@ instead of a Kubernetes Namespace).
 
 - These tools are available from https://github.com/ahmetb/kubectx
 
-- They were initially simple shell scripts, and are now full-fledged Go programs
+- On our clusters, they are installed as `kubectx` and `kubens`, and also as `kctx` and `kns`
 
-- On our clusters, they are installed as `kns` and `kctx`
-
-  (for brevity and to avoid completion clashes between `kubectx` and `kubectl`)
+  (shorter names, and Tab completion doesn't clash with `kubectl`)
 
 ---
 

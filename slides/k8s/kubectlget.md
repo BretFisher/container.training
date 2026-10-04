@@ -352,7 +352,7 @@ class: extra-details
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## What about `kube-public`?
 
@@ -371,7 +371,7 @@ Nothing!
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Exploring `kube-public`
 
@@ -397,7 +397,7 @@ We can use that!
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Accessing `cluster-info`
 
@@ -420,7 +420,7 @@ class: extra-details
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Retrieving `kubeconfig`
 
@@ -444,7 +444,7 @@ class: extra-details
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## What about `kube-node-lease`?
 
@@ -468,8 +468,6 @@ class: extra-details
 ## Services
 
 - A *service* is a stable endpoint to connect to "something"
-
-  (In the initial proposal, they were called "portals")
 
 .lab[
 

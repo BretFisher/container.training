@@ -12,7 +12,7 @@
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## If you're running Kubernetes 1.17 (or older)...
 
