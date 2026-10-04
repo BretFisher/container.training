@@ -579,3 +579,9 @@ $ curl -k https://10.96.0.1
 
 :EN:- Getting started with kubectl
 :FR:- Se familiariser avec kubectl
+
+---
+
+class: pic
+
+![Kubernetes IP Subnets](images/k8s-arch5-2026.svg)

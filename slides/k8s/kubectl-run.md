@@ -154,7 +154,7 @@ Error from server (NotFound): the server could not find the requested resource
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## `NotFound`
 
