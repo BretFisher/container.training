@@ -52,6 +52,16 @@ the checkout.
 4. Rebuild and inspect every affected deck in the browser for overflow, broken
    images, and exercise formatting. `build.sh` exits non-zero on the first failing deck.
 
+Content rules for every slide you write or edit:
+
+- Teach current Kubernetes and current tools only. When a newer feature
+  replaces an older one, teach the newer one, and give the older one at most
+  one line ("X is deprecated; use Y"). Delete history that has no replacement.
+  Exception: a topic that a client quote names as legacy (e.g. "PSP (legacy)")
+  gets that one line, with what replaced it.
+- Test each command, image, and chart version on the current lab before it
+  goes on a slide. A slide that reads well but fails on a lab is a bug.
+
 For a one-shot build without Docker, use Python 3 with dependencies from
 `slides/requirements.txt`, then run `cd slides && make build` (or `./build.sh once`).
 Set `SLIDES_ZIP=1` to also produce `slides.zip` (needs `zip`); Netlify does this.
@@ -162,10 +172,10 @@ delete its comments from the manifest.
    `helm-create-better-chart`, `helm-dependencies`,
    `helm-values-schema-validation`). Done when Bret approves the day 1 list.
 3. [ ] **Existing hands-on test.** Run every exercise in deck order on one
-   lab. Record each failure with file, slide title, command, and output. Known
-   risk: `pod-security-policies.md` edits API server flags and fails on 1.25+;
-   teach it as history and remove its exercises. Done when all exercises pass
-   or each failure has a fix or a removal.
+   lab. Record each failure with file, slide title, command, and output.
+   `pod-security-policies.md` stays out (PSP was removed in 1.25); the first
+   slide of `pod-security-admission.md` covers "PSP (legacy)" in one line.
+   Done when all exercises pass or each failure has a fix or a removal.
 4. [ ] **Net new slides.** Write the seven files in `NET NEW SLIDES`, in this
    order: `pod-hardening`, `encryption-at-rest`, `external-secrets`,
    `kyverno-security-policies`, `linting`, `gitops-pr-gating`,
