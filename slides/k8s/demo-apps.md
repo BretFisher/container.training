@@ -62,7 +62,7 @@
 
 class: pic
 
-![Dockercoins application diagram](images/dockercoins-diagram.png)
+![Dockercoins application diagram](images/dockercoins-diagram-2026.svg)
 
 ---
 

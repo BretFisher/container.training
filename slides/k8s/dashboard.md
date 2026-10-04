@@ -254,27 +254,21 @@ The dashboard will then ask you which authentication you want to use.
 - Resources can be evil; imagine a `deployment` that ...
 
 --
-
   - starts bitcoin miners on the whole cluster
 
 --
-
   - hides in a non-default namespace
 
 --
-
   - bind-mounts our nodes' filesystem
 
 --
-
   - inserts SSH keys in the root account (on the node)
 
 --
-
   - encrypts our data and ransoms it
 
 --
-
   - ☠️☠️☠️
 
 ---

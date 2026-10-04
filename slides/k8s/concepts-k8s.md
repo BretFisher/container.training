@@ -41,11 +41,11 @@
 
 --
 
-- Deploy a managed Kubernetes cluster (cloud or [professional services][enix-k8s-expert])
+- Deploy a managed Kubernetes cluster (experts managing the cluster for you)
 
 --
 
-- Start 5 containers using image `atseashop/api:v1.3`
+- Start 5 containers using image `yourorg/api:v1.3`
 
 --
 
@@ -53,7 +53,7 @@
 
 --
 
-- Start 10 containers using image `atseashop/webfront:v1.3`
+- Start 10 containers using image `yourorg/webfront:v1.3`
 
 --
 
@@ -65,13 +65,11 @@
 
 --
 
-- New release! Replace my containers with the new image `atseashop/webfront:v1.4`
+- New release! Replace my containers with the new image `yourorg/webfront:v1.4`
 
 --
 
 - Keep processing requests during the upgrade; update my containers one at a time
-
-[enix-k8s-expert]: https://enix.io/en/kubernetes-expert/
 
 ---
 
@@ -92,20 +90,6 @@
 - Advanced rollout patterns
 
   (blue/green deployment, canary deployment)
-
---
-
-.footnote[
-On the next page: canary cage with an oxygen bottle, designed to keep the canary alive.
-<br/>
-(See https://post.lurk.org/@zilog/109632335293371919 for details.)
-]
-
----
-
-class: pic
-
-![Canary cage](images/canary-cage.jpg)
 
 ---
 
@@ -199,9 +183,11 @@ class: pic
 
 class: pic
 
-![that one is more like the real thing](images/k8s-arch2.png)
+![Kubernetes control plane and worker nodes connected by a physical network](images/k8s-arch2-2026.svg)
 
 ---
+
+class: self-paced
 
 ## Credits
 
@@ -219,15 +205,11 @@ class: pic
 
 - The nodes executing our containers run a collection of services:
 
-  - a container Engine (typically Docker)
+  - a container runtime (typically `containerd`, same thing Docker runs underneath)
 
-  - kubelet (the "node agent")
+  - `kubelet` (the "node agent")
 
-  - kube-proxy (a necessary but not sufficient network component)
-
-- Nodes were formerly called "minions"
-
-  (You might see that word in older articles or documentation)
+  - `kube-proxy` (a necessary but not sufficient network component)
 
 ---
 
@@ -235,21 +217,19 @@ class: pic
 
 - The Kubernetes logic (its "brains") is a collection of services:
 
-  - the API server (our point of entry to everything!)
+  - the `kube-apiserver` (our point of entry to everything!)
 
-  - core services like the scheduler and controller manager
+  - core services like the `kube-scheduler` and `kube-controller-manager`
 
   - `etcd` (a highly available key/value store; the "database" of Kubernetes)
 
 - Together, these services form the control plane of our cluster
 
-- The control plane is also called the "master"
-
 ---
 
 class: pic
 
-![One of the best Kubernetes architecture diagrams available](images/k8s-arch4-thanks-luxas.png)
+![Kubernetes architecture with control-plane components, worker nodes, and interfaces](images/k8s-arch4-2026.svg)
 
 ---
 
@@ -257,13 +237,11 @@ class: extra-details
 
 ## Running the control plane on special nodes
 
-- It is common to reserve a dedicated node for the control plane
+- It is common to reserve a dedicated node(s) for the control plane
 
-  (Except for single-node development clusters, like when using minikube)
+  (Except for single-node development clusters, like when using minikube or k3s)
 
-- This node is then called a "master"
-
-  (Yes, this is ambiguous: is the "master" a node, or the whole control plane?)
+- This node is then called a control plane node
 
 - Normal applications are restricted from running on this node
 
@@ -272,8 +250,6 @@ class: extra-details
 - When high availability is required, each service of the control plane must be resilient
 
 - The control plane is then replicated on multiple nodes
-
-  (This is sometimes called a "multi-master" setup)
 
 ---
 
@@ -291,10 +267,6 @@ class: extra-details
 - In some hosted Kubernetes offerings (e.g. AKS, GKE, EKS), the control plane is invisible
 
   (We only "see" a Kubernetes API endpoint)
-
-- In that case, there is no "master node"
-
-*For this reason, it is more accurate to say "control plane" rather than "master."*
 
 ---
 
@@ -367,11 +339,15 @@ No!
 
 - The Docker Engine used to be the default option to run containers with Kubernetes
 
-- Support for Docker (specifically: dockershim) was removed in Kubernetes 1.24
+- Then the CRI standard (Container Runtime Interface) was introduced
+
+- Built-in support for Docker (`dockershim`) was removed in 2023 with K8s 1.24
+
+  - But it lives on as a supported CRI via `cri-dockerd`
+
+  - "Kubernetes dropped Docker support" was a common misconception
 
 - We can leverage other pluggable runtimes through the *Container Runtime Interface*
-
-- <del>We could also use `rkt` ("Rocket") from CoreOS</del> (deprecated)
 
 ---
 
@@ -403,7 +379,7 @@ Yes!
 
 --
 
-- In this workshop, we run our app on a single node first
+- Kubernetes, by default, can't build or push images
 
 - We will need to build images and ship them around
 
@@ -411,9 +387,7 @@ Yes!
   <br/>
   (but with some languages/frameworks, it might be much harder)
 
-- Docker is still the most stable container engine today
-  <br/>
-  (but other options are maturing very quickly)
+- Docker is still the most popular local and single-node container engine
 
 ---
 
@@ -451,7 +425,7 @@ class: extra-details
 
 class: pic
 
-![Node, pod, container](images/k8s-arch3-thanks-weave.png)
+![Two containers in a Pod with shared resources](images/k8s-arch3-2026.svg)
 
 ---
 
@@ -494,24 +468,3 @@ class: pic
     <br/>(incurring more latency, lower performance)
 
 - Both scenarios can make sense, depending on our goals
-
----
-
-## Credits
-
-- The first diagram is courtesy of Lucas Käldström, in [this presentation](https://speakerdeck.com/luxas/kubeadm-cluster-creation-internals-from-self-hosting-to-upgradability-and-ha)
-
-  - it's one of the best Kubernetes architecture diagrams available!
-
-- The second diagram is courtesy of Weave Works
-
-  - a *pod* can have multiple containers working together
-
-  - IP addresses are associated with *pods*, not with individual containers
-
-Both diagrams used with permission.
-
-???
-
-:EN:- Kubernetes concepts
-:FR:- Kubernetes en théorie

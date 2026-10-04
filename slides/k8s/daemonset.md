@@ -1,4 +1,4 @@
-# Daemon sets
+# DaemonSets
 
 - We want to scale `rng` in a way that is different from how we scaled `worker`
 
@@ -6,7 +6,7 @@
 
 - We *do not want* two instances of `rng` on the same node
 
-- We will do that with a *daemon set*
+- We will do that with a *DaemonSet*
 
 ---
 
@@ -24,15 +24,15 @@
 
   (and we will end up with two instances `rng` on the same node)
 
-- By contrast, a daemon set will start one pod per node and keep it that way
+- By contrast, a DaemonSet will start one pod per node and keep it that way
 
   (as nodes are added or removed)
 
 ---
 
-## Daemon sets in practice
+## DaemonSets in practice
 
-- Daemon sets are great for cluster-wide, per-node processes:
+- DaemonSets are great for cluster-wide, per-node processes:
 
   - network components like `kube-proxy`, `calico`, `cilium`...
 
@@ -48,15 +48,15 @@
 
 ---
 
-## Creating a daemon set
+## Creating a DaemonSet
 
 <!-- ##VERSION## -->
 
-- Unfortunately, as of Kubernetes 1.36, the CLI cannot create daemon sets
+- Unfortunately, as of Kubernetes 1.36, the CLI cannot create DaemonSets
 
 --
 
-- More precisely: it doesn't have a subcommand to create a daemon set
+- More precisely: it doesn't have a subcommand to create a DaemonSet
 
 --
 
@@ -67,19 +67,17 @@
 
 --
 
-- How do we create the YAML file for our daemon set?
+- How do we create the YAML file for our DaemonSet?
 
 --
-
   - option 1: [read the docs](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#create-a-daemonset)
 
 --
-
   - option 2: `vi` our way out of it
 
 ---
 
-## Creating the YAML file for our daemon set
+## Creating the YAML file for our DaemonSet
 
 - DaemonSets and Deployments should be *pretty similar*
 
@@ -135,7 +133,7 @@
 
 - Or, alternatively:
   ```bash
-  sed -i "s/kind: Deployment/kind: DaemonSet/"
+  sed -i "s/kind: Deployment/kind: DaemonSet/" rng.yaml
   ```
 
 ]
@@ -152,6 +150,8 @@
   ```bash
   kubectl apply -f rng.yaml
   ```
+
+<!-- ```expect-fail``` -->
 
 ]
 
@@ -170,7 +170,7 @@
 
 --
 
-- *Obviously,* it doesn't make sense to specify a number of replicas for a daemon set
+- *Obviously,* it doesn't make sense to specify a number of replicas for a DaemonSet
 
   (the field `spec.strategy` is also specific to Deployments)
 
@@ -182,11 +182,13 @@
 
 ## Fixing the problem
 
-- Let's remove the `replicas` field and try again
+- Let's remove the `replicas` and `strategy` fields and try again
 
 .lab[
 
-- Edit the `rng.yaml` file and remove the `replicas:` line
+- Edit the `rng.yaml` file and remove the `replicas:` and `strategy:` lines
+
+<!-- ```hide sed -i -e '/replicas:/d' -e '/strategy:/d' rng.yaml``` -->
 
 - Then try to create the DaemonSet again:
   ```bash
@@ -218,7 +220,7 @@ We have two resources called `rng`:
 
 - the *deployment* that was existing before
 
-- the *daemon set* that we just created
+- the *DaemonSet* that we just created
 
 We also have one too many pods.
 <br/>
@@ -230,7 +232,7 @@ We also have one too many pods.
 
 - You can have different resource types with the same name
 
-  (i.e. a *deployment* and a *daemon set* both named `rng`)
+  (i.e. a *deployment* and a *DaemonSet* both named `rng`)
 
 - We still have the old `rng` *deployment*
 
@@ -239,7 +241,7 @@ NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/rng        1         1         1            1           18m
   ```
 
-- But now we have the new `rng` *daemon set* as well
+- But now we have the new `rng` *DaemonSet* as well
 
   ```
 NAME                DESIRED  CURRENT  READY  UP-TO-DATE  AVAILABLE  NODE SELECTOR  AGE
@@ -254,7 +256,7 @@ daemonset.apps/rng  2        2        2      2           2          <none>      
 
   - *one pod* for the deployment (named `rng-xxxxxxxxxx-yyyyy`)
 
-  - *one pod per node* for the daemon set (named `rng-zzzzz`)
+  - *one pod per node* for the DaemonSet (named `rng-zzzzz`)
 
   ```
   NAME                        READY     STATUS    RESTARTS   AGE
@@ -266,7 +268,7 @@ daemonset.apps/rng  2        2        2      2           2          <none>      
 
 --
 
-The daemon set created one pod per node, except on the control plane node.
+The DaemonSet created one pod per node, except on the control plane node.
 
 The control plane node has [taints](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/) preventing pods from running there.
 
@@ -342,13 +344,13 @@ But ... why do these pods (in particular, the *new* ones) have this `app=rng` la
 - When we create a deployment with `kubectl create deployment rng`,
   <br/>this deployment gets the label `app=rng`
 
-- The replica sets created by this deployment also get the label `app=rng`
+- The ReplicaSets created by this deployment also get the label `app=rng`
 
-- The pods created by these replica sets also get the label `app=rng`
+- The pods created by these ReplicaSets also get the label `app=rng`
 
-- When we created the daemon set from the deployment, we re-used the same spec
+- When we created the DaemonSet from the deployment, we re-used the same spec
 
-- Therefore, the pods created by the daemon set get the same labels
+- Therefore, the pods created by the DaemonSet get the same labels
 
 .footnote[Note: when we use `kubectl run stuff`, the label is `run=stuff` instead.]
 
@@ -362,7 +364,7 @@ But ... why do these pods (in particular, the *new* ones) have this `app=rng` la
 
 --
 
-  It would be re-created immediately (by the replica set or the daemon set)
+  It would be re-created immediately (by the ReplicaSet or the DaemonSet)
 
 --
 
@@ -378,19 +380,19 @@ But ... why do these pods (in particular, the *new* ones) have this `app=rng` la
 
 ---
 
-## Selectors for replica sets and daemon sets
+## Selectors for ReplicaSets and DaemonSets
 
-- The "mission" of a replica set is:
+- The "mission" of a ReplicaSet is:
 
   "Make sure that there is the right number of pods matching this spec!"
 
-- The "mission" of a daemon set is:
+- The "mission" of a DaemonSet is:
 
   "Make sure that there is a pod matching this spec on each node!"
 
 --
 
-- *In fact,* replica sets and daemon sets do not check pod specifications
+- *In fact,* ReplicaSets and DaemonSets do not check pod specifications
 
 - They merely have a *selector*, and they look for pods matching that selector
 
@@ -404,19 +406,19 @@ But ... why do these pods (in particular, the *new* ones) have this `app=rng` la
 
 class: extra-details
 
-## Isolation of replica sets and daemon sets
+## Isolation of ReplicaSets and DaemonSets
 
-- Since both the `rng` daemon set and the `rng` replica set use `app=rng` ...
+- Since both the `rng` DaemonSet and the `rng` ReplicaSet use `app=rng` ...
 
   ... Why don't they "find" each other's pods?
 
 --
 
-- *Replica sets* have a more specific selector, visible with `kubectl describe`
+- *ReplicaSets* have a more specific selector, visible with `kubectl describe`
 
   (It looks like `app=rng,pod-template-hash=abcd1234`)
 
-- *Daemon sets* also have a more specific selector, but it's invisible
+- *DaemonSets* also have a more specific selector, but it's invisible
 
   (It looks like `app=rng,controller-revision-hash=abcd1234`)
 
@@ -638,13 +640,13 @@ the effect should be more visible.
 
 class: extra-details
 
-## Updating the daemon set
+## Updating the DaemonSet
 
-- If we scale up our cluster by adding new nodes, the daemon set will create more pods
+- If we scale up our cluster by adding new nodes, the DaemonSet will create more pods
 
 - These pods won't have the `active=yes` label
 
-- If we want these pods to have that label, we need to edit the daemon set spec
+- If we want these pods to have that label, we need to edit the DaemonSet spec
 
 - We can do that with e.g. `kubectl edit daemonset rng`
 
@@ -654,7 +656,7 @@ class: extra-details
 
 ## We've put resources in your resources
 
-- Reminder: a daemon set is a resource that creates more resources!
+- Reminder: a DaemonSet is a resource that creates more resources!
 
 - There is a difference between:
 
@@ -799,5 +801,5 @@ class: extra-details
 
 ???
 
-:EN:- Scaling with Daemon Sets
-:FR:- Utilisation de Daemon Sets
+:EN:- Scaling with DaemonSets
+:FR:- Utilisation de DaemonSets

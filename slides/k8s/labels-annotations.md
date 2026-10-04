@@ -90,7 +90,7 @@ So, what do we get?
 
 - `app=clock` comes from `kubectl create deployment` too
 
-- `pod-template-hash` was assigned by the Replica Set
+- `pod-template-hash` was assigned by the ReplicaSet
 
   (when we will do rolling updates, each set of Pods will have a different hash)
 

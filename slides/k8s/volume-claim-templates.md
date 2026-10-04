@@ -14,9 +14,9 @@
 
 ---
 
-## Persistent Volume Claims and Stateful sets
+## Persistent Volume Claims and StatefulSets
 
-- A Stateful set can define one (or more) `volumeClaimTemplate`
+- A StatefulSet can define one (or more) `volumeClaimTemplate`
 
 - Each `volumeClaimTemplate` will create one Persistent Volume Claim per Pod
 
@@ -26,7 +26,7 @@
 
 - Example:
 
-  - a Stateful set is named `consul`
+  - a StatefulSet is named `consul`
   - it is scaled to replicas
   - it has a `volumeClaimTemplate` named `data`
   - then it will create pods `consul-0`, `consul-1`, `consul-2`
@@ -37,7 +37,7 @@
 
 ## Persistent Volume Claims are sticky
 
-- When updating the stateful set (e.g. image upgrade), each pod keeps its volume
+- When updating the StatefulSet (e.g. image upgrade), each pod keeps its volume
 
 - When pods get rescheduled (e.g. node failure), they keep their volume
 
@@ -45,9 +45,9 @@
 
 - These volumes are not automatically deleted
 
-  (when the stateful set is scaled down or deleted)
+  (when the StatefulSet is scaled down or deleted)
 
-- If a stateful set is scaled back up later, the pods get their data back
+- If a StatefulSet is scaled back up later, the pods get their data back
 
 ---
 
@@ -57,7 +57,7 @@
 
 - The only differences between that file and the previous one are:
 
-  - `volumeClaimTemplate` defined in the Stateful Set spec
+  - `volumeClaimTemplate` defined in the StatefulSet spec
 
   - the corresponding `volumeMounts` in the Pod spec
 
@@ -117,7 +117,7 @@
 
 ## Explanations
 
-- In a Stateful Set, the Pods are started one by one
+- In a StatefulSet, the Pods are started one by one
 
 - `consul-1` won't be created until `consul-0` is running
 
@@ -216,9 +216,9 @@
 
 These are the steps when dynamic provisioning happens:
 
-1. The Stateful Set creates PVCs according to the `volumeClaimTemplate`.
+1. The StatefulSet creates PVCs according to the `volumeClaimTemplate`.
 
-2. The Stateful Set creates Pods using these PVCs.
+2. The StatefulSet creates Pods using these PVCs.
 
 3. The PVCs are automatically annotated with our Storage Class.
 

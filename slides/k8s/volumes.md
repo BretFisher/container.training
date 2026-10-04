@@ -482,7 +482,6 @@ spec:
 - What's the difference between a sidecar and a "main container"?
 
 --
-
   - sidecar might need to start *before* the main container(s)
     <br/>(e.g. if it provides "ambassador"-style connectivity service)
 

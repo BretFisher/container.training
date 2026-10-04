@@ -38,7 +38,7 @@
 
 class: pic
 
-![Dockercoins architecture diagram](images/dockercoins-diagram.png)
+![Dockercoins architecture diagram](images/dockercoins-diagram-2026.svg)
 
 ---
 

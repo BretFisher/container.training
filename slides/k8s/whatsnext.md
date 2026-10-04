@@ -117,7 +117,7 @@ And *then* it is time to look at orchestration!
 
   - persistent volumes, persistent volume claims
 
-  - stateful sets
+  - StatefulSets
 
 - Good questions to ask:
 
@@ -128,7 +128,7 @@ And *then* it is time to look at orchestration!
 - Relevant sections:
   [Volumes](kube-selfpaced.yml.html#toc-volumes)
   |
-  [Stateful Sets](kube-selfpaced.yml.html#toc-stateful-sets)
+  [StatefulSets](kube-selfpaced.yml.html#toc-statefulsets)
   |
   [Persistent Volumes](kube-selfpaced.yml.html#toc-highly-available-persistent-volumes)
 

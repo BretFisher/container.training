@@ -60,7 +60,7 @@ class: extra-details
 
   - to inspect and poke at things
 
-- The Kubernetes API is always the underlying access method
+- **The Kubernetes API is always the underlying access method**
 
 ---
 

@@ -122,7 +122,7 @@ and displays aggregated logs.
 
 class: pic
 
-![Diagram showing the 5 containers of the applications](images/dockercoins-diagram-transparent.png)
+![Diagram showing the 5 containers of the applications](images/dockercoins-diagram-2026.svg)
 
 ---
 
@@ -288,7 +288,7 @@ Stop the app with `^C`, edit `dockercoins.yml`, comment out the `volumes` sectio
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## Why does the speed seem irregular?
 
@@ -300,7 +300,7 @@ class: extra-details
 
 --
 
-class: extra-details
+class: extra-details, self-paced
 
 - The app actually has a constant, steady speed: 3.33 hashes/second
   <br/>
@@ -310,9 +310,10 @@ class: extra-details
 
 ---
 
-class: extra-details
+class: extra-details, self-paced
 
 ## The reason why this graph is *not awesome*
+
 
 - The worker doesn't update the counter after every loop, but up to once per second
 
@@ -326,7 +327,7 @@ class: extra-details
 
 --
 
-class: extra-details
+class: extra-details, self-paced
 
 - "I'm clearly incapable of writing good frontend code!" 😀 — Jérôme
 

@@ -138,7 +138,7 @@ class: extra-details
 
   - e.g. when running a combined load balancer / ingress controller
 
-  - or when running the ingress controller as a Daemon Set directly on port 80
+  - or when running the ingress controller as a DaemonSet directly on port 80
 
 ---
 

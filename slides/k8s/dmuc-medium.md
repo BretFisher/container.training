@@ -538,7 +538,7 @@ Which means that we wouldn't be able to issue any API request!
 
 ]
 
-Our Deployment exists, but not the Replica Set or Pod.
+Our Deployment exists, but not the ReplicaSet or Pod.
 
 We need to run the controller manager.
 

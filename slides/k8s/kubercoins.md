@@ -133,7 +133,7 @@ Without further ado, let's start this application!
 
 class: pic
 
-![Diagram showing the 5 containers of the applications](images/dockercoins-diagram.png)
+![Diagram showing the 5 containers of the applications](images/dockercoins-diagram-2026.svg)
 
 ---
 

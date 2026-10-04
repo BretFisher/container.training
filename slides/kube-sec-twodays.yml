@@ -13,7 +13,7 @@
 #       logs, declarative vs imperative, network model, image registries,
 #       running our app on Kubernetes
 #     Leveling Up: setting up Kubernetes, distros and installers, EKS on AWS,
-#       daemon sets, labels and selectors
+#       daemonsets, labels and selectors
 #     Working with Production Clusters: deploying with YAML, namespaces,
 #       controlling a cluster remotely, accessing internal services,
 #       exposing HTTP services
@@ -74,6 +74,8 @@ toc: single
 
 exclude:
 - self-paced
+# Hands-on storage slides (e.g. in pv-pvc-sc.md); this deck covers concepts only.
+- storage-lab
 
 content:
 - shared/title.md
@@ -92,7 +94,6 @@ content:
 -
   # KEEP: quote "Our sample application"
   - shared/sampleapp.md
-  # LEFT OFF HERE-------------------------------------------------------------
   #- shared/composescale.md
   #- shared/hastyconclusions.md
   - shared/composedown.md
@@ -100,6 +101,7 @@ content:
   - k8s/concepts-k8s.md
   # KEEP: quote "First contact with kubectl"
   - k8s/kubectlget.md
+  # LEFT OFF HERE-------------------------------------------------------------
 -
   # KEEP: quote "Running our first containers"
   - k8s/kubectl-run.md
@@ -263,22 +265,20 @@ content:
   #- k8s/prometheus.md
   #- k8s/prometheus-stack.md
 -
-  # COMMENT OUT: whole storage group. None of these are in the quote.
-  # Replace this group with "Restricting Workload Features" content
+  # Storage: concepts only (what a StatefulSet is and when to use it; PV,
+  # PVC, StorageClass). No storage labs: the "storage-lab" slides are
+  # excluded, and the Consul, OpenEBS, and failover chapters are out.
+  # Students use EKS, and the EKS section covers EBS storage.
+  # Still open: add "Restricting Workload Features" content
   # (resource-limits.md, metrics-server.md) and "Security Guides and
   # Recommendations" (shared/cloud-native-security.md plus net new slides).
   - k8s/statefulsets.md
-  # COMMENT OUT: storage, not in the quote.
-  - k8s/consul.md
-  # COMMENT OUT: storage, not in the quote.
+  #- k8s/consul.md
   - k8s/pv-pvc-sc.md
-  # COMMENT OUT: storage, not in the quote.
-  - k8s/volume-claim-templates.md
+  #- k8s/volume-claim-templates.md
   #- k8s/portworx.md
-  # COMMENT OUT: storage, not in the quote.
-  - k8s/openebs.md
-  # COMMENT OUT: storage, not in the quote.
-  - k8s/stateful-failover.md
+  #- k8s/openebs.md
+  #- k8s/stateful-failover.md
   #- k8s/extending-api.md
   # (admission.md is "Dynamic Admission Control". Not in the quote, but it
   # is the mechanism behind Kyverno and PSA. Optional background for day 2.)
@@ -342,7 +342,7 @@ content:
 #   line 728: "Defining min, max, and default resources"
 #   line 801: "Namespace quotas"
 #   line 969: "Limiting resources in practice"
-# Place where the storage group was.
+# Place right after the storage group (statefulsets.md, pv-pvc-sc.md).
 #- k8s/resource-limits.md
 # k8s/metrics-server.md (198 lines). Title "Checking Node and Pod resource
 # usage", exact match. Place right after resource-limits.md.

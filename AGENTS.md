@@ -59,6 +59,8 @@ Edit sources rather than generated `*.yml.html`, `index.html`, `past.html`, or `
 
 ## Create slide diagrams
 
+- Unless specified otherwise, use a 16:9 canvas for all Excalidraw diagrams
+  and SVG exports to maximize usable space on slides.
 - When creating or editing diagrams, use the `excalidraw-diagram-skill` skill
   if available. Some environments list it as `excalidraw-diagram`.
 - Create `.excalidraw` JSON files directly; MCP access is not required. Use

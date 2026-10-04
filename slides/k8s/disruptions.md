@@ -90,7 +90,7 @@ In the real world...
 
 - This will trigger creation of replacement pods by owner controllers
 
-  (except for pods with a stable network identity, e.g. in a Stateful Set!)
+  (except for pods with a stable network identity, e.g. in a StatefulSet!)
 
 ---
 
@@ -100,7 +100,7 @@ In the real world...
 
   (toleration automatically added by Admission controller `DefaultTolerationSeconds`)
 
-- Pods of a Stateful Set don't recover automatically:
+- Pods of a StatefulSet don't recover automatically:
 
   - as long as the Pod exists, a replacement Pod can't be created
 
@@ -358,7 +358,7 @@ In the real world...
 
 - Specifying `minAvailable: X%` or `maxUnavaiable` requires *managed pods*
 
-  (pods that belong to a controller, e.g. Replica Set, Stateful Set...)
+  (pods that belong to a controller, e.g. ReplicaSet, StatefulSet...)
 
 - This is because the PDB controller needs to know the total number of pods
 
@@ -392,7 +392,7 @@ In the real world...
 
 - Only shut down (or restart) a node when no pods are running on that node
 
-  (except system pods belonging to Daemon Sets)
+  (except system pods belonging to DaemonSets)
 
 - To remove pods running on a node, we should use the *eviction API*
 

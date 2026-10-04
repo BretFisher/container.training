@@ -30,11 +30,11 @@
 
 ---
 
-## Our Postgres Stateful set
+## Our Postgres StatefulSet
 
 - The next slide shows `k8s/postgres.yaml`
 
-- It defines a Stateful set
+- It defines a StatefulSet
 
 - With a `volumeClaimTemplate` requesting a 1 GB volume
 
@@ -50,7 +50,7 @@
 
 ---
 
-## Creating the Stateful set
+## Creating the StatefulSet
 
 - Before applying the YAML, watch what's going on with `kubectl get events -w`
 

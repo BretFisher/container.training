@@ -133,7 +133,7 @@ class: extra-details
 
 ## Bottom-up approach
 
-- Start with existing Kubernetes resources (Deployment, Stateful Set...)
+- Start with existing Kubernetes resources (Deployment, StatefulSet...)
 
 - Run the system in production
 
@@ -175,7 +175,7 @@ class: extra-details
 
   - Pods and Persistent Volumes will *eventually* recover
 
-  - Stateful Sets give us easy ways to "add N copies" of a thing
+  - StatefulSets give us easy ways to "add N copies" of a thing
 
 - The real challenges come with configuration changes
 

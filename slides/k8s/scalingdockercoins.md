@@ -6,7 +6,7 @@
 
 - Let's look at the architecture again:
 
-  ![DockerCoins architecture](images/dockercoins-diagram.png)
+  ![DockerCoins architecture](images/dockercoins-diagram-2026.svg)
 
 - The loop is done in the worker;
   perhaps we could try adding more workers?

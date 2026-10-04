@@ -264,11 +264,11 @@ We have the following resources:
 
 - `replicaset.apps/pingpong-xxxxxxxxxx`
 
-  This is a Replica Set created by this Deployment.
+  This is a ReplicaSet created by this Deployment.
 
 - `pod/pingpong-xxxxxxxxxx-yyyyy`
 
-  This is a *pod* created by the Replica Set.
+  This is a *pod* created by the ReplicaSet.
 
 Let's explain what these things are.
 
@@ -314,31 +314,31 @@ class: extra-details
 
 ---
 
-## Replica Set
+## ReplicaSet
 
 - Set of identical (replicated) Pods
 
 - Defined by a pod template + number of desired replicas
 
-- If there are not enough Pods, the Replica Set creates more
+- If there are not enough Pods, the ReplicaSet creates more
 
   (e.g. in case of node outage; or simply when scaling up)
 
-- If there are too many Pods, the Replica Set deletes some
+- If there are too many Pods, the ReplicaSet deletes some
 
   (e.g. if a node was disconnected and comes back; or when scaling down)
 
-- We can scale up/down a Replica Set
+- We can scale up/down a ReplicaSet
 
-  - we update the manifest of the Replica Set
+  - we update the manifest of the ReplicaSet
 
-  - as a consequence, the Replica Set controller creates/deletes Pods
+  - as a consequence, the ReplicaSet controller creates/deletes Pods
 
 ---
 
 ## Deployment
 
-- Replica Sets control *identical* Pods
+- ReplicaSets control *identical* Pods
 
 - Deployments are used to roll out different Pods
 
@@ -346,15 +346,15 @@ class: extra-details
 
 - When we update a Deployment with a new Pod definition:
 
-  - a new Replica Set is created with the new Pod definition
+  - a new ReplicaSet is created with the new Pod definition
 
-  - that new Replica Set is progressively scaled up
+  - that new ReplicaSet is progressively scaled up
 
-  - meanwhile, the old Replica Set(s) is(are) scaled down
+  - meanwhile, the old ReplicaSet(s) is(are) scaled down
 
 - This is a *rolling update*, minimizing application downtime
 
-- When we scale up/down a Deployment, it scales up/down its Replica Set
+- When we scale up/down a Deployment, it scales up/down its ReplicaSet
 
 ---
 
@@ -385,17 +385,17 @@ class: extra-details
 
 class: extra-details
 
-## Scaling a Replica Set
+## Scaling a ReplicaSet
 
-- What if we scale the Replica Set instead of the Deployment?
+- What if we scale the ReplicaSet instead of the Deployment?
 
 - The Deployment would notice it right away and scale back to the initial level
 
-- The Replica Set makes sure that we have the right numbers of Pods
+- The ReplicaSet makes sure that we have the right numbers of Pods
 
-- The Deployment makes sure that the Replica Set has the right size
+- The Deployment makes sure that the ReplicaSet has the right size
 
-  (conceptually, it delegates the management of the Pods to the Replica Set)
+  (conceptually, it delegates the management of the Pods to the ReplicaSet)
 
 - This might seem weird (why this extra layer?) but will soon make sense
 
@@ -428,9 +428,9 @@ class: extra-details
 
 ## Resilience
 
-- The *deployment* `pingpong` watches its *replica set*
+- The *deployment* `pingpong` watches its *ReplicaSet*
 
-- The *replica set* ensures that the right number of *pods* are running
+- The *ReplicaSet* ensures that the right number of *pods* are running
 
 - What happens if pods disappear?
 
@@ -471,7 +471,7 @@ class: extra-details
 
   (sending it the TERM signal and waiting for it to shutdown)
 
-- As soon as the pod is in "Terminating" state, the Replica Set replaces it
+- As soon as the pod is in "Terminating" state, the ReplicaSet replaces it
 
 - But we can still see the output of the "Terminating" pod in `kubectl logs`
 

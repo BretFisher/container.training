@@ -20,13 +20,13 @@
 
 - With rolling updates, when a Deployment is updated, it happens progressively
 
-- The Deployment controls multiple Replica Sets
+- The Deployment controls multiple ReplicaSets
 
-- Each Replica Set is a group of identical Pods
+- Each ReplicaSet is a group of identical Pods
 
   (with the same image, arguments, parameters ...)
 
-- During the rolling update, we have at least two Replica Sets:
+- During the rolling update, we have at least two ReplicaSets:
 
   - the "new" set (corresponding to the "target" version)
 
@@ -215,7 +215,7 @@ If you didn't deploy the Kubernetes dashboard earlier, just skip this slide.
 
 - Connect to the dashboard that we deployed earlier
 
-- Check that we have failures in Deployments, Pods, and Replica Sets
+- Check that we have failures in Deployments, Pods, and ReplicaSets
 
 - Can we see the reason for the failure?
 
@@ -328,13 +328,13 @@ We might see something like 1, 4, 5.
 
 ## Explaining deployment revisions
 
-- These revisions correspond to our Replica Sets
+- These revisions correspond to our ReplicaSets
 
-- This information is stored in the Replica Set annotations
+- This information is stored in the ReplicaSet annotations
 
 .lab[
 
-- Check the annotations for our replica sets:
+- Check the annotations for our ReplicaSets:
   ```bash
   kubectl describe replicasets -l app=worker | grep -A3 ^Annotations
   ```

@@ -83,7 +83,7 @@ class: extra-details
 
 - A default *Storage Class* using Portworx
 
-- A *Daemon Set* to create loop devices on each node of the cluster
+- A *DaemonSet* to create loop devices on each node of the cluster
 
 ---
 
@@ -127,7 +127,7 @@ class: extra-details
 
 ## Setting up a loop device
 
-- Our `portworx.yaml` manifest includes a *Daemon Set* that will:
+- Our `portworx.yaml` manifest includes a *DaemonSet* that will:
 
   - create a 10 GB (empty) file on each node
 
@@ -151,7 +151,7 @@ class: extra-details
 
 - This can be verified by running `sudo losetup`
 
-- The *Daemon Set* uses a privileged *Init Container*
+- The *DaemonSet* uses a privileged *Init Container*
 
 - We can check the logs of that container with:
   ```bash
@@ -187,9 +187,9 @@ class: extra-details
 
 ## Dynamic provisioning of persistent volumes
 
-- We are going to run PostgreSQL in a Stateful set
+- We are going to run PostgreSQL in a StatefulSet
 
-- The Stateful set will specify a `volumeClaimTemplate`
+- The StatefulSet will specify a `volumeClaimTemplate`
 
 - That `volumeClaimTemplate` will create Persistent Volume Claims
 
@@ -328,7 +328,7 @@ were inspired by [Portworx examples on Katacoda](https://katacoda.com/portworx/s
 
 - [HA PostgreSQL on Kubernetes with Portworx](https://www.katacoda.com/portworx/scenarios/px-k8s-postgres-all-in-one)
 
-  (with adaptations to use a Stateful Set and simplify PostgreSQL's setup)
+  (with adaptations to use a StatefulSet and simplify PostgreSQL's setup)
 
 ???
 

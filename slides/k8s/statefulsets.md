@@ -1,6 +1,6 @@
-# Stateful sets
+# StatefulSets
 
-- Stateful sets are a type of resource in the Kubernetes API
+- StatefulSets are a type of resource in the Kubernetes API
 
   (like pods, deployments, services...)
 
@@ -8,11 +8,11 @@
 
 - At a first glance, they look like Deployments:
 
-  - a stateful set defines a pod spec and a number of replicas *R*
+  - a StatefulSet defines a pod spec and a number of replicas *R*
 
   - it will make sure that *R* copies of the pod are running
 
-  - that number can be changed while the stateful set is running
+  - that number can be changed while the StatefulSet is running
 
   - updating the pod spec will cause a rolling update to happen
 
@@ -20,9 +20,9 @@
 
 ---
 
-## Stateful sets unique features
+## StatefulSets unique features
 
-- Pods in a stateful set are numbered (from 0 to *R-1*) and ordered
+- Pods in a StatefulSet are numbered (from 0 to *R-1*) and ordered
 
 - They are started and updated in order (from 0 to *R-1*)
 
@@ -76,7 +76,7 @@
 
 ## Using a cloud volume
 
-Here is a pod definition using an AWS EBS volume (that has to be created first):
+A pod with an AWS EBS volume (old in-tree type, removed in 1.27; EKS uses EBS CSI):
 
 ```yaml
 apiVersion: v1
@@ -146,9 +146,9 @@ spec:
 
 ## Individual volumes
 
-- The Pods of a Stateful set can have individual volumes
+- The Pods of a StatefulSet can have individual volumes
 
-  (i.e. in a Stateful set with 3 replicas, there will be 3 volumes)
+  (i.e. in a StatefulSet with 3 replicas, there will be 3 volumes)
 
 - These volumes can be either:
 
@@ -160,13 +160,13 @@ spec:
 
   Persistent Volumes, Persistent Volume Claims, Storage Classes
 
-  (and also `volumeClaimTemplates`, that appear within Stateful Set manifests!)
+  (and also `volumeClaimTemplates`, that appear within StatefulSet manifests!)
 
 ---
 
-## Stateful set recap
+## StatefulSet recap
 
-- A Stateful sets manages a number of identical pods
+- A StatefulSet manages a number of identical pods
 
   (like a Deployment)
 
@@ -184,15 +184,55 @@ spec:
 
 ---
 
+## When do we need a StatefulSet?
+
+- When the pods are *not* interchangeable
+
+- Databases (one primary, some replicas)
+
+- Clustered apps with a quorum (etcd, Consul, ZooKeeper, Kafka...)
+
+- Apps where each pod needs a stable network name
+
+  (e.g. `db-0.db`, `db-1.db`, through a headless service)
+
+- Apps where each pod needs its own disk, which stays with that pod
+
+  (even when the pod is restarted or moved to another node)
+
+---
+
+## StatefulSet or Deployment?
+
+- StatefulSet advantages:
+
+  - stable pod names and DNS names
+
+  - ordered start, stop, and rolling update
+
+  - one Persistent Volume Claim per pod, kept across restarts and moves
+
+- Deployment advantages:
+
+  - any pod can replace any other pod
+
+  - faster scaling and rollouts (no ordering)
+
+- Stateless app → Deployment; stateful app → StatefulSet
+
+- On a managed cloud, also compare with a managed database service (e.g. RDS)
+
+---
+
 ## Obtaining per-pod storage
 
-- Stateful Sets can have *persistent volume claim templates*
+- StatefulSets can have *persistent volume claim templates*
 
-  (declared in `spec.volumeClaimTemplates` in the Stateful set manifest)
+  (declared in `spec.volumeClaimTemplates` in the StatefulSet manifest)
 
 - A claim template will create one Persistent Volume Claim per pod
 
-  (the PVC will be named `<claim-name>.<stateful-set-name>.<pod-index>`)
+  (the PVC will be named `<claim-name>-<statefulset-name>-<pod-index>`)
 
 - Persistent Volume Claims are matched 1-to-1 with Persistent Volumes
 
@@ -204,8 +244,8 @@ spec:
 
 ???
 
-:EN:- Deploying apps with Stateful Sets
+:EN:- Deploying apps with StatefulSets
 :EN:- Understanding Persistent Volume Claims and Storage Classes
-:FR:- Déployer une application avec un *Stateful Set*
+:FR:- Déployer une application avec un *StatefulSet*
 :FR:- Comprendre les *Persistent Volume Claims* et *Storage Classes*
 

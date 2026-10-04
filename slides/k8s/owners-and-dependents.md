@@ -2,7 +2,7 @@
 
 - Some objects are created by other objects
 
-  (example: pods created by replica sets, themselves created by deployments)
+  (example: pods created by ReplicaSets, themselves created by deployments)
 
 - When an *owner* object is deleted, its *dependents* are deleted
 
@@ -96,7 +96,7 @@ so the lines should not be indented (otherwise the indentation will insert space
 
 ## Orphaning pods
 
-- We are going to delete the Deployment and Replica Set that we created
+- We are going to delete the Deployment and ReplicaSet that we created
 
 - ... without deleting the corresponding pods!
 
@@ -107,7 +107,7 @@ so the lines should not be indented (otherwise the indentation will insert space
   kubectl delete deployment -l app=yanginx --cascade=false
   ```
 
-- Delete the Replica Set:
+- Delete the ReplicaSet:
   ```bash
   kubectl delete replicaset -l app=yanginx --cascade=false
   ```

@@ -269,6 +269,28 @@
           pre.appendChild(button);
         });
       });
+      // Dev mode (SLIDES_DEV=1, body class "dev"): show the image path when
+      // the mouse is on an image. One label for the page, placed over the
+      // image with fixed coordinates, so the slide HTML (and the CSS rules
+      // that select slide images) does not change.
+      if (document.body.classList.contains('dev')) {
+        const label = document.createElement('div');
+        label.className = 'image-label';
+        document.body.appendChild(label);
+        document.addEventListener('mouseover', function (event) {
+          const img = event.target.closest('.remark-slide-content img');
+          if (!img) {
+            label.classList.remove('visible');
+            return;
+          }
+          const box = img.getBoundingClientRect();
+          // The src as written in the Markdown (not the resolved URL).
+          label.textContent = img.getAttribute('src');
+          label.style.left = Math.max(0, box.left) + 'px';
+          label.style.top = Math.max(0, box.top) + 'px';
+          label.classList.add('visible');
+        });
+      }
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: false });
         slideshow.on('afterShowSlide', function (slide) {

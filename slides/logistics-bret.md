@@ -14,7 +14,7 @@ Welcome to the workshop! I'm glad you're here. Do these now, so we can start qui
 
 4. Copy down your node IPs, username, and password. Same user/pw for all nodes
 
-5. SSH into `node1`: `ssh <username>@<node1 IP>`
+5. SSH into `node1`: `ssh <username>@<IP>` (`mosh` and `et` also supported if you're fancy)
 
 6. No SSH client? Use the web terminal: `http://<node1 IP>:1080` (**http**, not https)
 

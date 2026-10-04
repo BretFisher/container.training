@@ -1,6 +1,6 @@
 # Running a Consul cluster
 
-- Here is a good use-case for Stateful sets!
+- Here is a good use-case for StatefulSets!
 
 - We are going to deploy a Consul cluster with 3 nodes
 
@@ -74,7 +74,7 @@ consul agent -data-dir=/consul/data -client=0.0.0.0 -server -ui \
 
 - The file `k8s/consul-1.yaml` defines the required resources
 
-  (service account, role, role binding, service, stateful set)
+  (service account, role, role binding, service, StatefulSet)
 
 - Inspired by this [excellent tutorial](https://github.com/kelseyhightower/consul-on-kubernetes) by Kelsey Hightower
 
@@ -88,7 +88,7 @@ consul agent -data-dir=/consul/data -client=0.0.0.0 -server -ui \
 
 .lab[
 
-- Create the stateful set and associated service:
+- Create the StatefulSet and associated service:
   ```bash
   kubectl apply -f ~/container.training/k8s/consul-1.yaml
   ```

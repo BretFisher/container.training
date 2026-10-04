@@ -182,7 +182,7 @@ We need to:
 
 - Expose the Prometheus server web UI (e.g. with a NodePort)
 
-- Run the *node exporter* on each node (with a Daemon Set)
+- Run the *node exporter* on each node (with a DaemonSet)
 
 - Set up a Service Account so that Prometheus can query the Kubernetes API
 

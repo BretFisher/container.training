@@ -355,7 +355,7 @@ class: extra-details
 
 - kube-proxy is "yet another API server client"
 
-- In many clusters, it runs as a Daemon Set
+- In many clusters, it runs as a DaemonSet
 
 - In that case, it will have its own Service Account and associated permissions
 

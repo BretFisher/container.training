@@ -46,7 +46,7 @@
 ]
 
 If we [look at the YAML file](https://github.com/jpetazzo/container.training/blob/master/k8s/efk.yaml), we see that
-it creates a daemon set, two deployments, two services,
+it creates a DaemonSet, two deployments, two services,
 and a few roles and role bindings (to give fluentd the required permissions).
 
 ---
@@ -71,7 +71,7 @@ and a few roles and role bindings (to give fluentd the required permissions).
 
 ## The itinerary of a log line (with Fluentd)
 
-- Fluentd runs on each node (thanks to a daemon set)
+- Fluentd runs on each node (thanks to a DaemonSet)
 
 - It bind-mounts `/var/log/containers` from the host (to access these files)
 

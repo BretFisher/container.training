@@ -2,7 +2,7 @@
 
 - When an application needs storage, it creates a PersistentVolumeClaim
 
-  (either directly, or through a volume claim template in a Stateful Set)
+  (either directly, or through a volume claim template in a StatefulSet)
 
 - The PersistentVolumeClaim is initially `Pending`
 
@@ -139,6 +139,7 @@ class: extra-details
 - For all the details about the PersistentVolumeClaimBinder, check [this doc](https://github.com/kubernetes/design-proposals-archive/blob/main/storage/persistent-storage.md#matching-and-binding)
 
 ---
+class: storage-lab
 
 ## Creating a PVC
 
@@ -202,6 +203,7 @@ class: extra-details
 - WaitForFirstConsumer = don't provision the PV until a Pod mounts the PVC
 
 ---
+class: storage-lab
 
 ## Using the PVC
 
@@ -214,12 +216,14 @@ class: extra-details
 - We'll need to update the `claimName`! ⚠️
 
 ---
+class: storage-lab
 
 ```yaml
 @@INCLUDE[k8s/mounter.yaml]
 ```
 
 ---
+class: storage-lab
 
 ## Running the Pod
 
@@ -238,6 +242,7 @@ class: extra-details
 Note: this "mounter" Pod can be useful to inspect the content of a PVC.
 
 ---
+class: storage-lab
 
 ## Scenario 1 & 2
 
@@ -248,6 +253,7 @@ If we have a default Storage Class that can provision PVC dynamically...
 - The PV and the PVC should be `Bound` together
 
 ---
+class: storage-lab
 
 ## Scenario 3
 
@@ -264,6 +270,7 @@ kubectl get pv,pvc
 ```
 
 ---
+class: storage-lab
 
 ## Scenario 4
 
@@ -286,6 +293,7 @@ kubectl get pv,pvc
 ```
 
 ---
+class: storage-lab
 
 ## Checking the Pod
 
