@@ -28,6 +28,10 @@ class SlideTOCEntry(NamedTuple):
     filename: str
 
 
+class ContentsTOCEntry(SlideTOCEntry):
+    """A link to generated contents, without a lecture title slide."""
+
+
 def anchor(title):
     title = title.lower().replace(' ', '-')
     title = ''.join(c for c in title if c in string.ascii_letters+'-')
@@ -263,6 +267,9 @@ def contententries(content, filename):
             if properties.get("layout") == "true":
                 raise ValueError("{}: toc cannot be set on a layout slide".format(filename))
             entries.append(SlideTOCEntry(label, target, filename))
+        if re.search(r"^@@TOC@@$", slide, re.MULTILINE) and removeexcluded(slide, toc_exclude) == slide and properties.get("exclude") != "true":
+            entries.append(ContentsTOCEntry("Table of contents",
+                "toc" if single_toc else "toc-section-1", filename))
         entries.extend(re.findall("^# (.*)", slide, re.MULTILINE))
     return entries
 
@@ -287,15 +294,30 @@ def gentoc(tree):
             if isinstance(entry, dict) else (None, list(flatten(entry)))
             for entry in tree if isinstance(entry, (list, dict))]
     tree = [(name, part) for name, part in tree if name or part]
+    # A standalone TOC placeholder is an entry at its manifest position,
+    # not a new section. Keep it in the preceding group, or the next at the start.
+    groups = []
+    pending_contents = []
+    for name, part in tree:
+        if name is None and part and all(isinstance(entry, ContentsTOCEntry) for entry in part):
+            if groups:
+                groups[-1][1].extend(part)
+            else:
+                pending_contents.extend(part)
+        else:
+            groups.append((name, pending_contents + part))
+            pending_contents = []
+    tree = groups or ([(None, pending_contents)] if pending_contents else [])
     # Now, process each section.
     if single_toc:
         return gentoc_single(tree)
     parts = []
     pending_labels = []
-    section_count = sum(bool(part) for name, part in tree)
+    section_count = sum(any(not isinstance(entry, ContentsTOCEntry) for entry in part)
+                        for name, part in tree)
     display_section = 0
     for name, part in tree:
-        if part:
+        if any(not isinstance(entry, ContentsTOCEntry) for entry in part):
             display_section += 1
         if not any(isinstance(entry, str) for entry in part):
             label = "## {}\n\n".format(name or "Section {}".format(display_section))
@@ -340,7 +362,7 @@ def gentoc_single(tree):
     section = 0
     lecture_section = 0
     for name, part in tree:
-        if part:
+        if any(not isinstance(entry, ContentsTOCEntry) for entry in part):
             section += 1
         if any(isinstance(entry, str) for entry in part):
             lecture_section += 1
@@ -407,28 +429,34 @@ def git(*args):
     return subprocess.check_output(["git"] + list(args),
         stderr=subprocess.DEVNULL).decode("ascii").strip()
 
-try:
-    repo = os.environ.get("REPOSITORY_URL") or git("config", "remote.origin.url")
-    repo = repo.replace("git@github.com:", "https://github.com/").removesuffix(".git")
-    branch = os.environ.get("BRANCH") or git("rev-parse", "--abbrev-ref", "HEAD")
+# Development footers need only source filenames and slide anchors. Do not
+# discover Git metadata here: development containers have no .git directory.
+urltemplate = "file://{pwd}/{filename}".format(pwd=os.getcwd(), filename="{}")
+commit = "??????"
+dirtyfiles = ""
+if not dev:
     try:
-        base = git("rev-parse", "--show-prefix").strip("/")
+        repo = os.environ.get("REPOSITORY_URL") or git("config", "remote.origin.url")
+        repo = repo.replace("git@github.com:", "https://github.com/").removesuffix(".git")
+        branch = os.environ.get("BRANCH") or git("rev-parse", "--abbrev-ref", "HEAD")
+        try:
+            base = git("rev-parse", "--show-prefix").strip("/")
+        except Exception:
+            base = os.path.basename(os.getcwd())
+        urltemplate = ("{repo}/tree/{branch}/{base}/{filename}"
+            .format(repo=repo, branch=branch, base=base, filename="{}"))
     except Exception:
-        base = os.path.basename(os.getcwd())
-    urltemplate = ("{repo}/tree/{branch}/{base}/{filename}"
-        .format(repo=repo, branch=branch, base=base, filename="{}"))
-except Exception:
-    logging.warning("Could not determine repository URL or branch; generating local URLs instead.")
-    urltemplate = "file://{pwd}/{filename}".format(pwd=os.getcwd(), filename="{}")
-try:
-    commit = os.environ.get("COMMIT") or git("rev-parse", "--short", "HEAD")
-except Exception:
-    logging.warning("Could not determine HEAD commit.")
-    commit = "??????"
-try:
-    dirtyfiles = git("status", "--porcelain")
-except Exception:
-    dirtyfiles = "(git status unavailable in this build environment)"
+        logging.warning("Could not determine repository URL or branch; generating local URLs instead.")
+        urltemplate = "file://{pwd}/{filename}".format(pwd=os.getcwd(), filename="{}")
+    try:
+        commit = os.environ.get("COMMIT") or git("rev-parse", "--short", "HEAD")
+    except Exception:
+        logging.warning("Could not determine HEAD commit.")
+        commit = "??????"
+    try:
+        dirtyfiles = git("status", "--porcelain")
+    except Exception:
+        dirtyfiles = "(git status unavailable in this build environment)"
 
 def makelink(filename):
     if os.path.isfile(filename):

@@ -28,8 +28,8 @@ class NamedSectionsTest(unittest.TestCase):
         (self.work / "last.md").write_text("# Gamma\n\nLast content.\n")
         (self.work / "intro.md").write_text("## Introduction\n\nNo lecture heading.\n")
 
-    def build(self, content, single=False, dev=False, success=True):
-        manifest = {"title": "Test deck", "content": ["toc.md"] + content,
+    def build(self, content, single=False, dev=False, success=True, prepend_toc=True):
+        manifest = {"title": "Test deck", "content": (["toc.md"] if prepend_toc else []) + content,
                     "exclude": ["hidden"]}
         if single:
             manifest["toc"] = "single"
@@ -73,7 +73,7 @@ class NamedSectionsTest(unittest.TestCase):
                 self.assertIn("**Section 1**" if single else "## Section 1", html)
                 self.assertIn("**Deployment**" if single else "## Deployment", html)
                 links = re.findall(r"^- \[([^]]+)\]\(#toc-[^)]+\)$", html, re.M)
-                self.assertEqual(links, ["Alpha", "Beta", "Gamma"])
+                self.assertEqual(links, (["Table of contents"] if not single else []) + ["Alpha", "Beta", "Gamma"])
                 self.assertIn("[Previous lecture](#toc-beta)", html)
                 self.assertIn("[Next lecture](#toc-gamma)", html)
                 self.assertIn("[Previous lecture]({})".format("#toc" if single else "#toc-section-1"), html)
@@ -151,6 +151,63 @@ class NamedSectionsTest(unittest.TestCase):
         published = self.build(["first.md"], dev=False)
         self.assertIn("These slides have been built from commit: test", published)
 
+    def test_dev_skips_git_and_production_keeps_metadata_discovery(self):
+        (self.work / "first.md").write_text("name: sample\n\n## Sample\n\nBody.\n")
+        self.build(["first.md"])
+        # Run the real compiler with a spy inside its process, so caught Git
+        # failures cannot hide an attempted lookup. No metadata env is set.
+        runner = """
+import runpy, subprocess, sys
+from unittest.mock import patch, call
+compiler = sys.argv.pop(1)
+values = {
+    ('git', 'config', 'remote.origin.url'): b'git@github.com:example/training.git',
+    ('git', 'rev-parse', '--abbrev-ref', 'HEAD'): b'production',
+    ('git', 'rev-parse', '--show-prefix'): b'slides/',
+    ('git', 'rev-parse', '--short', 'HEAD'): b'abc123',
+    ('git', 'status', '--porcelain'): b' M first.md',
+}
+with patch('subprocess.check_output', side_effect=lambda command, **kw: values[tuple(command)]) as spy:
+    runpy.run_path(compiler, run_name='__main__')
+    if __import__('os').environ['SLIDES_DEV'] == '1':
+        spy.assert_not_called()
+    else:
+        assert spy.call_args_list == [call(list(command), stderr=subprocess.DEVNULL) for command in values]
+"""
+        for dev in (True, False):
+            with self.subTest(dev=dev):
+                env = dict(os.environ, SLIDES_DEV="1" if dev else "0")
+                for key in ("REPOSITORY_URL", "BRANCH", "COMMIT"):
+                    env.pop(key, None)
+                result = subprocess.run(
+                    [sys.executable, "-c", runner, str(SLIDES / "markmaker.py"), "deck.yml"],
+                    cwd=self.work, env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertNotIn("Could not determine", result.stderr)
+                if dev:
+                    self.assertIn(".debug[first.md · #sample]", result.stdout)
+                    self.assertNotIn("These slides have been built from commit", result.stdout)
+                else:
+                    self.assertIn("https://github.com/example/training/tree/production/slides/first.md", result.stdout)
+                    self.assertIn("These slides have been built from commit: abc123", result.stdout)
+                    self.assertIn("M first.md", result.stdout)
+
+    def test_dev_without_git_keeps_unrelated_warnings(self):
+        self.build(["first.md"])
+        env = dict(os.environ, SLIDES_DEV="1", PATH="")
+        for key in ("REPOSITORY_URL", "BRANCH", "COMMIT"):
+            env.pop(key, None)
+        # A missing source still needs its warning; skip only Git discovery.
+        manifest = yaml.safe_load((self.work / "deck.yml").read_text())
+        manifest["content"].append("missing-source.md")
+        (self.work / "deck.yml").write_text(yaml.safe_dump(manifest))
+        result = subprocess.run([sys.executable, str(SLIDES / "markmaker.py"), "deck.yml"],
+                                cwd=self.work, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("Could not determine", result.stderr)
+        self.assertIn("no file found: missing-source.md", result.stderr)
+        self.assertIn(".debug[first.md]", result.stdout)
+
     def test_direct_slide_links_keep_order_slides_and_lecture_navigation(self):
         body = ("# Alpha\n\nFirst content.\n\n---\n\n"
                 "name: task\nclass: exercise\ntoc: Do the task\n\n"
@@ -166,7 +223,8 @@ class NamedSectionsTest(unittest.TestCase):
                         (self.work / "task.md").write_text(body)
                         new = self.build([group], single, dev)
                         links = re.findall(r"^- \[([^]]+)\]\(#([^)]+)\)$", new, re.M)
-                        self.assertEqual(links, [("Alpha", "toc-alpha"), ("Do the task", "task"), ("Beta", "toc-beta")])
+                        self.assertEqual(links, [("Table of contents", "toc" if single else "toc-section-1"),
+                                                 ("Alpha", "toc-alpha"), ("Do the task", "task"), ("Beta", "toc-beta")])
                         self.assertEqual(old.count("\n---\n"), new.count("\n---\n"))
                         self.assertEqual(re.findall(r"^name: .*", old, re.M), re.findall(r"^name: .*", new, re.M))
                         self.assertEqual(re.findall(r"\[(?:Previous|Next) lecture\]\([^)]*\)", old),
@@ -223,3 +281,37 @@ class NamedSectionsTest(unittest.TestCase):
             with self.subTest(message=message):
                 (self.work / "bad.md").write_text(content)
                 self.assertIn(message, self.build([["bad.md"]], single=True, success=False))
+
+    def test_automatic_contents_entry_keeps_manifest_order_and_navigation(self):
+        for single in (False, True):
+            for placement in ("start", "middle", "end", "named"):
+                with self.subTest(single=single, placement=placement):
+                    if placement == "named":
+                        content = [{"title": "Basics", "content": ["first.md", "toc.md", "last.md"]}]
+                    else:
+                        content = {"start": ["toc.md", ["first.md", "last.md"]],
+                                   "middle": [["first.md"], "toc.md", ["last.md"]],
+                                   "end": [["first.md", "last.md"], "toc.md"]}[placement]
+                    html = self.build(content, single, prepend_toc=False)
+                    links = re.findall(r"^- \[([^]]+)\]\(#([^)]+)\)$", html, re.M)
+                    target = "toc" if single else "toc-section-1"
+                    expected = [("Alpha", "toc-alpha"), ("Beta", "toc-beta"), ("Gamma", "toc-gamma")]
+                    position = 0 if placement == "start" else 3 if placement == "end" else 2
+                    expected.insert(position, ("Table of contents", target))
+                    self.assertEqual(links, expected)
+                    self.assertEqual(len(re.findall(r"^name: " + target + r"$", html, re.M)), 1)
+                    self.assertNotIn("name: toc-table-of-contents", html)
+                    self.assertEqual(html.count("class: title"), 3)
+                    self.assertEqual(html.count("class: pic"), 3)
+                    self.assertEqual(len(re.findall(r"^name: toc(?:-section-\d+)?$", html, re.M)),
+                                     1 if single or placement != "middle" else 2)
+                    self.assertIn("[Next lecture](#toc-gamma)", html)
+                    self.assertIn("[Previous lecture](#toc-beta)", html)
+
+    def test_automatic_contents_target_rejects_duplicate_anchor(self):
+        for single in (False, True):
+            with self.subTest(single=single):
+                target = "toc" if single else "toc-section-1"
+                (self.work / "collision.md").write_text("name: " + target + "\n\n## Collision\n")
+                self.assertIn("exactly one retained slide", self.build([["collision.md", "first.md"]],
+                              single, success=False))

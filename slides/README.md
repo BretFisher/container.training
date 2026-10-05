@@ -108,28 +108,50 @@ it will compile each `foo.yml` file into `foo.yml.html`.
 It needs Python 3 with the packages in `requirements.txt`.
 It exits non-zero if any deck fails to build.
 
-For a live dev server that rebuilds on every save, run `make serve`
-(or `docker compose up --build --watch`) in this directory. It runs one
-container that:
+For a live dev server that rebuilds on every save, run `make serve` in this
+directory. It runs `docker compose up --build --watch` in the foreground.
+Build and watch output stays in that terminal. The slide image supplies
+Python and build dependencies; no extra host tool is needed.
 
-- is built from `Dockerfile` with Python, the build dependencies, and a
-  baseline copy of `slides/` and `k8s/` (slides pull manifests from `k8s/`
-  with `@@INCLUDE[...]`),
-- builds every deck at startup and serves this directory on
-  http://localhost:8080/ (set `SLIDES_PORT` in `.env` or the environment
-  to change the port),
-- receives each source edit through Compose watch (file sync, no bind
-  mount) and re-runs `./build.sh once`. Build errors show in the same
-  terminal, and the previous HTML stays served until the build passes.
+```sh
+make serve                            # Build all decks and watch source edits
+make serve SLIDES_DECK=kube-sec-twodays.yml    # Build and rebuild only this deck
+# Press Ctrl+C to stop; then remove the containers:
+make down
+```
 
-Generated files stay inside the container. Always start with `--build`
-(which `make serve` does) so the baseline matches your checkout; the sync
-only carries edits made while the watcher runs.
+The container serves slides at http://localhost:8080/ (override with
+`SLIDES_PORT`). Compose watch syncs source edits under `slides/` and `k8s/`
+into the container and runs `./build.sh once`. Generated HTML stays in the
+container. Refresh the browser after a rebuild. Each deck keeps its previous
+HTML until its next build succeeds.
+
+`SLIDES_DECK` must name an existing `.yml` file in `slides/`, without a path.
+Pass it to Make or export it in the shell. An empty or unset value builds all
+decks; lab commands default to `kube-sec-twodays.yml` when it is empty.
+Before Compose starts, Make prints `Serving deck: <filename>` or
+`Serving all decks.` so the selection is visible before image-build output.
+The terminal prints `Building deck: <filename>` for a selection, or
+`Building all decks.` otherwise. The selection applies to startup and every
+rebuild, including edits to shared content, templates, images, and `k8s/`.
+Open the deck directly, for example
+`http://localhost:8080/kube-sec-twodays.yml.html`. Selected builds skip the
+catalog (`index.html` and `past.html`); existing catalog and other deck HTML
+can remain and may be out of date. Builds do not delete them. Container
+recreation can replace old outputs.
+
+To switch decks, press Ctrl+C and run `make serve SLIDES_DECK=another-deck.yml`.
+Run `make serve SLIDES_DECK=` to build all decks again. `make zip` and
+`SLIDES_ZIP=1` always build all decks and catalogs. Direct `./build.sh once`
+builds all decks unless `SLIDES_DECK` is set. Run `make test-markmaker` for
+compiler and selection tests.
 
 The dev server builds in dev mode (`SLIDES_DEV=1`): the footer of each
 slide shows its source file name and its `name:` anchor, for example
 `install.md · #install`. Dev footers omit Git status and build details so
-they do not cover slide content. Published decks keep those details in the
+they do not cover slide content. Dev builds skip all Git metadata lookups,
+so a container without `.git` does not emit Git metadata warnings.
+Published decks keep those details in the
 hidden first footer. Open `deck.yml.html#install` to go back to that
 slide. For a local build in dev mode, run `make build-dev`. To turn dev
 mode off in the container, run `SLIDES_DEV=0 make serve`. Netlify does not
@@ -139,7 +161,7 @@ To create `slides.zip` like Netlify does (all decks, no dev footers), run
 `make zip`. It builds in the same Docker image and copies only `slides.zip`
 to this directory. Unzip it and open a `foo.yml.html` file in a browser.
 
-Stop with Ctrl-C, then `make down` to remove the container.
+Stop with Ctrl+C, then run `make down` to remove the container.
 `make clean` also deletes generated files from a local, non-Docker build.
 `make help` lists all targets.
 
@@ -155,6 +177,39 @@ Pull requests are automatically deployed to testing
 subdomains. I had no idea that I would ever say this
 about a static page hosting service, but it is seriously awesome. ⚡️💥
 
+
+## Search a deck
+
+Press `/` or click the search button above the theme button to search all
+slides in the open deck. The Remark help screen (`?`) lists this shortcut.
+Search matches text without case sensitivity, including code. It treats
+punctuation as plain text. It excludes speaker notes, slide properties,
+and slide controls. In chapter view (`workshop.html?k8s/helm-intro`), it
+searches only that chapter.
+
+Results show slide titles and displayed numbers. Use Up/Down and Enter,
+or click a title to open a result. Close with X, Escape, or a click outside
+the popup. Dismissal restores focus and keeps the current slide and reveal.
+A match in a later incremental step opens that step; each slide
+appears once. Cmd/Ctrl+F keeps the browser's normal search behavior.
+Search runs in the browser and needs no extra dependency or service.
+
+## Open the table of contents
+
+Press `o` or click the contents button to open the deck's generated section
+slides with their original columns, text styles, and chapter links. Each
+preview trims blank slide margins and scales the content to fit the window. Select **Table of contents** in the generated
+list to open the TOC slide. The compiler adds this entry at the manifest
+position of `toc.md`. Multi-page TOCs link to their first page.
+Decks with multiple TOC slides show each section preview in a scrollable
+popup. The four buttons form a vertical stack at the
+bottom right: contents, search, theme, and Help. This shortcut also appears
+in Help (`?`). Select a chapter to close the popup and open its first step. Use Tab and Enter for
+keyboard selection.
+
+Close with X, Escape, or a click outside. Dismissal keeps the current slide,
+reveal, and URL hash. Both popups keep slide navigation keys inside the popup
+and use the current theme. Chapter-only views have no generated contents.
 
 ## Extra bells and whistles
 
@@ -180,7 +235,7 @@ This needs the existing Helm CLI. It does not install tools.
 Plan the core chapters before a lab run:
 
 ```sh
-make labtest-plan DECK=kube-sec-twodays.yml \
+make labtest-plan SLIDES_DECK=kube-sec-twodays.yml \
   ONLY="k8s/helm-intro.md k8s/helm-chart-format.md k8s/helm-create-basic-chart.md k8s/helm-values-schema-validation.md k8s/helm-secrets.md"
 ```
 

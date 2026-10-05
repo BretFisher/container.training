@@ -142,7 +142,15 @@
       // "N + Enter" goes to step N in Remark. Track the digits, and after
       // Remark has moved, go to the first step of slide N instead.
       let typedNumber = '';
+      const searchDialog = document.createElement('dialog');
+      const contentsDialog = document.createElement('dialog');
+      const popupOpen = () => searchDialog.open || contentsDialog.open;
       document.addEventListener('keydown', function (event) {
+        if (popupOpen() || event.ctrlKey || event.metaKey || event.altKey ||
+            event.target.closest('input, textarea, select, [contenteditable]')) {
+          typedNumber = '';
+          return;
+        }
         if (/^[0-9]$/.test(event.key)) {
           typedNumber += event.key;
         } else if (event.key === 'Enter' && typedNumber) {
@@ -201,7 +209,289 @@
         container.appendChild(button);
       });
 
-      // 🎨 button left of "?": cycle through color themes (workshop.css
+      // Search the rendered student slides, before controls or Mermaid can
+      // change their DOM. Remark has already removed notes and properties.
+      // Keep every step's text, but return only one result per displayed number.
+      const searchSlides = [];
+      const normalizeSearch = text => text.replace(/\s+/g, ' ').trim().toLowerCase();
+      function studentText(node) {
+        if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+        if (node.matches('script, style, .footer, .debug, .remark-slide-number, button, [hidden]') ||
+            getComputedStyle(node).display === 'none') return '';
+        const text = [...node.childNodes].map(studentText).join('');
+        // Preserve spaces inside inline text; separate paragraphs and code lines.
+        return text + (getComputedStyle(node).display === 'inline' ? '' : ' ');
+      }
+      document.querySelectorAll('.remark-slides-area .remark-slide-content').forEach((content, i) => {
+        const no = stepToSlide[i];
+        let entry = searchSlides.find(slide => slide.no === no);
+        if (!entry) {
+          entry = { no, title: '', steps: [] };
+          searchSlides.push(entry);
+        }
+        const heading = content.querySelector('h1, h2, h3, h4, h5, h6');
+        if (!entry.title && heading) entry.title = studentText(heading).trim();
+        entry.steps.push({ step: i + 1, text: normalizeSearch(studentText(content)) });
+      });
+      searchDialog.className = 'slide-search';
+      searchDialog.setAttribute('aria-labelledby', 'slide-search-title');
+      searchDialog.innerHTML = `
+        <div class="slide-search-header">
+          <h2 id="slide-search-title">Search slides</h2>
+          <button type="button" class="slide-search-close" aria-label="Close search">×</button>
+        </div>
+        <label for="slide-search-input">Text in this deck</label>
+        <input id="slide-search-input" type="search" autocomplete="off"
+          role="combobox" aria-autocomplete="list" aria-expanded="true"
+          aria-controls="slide-search-results" aria-describedby="slide-search-hint">
+        <p id="slide-search-hint">↑ ↓ select · Enter opens · Esc closes</p>
+        <p class="slide-search-status" role="status" aria-live="polite"></p>
+        <ul id="slide-search-results" role="listbox" aria-label="Matching slides"></ul>`;
+      document.body.appendChild(searchDialog);
+      const searchInput = searchDialog.querySelector('input');
+      const searchResults = searchDialog.querySelector('ul');
+      const searchStatus = searchDialog.querySelector('[role="status"]');
+      let searchMatches = [];
+      let selectedResult = -1;
+      // Native modal dialogs keep focus inside and leave the current reveal alone.
+      function popupControls(dialog) {
+        let returnFocus;
+        function close() {
+          dialog.close();
+          typedNumber = '';
+          if (returnFocus && returnFocus.isConnected && returnFocus.getClientRects().length) returnFocus.focus();
+          else document.body.focus();
+        }
+        function open() {
+          if (popupOpen()) return;
+          if (document.body.classList.contains('remark-help-mode')) slideshow.toggleHelp();
+          returnFocus = document.activeElement;
+          typedNumber = '';
+          dialog.showModal();
+        }
+        dialog.querySelector('button').addEventListener('click', close);
+        dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
+        ['click', 'wheel', 'mousewheel', 'DOMMouseScroll', 'touchstart', 'touchmove', 'touchend'].forEach(type =>
+          dialog.addEventListener(type, event => event.stopPropagation()));
+        return { open, close };
+      }
+      const searchPopup = popupControls(searchDialog);
+      function selectSearchResult(index) {
+        selectedResult = index;
+        [...searchResults.children].forEach((item, i) => {
+          item.setAttribute('aria-selected', String(i === index));
+        });
+        const item = searchResults.children[index];
+        if (item) {
+          searchInput.setAttribute('aria-activedescendant', item.id);
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          searchInput.removeAttribute('aria-activedescendant');
+        }
+      }
+      const closeSearch = searchPopup.close;
+      function openSearch() {
+        if (popupOpen()) return;
+        searchPopup.open();
+        updateSearch();
+        searchInput.focus();
+        searchInput.select();
+      }
+      function openSearchResult(index) {
+        const result = searchMatches[index];
+        if (!result) return;
+        closeSearch();
+        // Open the first step that includes the match, so later reveals show.
+        slideshow.gotoSlide(result.step);
+      }
+      function updateSearch() {
+        const query = normalizeSearch(searchInput.value);
+        searchMatches = [];
+        if (query) searchSlides.forEach(slide => {
+          const match = slide.steps.find(step => step.text.includes(query));
+          if (match) searchMatches.push({ ...slide, step: match.step });
+        });
+        searchResults.replaceChildren();
+        searchStatus.textContent = !query ? 'Type text to search all slides in this deck.' :
+          searchMatches.length ? `${searchMatches.length} matching slides` : 'No matching slides.';
+        searchMatches.forEach((slide, i) => {
+          const item = document.createElement('li');
+          item.id = `slide-search-result-${i}`;
+          item.setAttribute('role', 'option');
+          const number = document.createElement('span');
+          number.className = 'slide-search-number';
+          number.textContent = tmplSLIDENUMBERPREFIX + slide.no;
+          const title = document.createElement('span');
+          title.textContent = slide.title || `Slide ${slide.no}`;
+          item.append(number, title);
+          item.addEventListener('click', () => openSearchResult(i));
+          searchResults.appendChild(item);
+        });
+        selectSearchResult(searchMatches.length ? 0 : -1);
+      }
+      searchInput.addEventListener('input', updateSearch);
+      contentsDialog.className = 'slide-search slide-contents';
+      contentsDialog.setAttribute('aria-label', 'Table of contents');
+      contentsDialog.innerHTML = `
+        <button type="button" class="slide-search-close slide-contents-close" aria-label="Close contents">×</button>
+        <nav aria-label="Deck chapters"></nav>`;
+      const contentsNav = contentsDialog.querySelector('nav');
+      // Reuse the compiler's rendered TOC, including section labels and anchors.
+      slideshow.getSlides().forEach((slide, i) => {
+        if (!/^toc(?:-section-\d+)?$/.test(slide.properties.name || '')) return;
+        const source = document.querySelectorAll('.remark-slides-area .remark-slide-content')[i];
+        const section = source.cloneNode(true);
+        section.removeAttribute('id');
+        const page = document.createElement('section');
+        page.className = 'slide-contents-page';
+        page.setAttribute('aria-label', source.querySelector('h2')?.textContent || 'Table of contents');
+        const preview = document.createElement('div');
+        preview.className = 'slide-contents-preview';
+        const canvas = document.createElement('div');
+        canvas.className = 'remark-slide slide-contents-canvas';
+        // Keep Remark's original canvas size, classes, columns, and typography.
+        canvas.dataset.step = i;
+        section.querySelectorAll('.debug, .footer, .remark-slide-number, button').forEach(node => node.remove());
+        section.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+        canvas.appendChild(section);
+        preview.appendChild(canvas);
+        page.appendChild(preview);
+        contentsNav.appendChild(page);
+      });
+      if (!contentsNav.children.length) contentsNav.textContent = 'This chapter view has no table of contents.';
+      document.body.appendChild(contentsDialog);
+      const contentsPopup = popupControls(contentsDialog);
+      function fitContents() {
+        if (!contentsDialog.open) return;
+        const canvases = [...contentsNav.querySelectorAll('.slide-contents-canvas')];
+        const bounds = canvases.map(canvas => {
+          const source = document.querySelectorAll('.remark-slides-area .remark-slide-content')[+canvas.dataset.step];
+          const scaler = source.closest('.remark-slide-scaler');
+          canvas.style.width = scaler.style.width;
+          canvas.style.height = scaler.style.height;
+          canvas.style.transform = 'none';
+          const origin = canvas.getBoundingClientRect();
+          const children = [...canvas.firstElementChild.children].map(node => node.getBoundingClientRect())
+            .filter(rect => rect.width && rect.height);
+          // Trim only blank canvas edges; preserve the original text geometry.
+          const left = Math.min(...children.map(rect => rect.left)) - origin.left - 4;
+          const top = Math.min(...children.map(rect => rect.top)) - origin.top - 4;
+          const width = Math.max(...children.map(rect => rect.right)) - origin.left - left + 4;
+          const height = Math.max(...children.map(rect => rect.bottom)) - origin.top - top + 4;
+          return { left, top, width, height };
+        });
+        const scale = Math.min(contentsNav.clientWidth / Math.max(...bounds.map(box => box.width)),
+          (window.innerHeight - 34) / Math.max(...bounds.map(box => box.height)));
+        canvases.forEach((canvas, i) => {
+          const box = bounds[i];
+          canvas.style.transform = `scale(${scale}) translate(${-box.left}px, ${-box.top}px)`;
+          canvas.parentElement.style.width = box.width * scale + 'px';
+          canvas.parentElement.style.height = box.height * scale + 'px';
+        });
+      }
+
+      new ResizeObserver(fitContents).observe(contentsNav);
+      function openContents() {
+        contentsPopup.open();
+        fitContents();
+      }
+      contentsNav.addEventListener('click', event => {
+        const link = event.target.closest('a[href^="#"]');
+        if (!link) return;
+        event.preventDefault();
+        const name = decodeURIComponent(link.getAttribute('href').slice(1));
+        const index = slideshow.getSlides().findIndex(slide => slide.properties.name === name);
+        contentsPopup.close();
+        if (index >= 0) slideshow.gotoSlide(index + 1);
+      });
+      // A backdrop click belongs to the dialog, so consume it before Remark.
+      window.addEventListener('click', event => {
+        const dialog = searchDialog.open ? searchDialog : contentsDialog.open ? contentsDialog : null;
+        if (!dialog) return;
+        const rect = dialog.getBoundingClientRect();
+        if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right ||
+            event.clientY < rect.top || event.clientY > rect.bottom)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          (dialog === searchDialog ? searchPopup : contentsPopup).close();
+        }
+      }, true);
+      // Capture at window level before Remark and the numeric Enter handler.
+      // Native edit keys (including Cmd/Ctrl+F) keep their browser behavior.
+      window.addEventListener('keydown', event => {
+        if (popupOpen()) {
+          event.stopImmediatePropagation();
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            (searchDialog.open ? searchPopup : contentsPopup).close();
+          } else if (!event.isComposing && event.target === searchInput) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+              event.preventDefault();
+              if (searchMatches.length) selectSearchResult(
+                (selectedResult + (event.key === 'ArrowDown' ? 1 : -1) + searchMatches.length) % searchMatches.length);
+            } else if (event.key === 'Enter') {
+              event.preventDefault();
+              openSearchResult(selectedResult);
+            }
+          }
+        } else if ((event.key === '/' || event.key.toLowerCase() === 'o') && !event.ctrlKey && !event.metaKey && !event.altKey &&
+                   !event.target.closest('input, textarea, select, [contenteditable]')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (event.key === '/') openSearch();
+          else openContents();
+        }
+      }, true);
+      ['keypress', 'keyup'].forEach(type => window.addEventListener(type, event => {
+        if (popupOpen()) event.stopImmediatePropagation();
+      }, true));
+      const helpContent = document.querySelector('.remark-help-content');
+      if (helpContent) {
+        helpContent.querySelector('h1')?.remove();
+        helpContent.setAttribute('role', 'dialog');
+        helpContent.setAttribute('aria-label', 'Keyboard shortcuts');
+      }
+      const helpTable = document.querySelector('.remark-help-content table');
+      if (helpTable) {
+        const row = helpTable.insertRow();
+        row.insertCell().innerHTML = '<span class="key">/</span>';
+        row.insertCell().textContent = 'Search all slides in this deck';
+        const contentsRow = helpTable.insertRow();
+        contentsRow.insertCell().innerHTML = '<span class="key">o</span>';
+        contentsRow.insertCell().textContent = 'Open table of contents';
+      }
+      function addSearchButton() {
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container || container.querySelector('.remark-search-button')) return;
+        const button = document.createElement('button');
+        button.className = 'remark-search-button';
+        button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="6"></circle><path d="m15 15 6 6"></path></svg>';
+        button.title = 'Search all slides (/)';
+        button.setAttribute('aria-label', 'Search all slides (/)');
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          openSearch();
+        });
+        container.appendChild(button);
+      }
+      slideshow.on('afterShowSlide', addSearchButton);
+      addSearchButton();
+      function addContentsButton() {
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container || container.querySelector('.remark-contents-button')) return;
+        const button = document.createElement('button');
+        button.className = 'remark-contents-button';
+        button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"></path></svg>';
+        button.title = 'Table of contents (o)';
+        button.setAttribute('aria-label', button.title);
+        button.addEventListener('click', event => { event.stopPropagation(); openContents(); });
+        container.appendChild(button);
+      }
+      slideshow.on('afterShowSlide', addContentsButton);
+      addContentsButton();
+
+      // 🎨 button above "?": cycle through color themes (workshop.css
       // defines the colors). Light themes first, then dark from lightest to
       // darkest. The choice is saved in this browser only.
       const themes = [

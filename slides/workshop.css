@@ -80,12 +80,19 @@ div.remark-slide-number {
 }
 
 /* "?" help button in the bottom-right corner (added by workshop.html). */
-.remark-help-button {
+.remark-help-button,
+.remark-theme-button,
+.remark-search-button,
+.remark-contents-button {
   position: absolute;
   bottom: 8px;
   right: 8px;
   width: 36px;
   height: 36px;
+  box-sizing: border-box;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
   border: 2px solid #999;
   border-radius: 50%;
   background: white;
@@ -94,13 +101,18 @@ div.remark-slide-number {
   cursor: pointer;
   opacity: 0.6;
 }
-.remark-help-button:hover {
+.remark-help-button:hover, .remark-theme-button:hover, .remark-search-button:hover, .remark-contents-button:hover,
+.remark-help-button:focus-visible, .remark-theme-button:focus-visible, .remark-search-button:focus-visible, .remark-contents-button:focus-visible {
   opacity: 1;
   color: black;
   border-color: black;
 }
+.remark-help-button:focus-visible, .remark-theme-button:focus-visible, .remark-search-button:focus-visible, .remark-contents-button:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
 @media print {
-  .remark-help-button { display: none; }
+  .remark-help-button, .remark-theme-button, .remark-search-button, .remark-contents-button { display: none; }
 }
 
 /* Help screen ("?"): black text on white, instead of white on dark gray. */
@@ -452,23 +464,10 @@ html .hljs-default .hljs-meta { color: var(--hl-meta); }
 html .remark-code-line-highlighted,
 html .remark-code-span-highlighted { background-color: var(--line-hl); }
 
-/* 🎨 theme button, left of the "?" help button (added by workshop.html). */
+/* 🎨 theme button, above the "?" help button (added by workshop.html). */
 .remark-theme-button {
-  position: absolute;
-  bottom: 8px;
-  right: 52px;
-  width: 36px;
-  height: 36px;
-  border: 2px solid #999;
-  border-radius: 50%;
-  background: white;
+  bottom: 52px;
   font: 20px/1 sans-serif;
-  cursor: pointer;
-  opacity: 0.6;
-}
-.remark-theme-button:hover { opacity: 1; border-color: black; }
-@media print {
-  .remark-theme-button { display: none; }
 }
 
 /* Theme name, shown in the bottom center for a moment after a change. */
@@ -542,3 +541,43 @@ pre:has(> .copy-button) {
 @media print {
   .copy-button { display: none; }
 }
+
+/* Deck search uses the same palette as slide content in every theme. */
+.slide-search {
+  width: min(640px, calc(100vw - 48px));
+  max-height: calc(100dvh - 64px);
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid var(--box-border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 'Open Sans', sans-serif;
+  overflow: auto;
+}
+.slide-search::backdrop { background: rgba(0, 0, 0, 0.55); }
+.slide-search-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.slide-search-header h2 { font-size: 24px !important; margin: 0 0 12px; color: var(--heading); }
+.slide-search-close { background: none; color: var(--fg); border: 0; font-size: 28px; cursor: pointer; }
+.slide-search label { display: block; margin-bottom: 6px; }
+.slide-search input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--box-border); border-radius: 3px; background: var(--pre-bg); color: var(--fg); font: inherit; }
+.slide-search input:focus-visible, .slide-search button:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+#slide-search-hint { margin: 10px 0; font-size: 13px; }
+.slide-search-status { margin: 12px 0; }
+#slide-search-results { list-style: none; padding: 0; margin: 0; max-height: 45dvh; overflow: auto; }
+#slide-search-results li { display: flex; gap: 16px; align-items: baseline; padding: 10px; border-bottom: 1px solid var(--box-border); cursor: pointer; }
+#slide-search-results li:hover, #slide-search-results li[aria-selected="true"] { background: var(--box-bg); }
+#slide-search-results li[aria-selected="true"] { box-shadow: inset 3px 0 var(--link); }
+.slide-search-number { min-width: 3ch; color: var(--link); font-variant-numeric: tabular-nums; }
+.remark-search-button { bottom: 96px; }
+@media print { .slide-search { display: none; } }
+
+.remark-contents-button { bottom: 140px; }
+/* Scale each original TOC canvas; keep its columns and slide text styles. */
+.slide-contents { width: calc(100vw - 16px); max-width: none; max-height: calc(100dvh - 16px); padding: 8px; }
+.slide-contents-close { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.slide-contents nav { max-height: calc(100dvh - 34px); overflow: auto; }
+.slide-contents-page + .slide-contents-page { margin-top: 24px; }
+.slide-contents-preview { position: relative; margin: auto; overflow: hidden; }
+.slide-contents-canvas { position: absolute; inset: 0 auto auto 0; transform-origin: top left; }
+.slide-contents a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }

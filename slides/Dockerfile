@@ -21,6 +21,6 @@ COPY k8s /repo/k8s
 COPY slides /repo/slides
 
 EXPOSE 80
-# Build every deck once, then serve this directory. Compose watch execs
+# Build the selected deck (or all decks), then serve. Compose watch execs
 # ./build.sh once into this same container after each source change.
 CMD ["sh", "-c", "./build.sh once && exec python -m http.server 80"]

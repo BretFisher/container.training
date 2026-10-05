@@ -31,9 +31,11 @@ From the repository root, with Docker and Compose available:
 ```sh
 cd slides
 make serve        # same as: docker compose up --build --watch
+# Build and rebuild only the workshop deck:
+make serve SLIDES_DECK=kube-sec-twodays.yml
 ```
 
-One container builds every deck at startup and serves them at
+One container builds the selected deck, or all decks by default, and serves them at
 `http://localhost:8080/` (override with `SLIDES_PORT`). Compose watch syncs
 edits under `slides/` and `k8s/` into the container and re-runs `./build.sh once`.
 Generated HTML stays in the container; open a deck such as `/intro-fullday.yml.html`
@@ -134,10 +136,10 @@ in every checkout. When you finish a phase, tick its box in `PLAN.md`.
 Use `slides/labtest/` (read its README for directives and result files).
 From `slides/`:
 
-- `make labtest-plan DECK=<deck>.yml [ONLY="k8s/a.md k8s/b.md"]`: no lab
+- `make labtest-plan SLIDES_DECK=<deck>.yml [ONLY="k8s/a.md k8s/b.md"]`: no lab
   needed. Lists commands per file and the commands that will probably hang.
   Fix those first: add `wait`/`keys`/`key` directives after them.
-- `make labtest DECK=<deck>.yml TAG=<tag> [ONLY=... | FROM=file[:line] TO=file]`:
+- `make labtest SLIDES_DECK=<deck>.yml TAG=<tag> [ONLY=... | FROM=file[:line] TO=file]`:
   runs on node1 of `prepare-labs/tags/<tag>` as the student user. Use
   `ONLY` to re-test one chapter after a fix. Run it in the background for
   long selections.

@@ -11,7 +11,7 @@ your computer and on the node.
 Run these from the `slides/` directory.
 
 ```bash
-make labtest-plan DECK=kube-sec-twodays.yml
+make labtest-plan SLIDES_DECK=kube-sec-twodays.yml
 ```
 
 Lists the commands of the deck per file, without a lab. It also lists three
@@ -26,7 +26,7 @@ kinds of problems to fix before a run:
 - Blocks with a comment that says the command fails, but no `expect-fail`.
 
 ```bash
-make labtest DECK=kube-sec-twodays.yml TAG=bret
+make labtest SLIDES_DECK=kube-sec-twodays.yml TAG=bret
 ```
 
 Runs the full deck on node1 of lab `TAG` (a directory in

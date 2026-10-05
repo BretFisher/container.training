@@ -1,12 +1,13 @@
-# Local slide development. Start with: make serve   (or: docker compose up --build --watch)
+# Local slide development. Start: make serve [SLIDES_DECK=filename.yml].
+# Compose watch runs in the foreground. Stop with Ctrl+C, then make down.
 #
 # One container. No bind mounts, no volumes. The image carries a baseline
-# copy of slides/ and k8s/, builds every deck at startup, and serves the
+# copy of slides/ and k8s/, builds the selected deck (or all decks), and serves the
 # result with Python's HTTP server. Compose watch syncs each source edit into
 # the container (faster than a macOS bind mount) and re-runs ./build.sh once.
 # Generated files never touch the host.
 #
-# Always start with --build so the baseline matches your checkout; sync only
+# Always build before startup so the baseline matches your checkout; sync only
 # carries changes made while the watcher is running.
 services:
   slides:
@@ -21,6 +22,8 @@ services:
       # Show each slide's source file and "name:" anchor in its footer.
       # Netlify does not set this, so production slides do not change.
       SLIDES_DEV: ${SLIDES_DEV:-1}
+      # Empty selects all decks; retained for startup and every watch exec.
+      SLIDES_DECK: ${SLIDES_DECK:-}
       REPOSITORY_URL: ${REPOSITORY_URL:-}
       BRANCH: ${BRANCH:-}
       COMMIT: ${COMMIT:-}
