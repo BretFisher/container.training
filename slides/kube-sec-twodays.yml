@@ -128,26 +128,17 @@ content:
   - k8s/buildshiprun-dockerhub.md
   - k8s/ourapponkube.md
   #- k8s/exercise-wordsmith.md
-  # LEFT OFF HERE---------------------------------------------------------------
-
   - k8s/yamldeploy.md
-  # KEEP: quote "Setting up Kubernetes"
+  ## TODO: did we deploy our app on kube with yaml?
+-
   - k8s/setup-overview.md
-  # COMMENT OUT: "Running a local development cluster" is not in the quote.
-  # The quote lists "Distros and installers" and "EKS on AWS" instead.
-  - k8s/setup-devel.md
+  #- k8s/setup-devel.md
   #- k8s/setup-managed.md
-  # COMMENT IN: title is "Kubernetes distributions and installers".
-  # Matches quote "Distros and installers".
   #- k8s/setup-selfhosted.md
   - k8s/aws-eks.md
-  # TODO (EKS section): cover how pods pull images from ECR (node IAM role,
-  # no imagePullSecrets). The private registry lab in secrets.md is skipped.
-  # Gateway API on EKS (NLB in front of Envoy Gateway, or the ALB
-  # GatewayClass) is the "On EKS" slide in gateway-api.md; point to it.
-  # COMMENT OUT: not in the quote.
+  # LEFT OFF HERE-----------------------------------------------------------------
   #- k8s/dashboard.md
-  # COMMENT OUT: not in the quote.
+  # MAYBE IF TIME: (not in quote)
   #- k8s/k9s.md
   #- k8s/tilt.md
   #- k8s/kubectlscale.md
@@ -194,15 +185,13 @@ content:
   - k8s/templating.md
   # KEEP: quote "Helm and Kustomize"
   - k8s/kustomize.md
-  # KEEP: quote "Helm and Kustomize". Seven Helm files follow. The quote
-  # says only "Helm and Kustomize", so consider trimming the chart-authoring
-  # files (create-basic, create-better, dependencies, values-schema) to free
-  # time for GitOps and cert-manager on day 1.
+  # Core Helm: operations, chart format, compact DockerCoins lab,
+  # values validation, and release-Secret security.
   - k8s/helm-intro.md
   - k8s/helm-chart-format.md
   - k8s/helm-create-basic-chart.md
-  - k8s/helm-create-better-chart.md
-  - k8s/helm-dependencies.md
+  #- k8s/helm-create-better-chart.md # optional chart-authoring lab
+  #- k8s/helm-dependencies.md # optional dependency lab
   - k8s/helm-values-schema-validation.md
   # KEEP: also relevant to day 2 "Managing secrets" (shows release data
   # stored as Secrets).
@@ -211,7 +200,7 @@ content:
   #- k8s/ytt.md
   # Quote uses Flux and Argo CD for GitOps, not GitLab CI/CD.
   #- k8s/gitlab.md
-  - k8s/cert-manager.md
+  #- k8s/cert-manager.md
   # GitOps is the last lecture of day 1. The Flux and Argo CD chapters hold
   # all the GitOps labs. Potential after-hours labs: uncomment one to offer it.
   - k8s/gitworkflows.md
@@ -219,6 +208,7 @@ content:
   #- k8s/argocd.md           # potential after-hours lab
   #- k8s/argocd-advanced.md  # optional lecture for the Argo CD lab
 -
+  - k8s/AI.md
   # KEEP: quote "Network policies". Note the quote puts this under
   # "Workload and Network Policies", after the Auth and RBAC group.
   # Consider moving it below authn-authz.md and the auth files.
@@ -311,20 +301,9 @@ content:
 #- k8s/user-cert.md
 #
 # --- Day 2, Workload and Network Policies: "Policy Management with Kyverno" ---
-# k8s/kyverno.md (571 lines). Title "Policy Management with Kyverno",
-# exact match. Validation, mutation, generation examples. Place after
-# pod-security-admission.md.
-#- k8s/kyverno.md
-# k8s/kyverno-colors.md (249 lines, 13 slides). Hands-on: immutable
-# labels policy. Demo about labels, not a security policy. Optional.
-#- k8s/kyverno-colors.md
-# k8s/kyverno-ingress.md (223 lines, 11 slides). Hands-on: detect
-# duplicate Ingress hosts. Demo, not a security policy. Optional.
-#- k8s/kyverno-ingress.md
-#
-# --- Day 2, Secrets and Hardening: "Sealed secrets" ---
-# k8s/sealed-secrets.md (331 lines). Title "Sealed Secrets". Operator
-# install, kubeseal, SealedSecret resource. Place after secrets.md.
+- k8s/kyverno.md
+# k8s/kyverno-colors.md Hands-on: immutable labels policy lab.
+- k8s/kyverno-colors.md
 #- k8s/sealed-secrets.md
 #
 # --- Day 2, Secrets and Hardening: "Securing the control plane" ---

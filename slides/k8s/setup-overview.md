@@ -167,6 +167,64 @@
 
 ---
 
+name: kubernetes-operations-lifecycle
+class: pic
+
+![Kubernetes operations: Day 0 plans ownership, topology, capacity, security, recovery, and delivery; Day 1 deploys the cluster, add-ons, policies, observability, backups, and workloads; Day 2 monitors, restores, upgrades, reviews access, rotates credentials, and responds to incidents.](images/k8s-operations-lifecycle-2026.svg)
+
+???
+
+Day 0, Day 1, and Day 2 are operations lifecycle phases. They are not the
+workshop's teaching days and do not describe elapsed calendar days.
+
+Plan for operations before deployment. Set up observability and backups during
+deployment. During operation, act on alerts, verify backups with restore tests,
+and use findings to update the plan. Security controls need design, initial
+enforcement, and continued review across all three phases.
+
+These activity groups are a teaching summary, not a Kubernetes specification.
+Managed services change who performs an activity; they do not remove the need
+to define ownership and verify the result.
+
+Sources:
+
+- [Red Hat: operations lifecycle definitions](https://www.redhat.com/en/blog/how-does-red-hat-support-day-2-operations)
+- [Kubernetes: production environment](https://kubernetes.io/docs/setup/production-environment/)
+- [Kubernetes: security checklist](https://kubernetes.io/docs/concepts/security/security-checklist/)
+- [Kubernetes: operating etcd, backups, and restores](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)
+- [Kubernetes: certificate management](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)
+- [Amazon EKS: Day 2 best practices](https://docs.aws.amazon.com/eks/latest/best-practices/)
+- [Amazon EKS: security responsibilities](https://docs.aws.amazon.com/eks/latest/userguide/security.html)
+
+Related workshop content: `gitworkflows.md` (planning and ownership),
+`yamldeploy.md` ("Day 2" YAML), `rollout.md` (release recovery),
+`authn-authz.md` (access checks), and `helm-secrets.md` (release data protection).
+
+Tool references:
+
+| Activity | Tools |
+| --- | --- |
+| Define ownership | [Backstage](https://backstage.io/docs/features/software-catalog/) · [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) |
+| Design topology | [Terraform](https://developer.hashicorp.com/terraform/intro) · [Cluster API](https://cluster-api.sigs.k8s.io/) |
+| Plan capacity | [Karpenter](https://karpenter.sh/docs/) · [Cluster Autoscaler](https://kubernetes.io/docs/concepts/cluster-administration/node-autoscaling/) |
+| Define security baseline | [Kyverno](https://kyverno.io/docs/introduction/) · [Trivy](https://trivy.dev/docs/latest/guide/) |
+| Plan recovery | [Velero](https://velero.io/docs/) · [etcdutl](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) |
+| Design delivery workflow | [Flux](https://fluxcd.io/flux/) · [Argo CD](https://argo-cd.readthedocs.io/en/stable/) |
+| Cluster setup | [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/) · [eksctl](https://docs.aws.amazon.com/eks/latest/eksctl/what-is-eksctl.html) |
+| Add-on setup | [Helm](https://helm.sh/docs/intro/using_helm/) · [EKS add-ons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html) |
+| Access & policy setup | [kubectl](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) · [Kyverno](https://kyverno.io/docs/introduction/) |
+| Observability setup | [Prometheus](https://prometheus.io/docs/introduction/overview/) · [OpenTelemetry](https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/) |
+| Backup setup | [Velero](https://velero.io/docs/) · [etcdctl](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) |
+| Deploy workloads | [Helm](https://helm.sh/docs/intro/using_helm/) · [Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) |
+| Health monitoring | [Grafana](https://grafana.com/docs/grafana/latest/introduction/) · [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) |
+| Backup & restore tests | [Velero](https://velero.io/docs/) · [etcdutl](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) |
+| Upgrade & patch | [kubeadm](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/) · [EKS](https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html) |
+| Access review | [kubectl auth](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_auth/kubectl_auth_can-i/) · [rbac-lookup](https://rbac-lookup.docs.fairwinds.com/) |
+| Credential rotation | [cert-manager](https://cert-manager.io/docs/usage/certificate/) · [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html) |
+| Incident response | [Falco](https://falco.org/docs/) · [Tetragon](https://tetragon.io/docs/overview/) |
+
+---
+
 ## It's dangerous to go alone!
 
 Don't hesitate to hire help before going to production with your first K8S app!

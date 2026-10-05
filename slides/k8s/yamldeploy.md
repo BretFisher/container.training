@@ -46,17 +46,15 @@
 
 ## Why use YAML? (3/3)
 
-- YAML lets us work *declaratively*
+- YAML lets us work more *declaratively* than `kubectl` commands
+
+  - Kubernetes changes are always declarative in nature, but YAML makes it easier for humans to track the desired state changes
 
 - Describe what we want to deploy/run on Kubernetes
 
   ("desired state")
 
-- Use tools like `kubectl`, Helm, kapp, Flux, ArgoCD... to make it happen
-
-  ("reconcile" actual state with desired state)
-
-- Very similar to e.g. Terraform
+- Use tools like `kubectl`, Helm, kapp, Flux, ArgoCD... to "apply" YAML
 
 ---
 

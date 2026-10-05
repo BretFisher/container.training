@@ -54,6 +54,8 @@ the checkout.
 
 Content rules for every slide you write or edit:
 
+- Do not add speaker notes (`???` sections) inside individual slides unless
+  the user specifically requests them.
 - Teach current Kubernetes and current tools only. When a newer feature
   replaces an older one, teach the newer one, and give the older one at most
   one line ("X is deprecated; use Y"). Delete history that has no replacement.

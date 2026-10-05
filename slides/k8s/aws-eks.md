@@ -1,693 +1,338 @@
 # Amazon EKS
 
-- Elastic Kubernetes Service
+- EKS is Amazon's managed Kubernetes service
 
 - AWS runs the Kubernetes control plane
 
-  (all we see is an API server endpoint)
-
-- Pods can run on any combination of:
-
-  - EKS-managed nodes
-
-  - self-managed nodes
-
-  - Fargate
-
-- Leverages and integrates with AWS services and APIs
+- Our student clusters use kubeadm on standard EC2 (so no EKS demos today 😭)
 
 ---
 
-## Some integrations
+## Who manages what?
 
-- Authenticate with IAM users and roles
+- AWS operates, patches, and scales the EKS control plane
 
-- Associate IAM roles to Kubernetes ServiceAccounts
+- We cannot log in to its control planehosts or access etcd directly
 
-- Load balance traffic with ALB/ELB/NLB
+- We configure API endpoint access, IAM access, and Kubernetes RBAC
 
-- Persist data with EBS/EFS
+  - EKS exposes a Kubernetes API endpoint. We control it's network policy
 
-- Label nodes with instance ID, instance type, region, AZ ...
+- Customers always manage applications, data, permissions, and policies
 
-- Pods can be "first class citizens" of VPC
-
----
-
-## Pros/cons
-
-- Fully managed control plane
-
-- Handles deployment, upgrade, scaling of the control plane
-
-- Available versions and features tend to lag a bit
-
-- Doesn't fit the most demanding users
-
-  ("demanding" starts somewhere between 100 and 1000 nodes)
+- **Node and infrastructure responsibilities depend on the compute choice**
 
 ---
 
-## Good to know ...
+class: pic
 
-- Some integrations are specific to EKS
-
-  (some authentication models)
-
-- Many integrations are *not* specific to EKS
-
-- The Cloud Controller Manager can run outside of EKS
-
-  (and provide LoadBalancer services, EBS volumes, and more)
+![EKS compute comparison: node ownership, scaling, workload fit, and constraints for self-managed nodes, managed node groups, Auto Mode, and Fargate, with Karpenter roles](images/aws-eks-compute-2026.svg)
 
 ---
 
-# Provisioning clusters
+## Provisioning clusers: kubeadm vs EKS
 
-- AWS console, API, CLI
+.column-half[
+### kubeadm+kubectl (vanilla K8s)
 
-- `eksctl`
+- Provision machines and install the runtime
 
-- Infrastructure-as-Code
+- Run `kubeadm init` and `kubeadm join`
 
----
+- Install CNI and storage integrations (`kubectl apply` or `helm`)
 
-## AWS "native" provisioning
+- Operate and upgrade the control plane and nodes
+]
 
-- AWS web console
+.column-half[
+### EKS
 
-  - click-click-click!
+- Create the managed control plane: AWS console, AWS CLI, IaC, or `eksctl`
 
-  - difficulty: low
+- Standard: configure compute and selected add-ons
 
-- AWS API or CLI
+- Auto Mode: AWS provisions nodes and manages infrastructure integrations
 
-  - must provide subnets, ARNs
-
-  - difficulty: medium
-
----
-
-## `eksctl`
-
-- Originally developed by Weave
-
-  (back when AWS "native" provisioning wasn't very good)
-
-- `eksctl create cluster` just works™
-
-- Has been "adopted" by AWS
-
-  (is listed in official documentations)
+- Fargate: AWS provisions compute per Pod using configured profiles
+]
 
 ---
 
-## Infrastructure-as-Code
+## Human auth/access: kubeadm vs EKS
 
-- Cloud Formation
+Create Alice user and give read/write in existing namespace `demo`
 
-- Terraform
+.small[
+.column-half[
+### kubeadm+kubectl (vanilla K8s)
 
-  [terraform-aws-eks](https://github.com/terraform-aws-modules/terraform-aws-eks)
-  by the community
-  ([example](https://github.com/terraform-aws-modules/terraform-aws-eks/tree/master/examples/basic))
+```bash
+  # Generate Alice's key, certificate, and kubeconfig
+sudo kubeadm kubeconfig user \
+  --config cluster.yaml \
+  --client-name alice \
+  --validity-period 24h > alice.conf
 
-  [terraform-provider-aws](https://github.com/hashicorp/terraform-provider-aws)
-  by Hashicorp
-  ([example](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/eks-getting-started))
-
-  [Kubestack](https://www.kubestack.com/)
-
----
-
-## Node groups
-
-- Virtually all provisioning models have a concept of "node group"
-
-- Node group = group of similar nodes in an ASG
-
-  - can span multiple AZ
-
-  - can have instances of different types¹
-
-- A cluster will need at least one node group
-
-.footnote[¹As I understand it, to specify fallbacks if one instance type is unavailable or out of capacity.]
-
----
-
-# IAM → EKS authentication
-
-- Access EKS clusters using IAM users and roles
-
-- No special role, permission, or policy is needed in IAM
-
-  (but the `eks:DescribeCluster` permission can be useful, see later)
-
-- Users and roles need to be explicitly listed in the cluster
-
-- Configuration is done through a ConfigMap in the cluster
-
----
-
-## Setting it up
-
-- Nothing to do when creating the cluster
-
-  (feature is always enabled)
-
-- Users and roles are *mapped* to Kubernetes users and groups
-
-  (through the `aws-auth` ConfigMap in `kube-system`)
-
-- That's it!
-
----
-
-## Mapping
-
-- The `aws-auth` ConfigMap can contain two entries:
-
-  - `mapRoles` (map IAM roles)
-
-  - `mapUsers` (map IAM users)
-
-- Each entry is a YAML file
-
-- Each entry includes:
-
-  - `rolearn` or `userarn` to map
-
-  - `username` (as a string)
-
-  - `groups` (as a list; can be empty)
-
----
-
-## Example
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: kube-system
-  name: aws-auth
-data:
-  mapRoles: `|`
-    - rolearn: arn:aws:iam::111122223333:role/blah
-      username: blah
-      groups: [ devs, ops ]
-  mapUsers: `|`
-    - userarn: arn:aws:iam::111122223333:user/alice
-      username: alice
-      groups: [ system:masters ]
-    - userarn: arn:aws:iam::111122223333:user/bob
-      username: bob
-      groups: [ system:masters ]
+  # Bind the existing edit role in demo namespace
+kubectl create rolebinding alice-edit \
+  --namespace demo --clusterrole edit \
+  --user alice
 ```
+]
 
----
+.column-half[
+### EKS (via K8s [webhook token auth][webhook-token-auth])
 
-## Client setup
+```bash
+  # Create Alice's IAM identity (no credentials yet)
+ARN=$(aws iam create-user \
+  --user-name alice \
+  --query User.Arn --output text)
 
-- We need either the `aws` CLI or the `aws-iam-authenticator`
+  # Link Alice identity to the EKS cluster
+aws eks create-access-entry \
+  --cluster-name "$CLUSTER" \
+  --principal-arn "$ARN"
 
-- We use them as `exec` plugins in `~/.kube/config`
-
-- Done automatically by `eksctl`
-
-- Or manually with `aws eks update-kubeconfig`
-
-- Discovering the address of the API server requires one IAM permission
-
-  ```json
-    "Action": [
-        "eks:DescribeCluster"
-    ],
-    "Resource": "arn:aws:eks:<region>:<account>:cluster/<cluster-name>"
-  ```
-
-  (wildcards can be used when specifying the resource)
-
----
-
-class: extra-details
-
-## How it works
-
-- The helper generates a token
-
-  (with `aws eks get-token` or `aws-iam-authenticator token`)
-
-- Note: these calls will always succeed!
-
-  (even if AWS API keys are invalid)
-
-- The token is used to authenticate with the Kubernetes API
-
-- AWS' Kubernetes API server will decode and validate the token
-
-  (and map the underlying user or role accordingly)
-
----
-
-## Read The Fine Manual
-
-https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
-
----
-
-# EKS → IAM authentication
-
-- Access AWS services from workloads running on EKS
-
-  (e.g.: access S3 bucket from code running in a Pod)
-
-- This works by associating an IAM role to a K8S ServiceAccount
-
-- There are also a few specific roles used internally by EKS
-
-  (e.g. to let the nodes establish network configurations)
-
-- ... We won't talk about these
-
----
-
-## The big picture
-
-- One-time setup task
-
-  ([create an OIDC provider associated to our EKS cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html))
-
-- Create (or update) a role with an appropriate *trust policy*
-
-  (more on that later)
-
-- Annotate service accounts to map them to that role
-
-  `eks.amazonaws.com/role-arn=arn:aws:iam::111122223333:role/some-iam-role`
-
-- Create (or re-create) pods using that ServiceAccount
-
-- The pods can now use that role!
-
----
-
-## Trust policies
-
-- IAM roles have a *trust policy* (aka *assume role policy*)
-
-  (cf `aws iam create-role ... --assume-role-policy-document ...`)
-
-- That policy contains a *statement* list
-
-- This list indicates who/what is allowed to assume (use) the role
-
-- In the current scenario, that policy will contain something saying:
-
-  *ServiceAccount S on EKS cluster C is allowed to use this role*
-
----
-
-## Trust policy for a single ServiceAccount
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/${OIDC_PROVIDER}"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "${OIDC_PROVIDER}:sub":
-            "system:serviceaccount:<namespace>:<service-account>"
-        }
-      }
-    }
-  ]
-}
+  # Grant Alice read/write in demo namespace
+aws eks associate-access-policy \
+  --cluster-name "$CLUSTER" \
+  --principal-arn "$ARN" \
+  --policy-arn "$EDIT_POLICY_ARN" \
+  --access-scope \
+  type=namespace,namespaces=demo
 ```
+]
+]
+
+[webhook-token-auth]: https://kubernetes.io/docs/reference/access-authn-authz/authentication/#webhook-token-authentication
 
 ---
 
-## Trust policy for multiple ServiceAccounts
+## Pod auth: Accesssing cluster resources vs AWS resources
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/${OIDC_PROVIDER}"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringLike": {
-            "${OIDC_PROVIDER}:sub": 
-              ["system:serviceaccount:container-training:*"]
-        }
-      }
-    }
-  ]
-}
-```
+.column-half[
+### Accessing in-cluster resources
 
----
+- `kubectl create serviceaccount`: create a workload identity
 
-## The little details
+- `kubectl create rolebinding`: grant Kubernetes API permissions
 
-- When pods are created, they are processed by a mutating webhook
+- Auth to other pods (DBs): Store in AWS Secrets Manager, access via [ASCP][ascp-irsa]
 
-  (typically named `pod-identity-webhook`)
+- Use K8s NetworkPolicy to access other Pod Services
 
-- Pods using a ServiceAccount with the right annotation get:
+]
 
-  - an extra token
-    <br/>
-    (mounted in `/var/run/secrets/eks.amazonaws.com/serviceaccount/token`)
+.column-half[
+### Accessing AWS resources
 
-  - a few env vars
-    <br/>
-    (including `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN`)
+- EKS Pod Identity or IRSA provision AWS credentials for pods
 
-- AWS client libraries and tooling will work this that
+- Pod workloads use AWS SDKs or ASCP to get those creds
 
-  (see [this list](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts-minimum-sdk.html) for supported versions)
+]
+
+[ascp-irsa]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/ascp-pod-identity-integration.html
 
 ---
 
-# CNI
+## Pod access to AWS: Pod Identity vs IRSA
 
-- EKS is a compliant Kubernetes implementation
+Both provide AWS IAM role credentials to Kubernetes Pods via the [AWS SDK][irsa-sdks] and [ASCP][ascp-irsa]
 
-  (which means we can use a wide range of CNI plugins)
 
-- However, the recommended CNI plugin is the "AWS VPC CNI"
+.column-half[
+### [EKS Pod Identity][eks-pod-identity] launched 2023
 
-  (https://github.com/aws/amazon-vpc-cni-k8s)
+- Simpler than IRSA, Requires EKS, but no Fargate support
 
-- Pods are then "first class citizens" of AWS VPC
+- Associate cluster, namespace, and ServiceAccount with a role that trusts EKS
 
----
+]
 
-## AWS VPC CNI
+.column-half[
+### [IRSA][irsa-overview] launched 2019
 
-- Each Pod gets an address in a VPC subnet
+- Older solution: IAM Roles for Service Accounts
 
-- No overlay network, no encapsulation, no overhead
+- [Configure OIDC and IAM role trust][irsa-setup] for the intended ServiceAccount
 
-  (other than AWS network fabric, obviously)
+- Use with Fargate and self-managed Kubernetes
+]
 
-- Probably the fastest network option when running on AWS
+[eks-pod-identity]: https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html
+[pod-id-sdks]: https://docs.aws.amazon.com/eks/latest/userguide/pod-id-minimum-sdk.html
+[irsa-overview]: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
+[irsa-setup]: https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html
 
-- Allows "direct" load balancing (more on that later)
+[ascp-pod-id]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/ascp-pod-identity-integration.html
+[ascp-irsa]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/ascp-irsa-integration.html
 
-- Can use security groups with Pod traffic
-
-- But: limits the number of Pods per Node
-
-- But: more complex configuration (more on that later)
-
----
-
-## Number of Pods per Node
-
-- Each Pod gets an IP address on an ENI
-
-  (Elastic Network Interface)
-
-- EC2 instances can only have a limited number of ENIs
-
-  (the exact limit depends on the instance type)
-
-- ENIs can only have a limited number of IP addresses
-
-  (with variations here as well)
-
-- This gives limits of e.g. 35 pods on `t3.large`, 29 on `c5.large` ...
-
-  (see
-  [full list of limits per instance type](https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt
-)
-  and
-  [ENI/IP details](https://github.com/aws/amazon-vpc-cni-k8s/blob/master/pkg/awsutils/vpc_ip_resource_limit.go
-))
+[irsa-sdks]: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts-minimum-sdk.html
 
 ---
 
-## Limits?
+## Secrets for legacy apps: ASCP
 
-- These limits might seem low
+- [AWS Secrets and Configuration Provider (ASCP)][ascp-setup] connects Secrets Manager
+  and Parameter Store to EKS Pods
 
-- They're not *that* low if you compute e.g. the RAM/Pod ratio
+- Pod Identity authorizes retrieval; the Secrets Store CSI Driver mounts values as files
 
-- Except if you're running lots if tiny pods
+- The app reads the mounted credentials; no AWS SDK is needed in the app
 
-- Bottom line: do the math!
+- Create the database account and store its password separately; ASCP delivers it
 
----
+- On password rotation, the app must reload credentials or restart
 
-class: extra-details
-
-## Pre-loading
-
-- It can take a little while to allocate/attach an ENI
-
-- The AWS VPC CNI can keep a few extra addresses on each Node
-
-  (by default, one ENI worth of IP addresses)
-
-- This is tunable if needed
-
-  (see [the docs](https://github.com/aws/amazon-vpc-cni-k8s/blob/master/docs/eni-and-ip-target.md
-) for details)
+[ascp-setup]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/ascp-pod-identity-integration.html
 
 ---
 
-## Better load balancing
+class: pic
 
-- The default path for inbound traffic is:
-
-  Load balancer → NodePort → Pod
-
-- With the AWS VPC CNI, it becomes possible to do:
-
-  Load balancer → Pod
-
-- More on that in the load balancing section!
+![EKS workload access: Pod Identity and IRSA provide AWS credentials; ASCP uses either to deliver secrets](images/aws-eks-workload-access-2026.svg)
 
 ---
 
-## Configuration complexity
+## Operations and upgrades
 
-- The AWS VPC CNI is a very good solution when running EKS
+- EKS versions receive 14 months of standard support, then 12 months extended
 
-- It brings optimized solutions to various use-cases:
+- Extended support has a higher cluster charge; check the cluster upgrade policy
 
-  - direct load balancing
-  - user authentication
-  - interconnection with other infrastructure
-  - etc.
+- Know which updates you are responsible for: 
 
-- Keep in mind that all these solutions are AWS-specific
-
-- They can require a non-trivial amount of specific configuration
-
-- Especially when moving from a simple POC to an IAC deployment!
+  - Control Plane version? 
+  - node OS?
+  - node agents?
+  - K8s add-ons? 
 
 ---
 
-# Load Balancers
+## EKS best practices
 
-- Here be dragons!
+.column-half[
+.small[
+- **Size subnets for peak Pod count, including rolling update**
 
-- Multiple options, each with different pros/cons
+- **Give workloads limited AWS perms (Pod Identity or IRSA) and no instance metadata**
 
-- It's necessary to know both AWS products and K8S concepts
+- Restrict access to the Kubernetes API endpoint (enable Private access)
 
----
+- Update add-ons separately from Kubernetes
 
-## AWS load balancers
+- Measure resource requests before tuning autoscaling
 
-- CLB / Classic Load Balancer (formerly known as ELB)
+- Test whether applications survive node replacement
 
-  - can work in L4 (TCP) or L7 (HTTP) mode
-  - can do TLS unrolling
-  - can't do websockets, HTTP/2, content-based routing ...
+- Enable multiple instance types and AZs for nodes
 
-- NLB / Network Load Balancer
+- Enable control plane logs
 
-  - high-performance L4 load balancer with TLS support
+- **Use a dedicated ServiceAccount for each application**
 
-- ALB / Application Load Balancer
+- **Disable automatic ServiceAccount Kubernetes API token mounts when unused**
 
-  - HTTP load balancer
-  - can do TLS unrolling
-  - can do websockets, HTTP/2, content-based routing ...
+]]
+.column-half[
+.small[
+- Avoid unnecessary cluster-admin access
 
----
+- **Enforce Pod admission controls via Pod Security Standards, Kyverno, or Gatekeeper**
 
-## Load balancing modes
+- **Run containers as non-root, read-only FS, and prevent privilege escalation** (Pod Spec)
 
-- "IP targets"
+- **Enable Pod seccomp default profile cluster-wide**
 
-  - send traffic directly from LB to Pods
+- **Default-deny Pod traffic and explicitly allow required connections**
 
-  - Pods must use the AWS VPC CNI
+- Combine restrictive AWS Security Groups and K8s NetworkPolicies
 
-  - compatible with Fargate Pods
+- Keep credentials out of images, manifests, and source control
 
-- "Instance targets"
+- Limit secret access (RBAC) and test application credential rotation
 
-  - send traffic to a NodePort (generally incurs an extra hop)
-
-  - Pods can use any CNI
-
-  - not compatible with Fargate Pods
-
-- Each LB (Service) can use a different mode, if necessary
+- Enable threat detection for audit logs and container runtimes (GuardDuty, Falco)
+]]
 
 ---
 
-## Kubernetes load balancers
+## Official EKS guidance
 
-- Service (L4)
+.column-half[
+.small[
 
-  - ClusterIP: internal load balancing
-  - NodePort: external load balancing on ports >30000
-  - LoadBalancer: external load balancing on the port you want
-  - ExternalIP: external load balancing directly on nodes
+- [Best practices][eks-guidance-best-practices]
 
-- Ingress (L7 HTTP)
+- [Security guide][eks-guidance-security-guide]
 
-  - partial content-based routing (`Host` header, request path)
-  - requires an Ingress Controller (in front)
-  - works with Services (in back)
+- [EKS security][eks-guidance-security]
 
----
+- [Auto Mode security][eks-guidance-auto-security]
 
-## Two controllers are available
+- [IAM][eks-guidance-iam]
 
-- Kubernetes "in-tree" load balancer controller
+- [Cluster access][eks-guidance-access]
 
-  - always available
-  - used by default for LoadBalancer Services
-  - creates CLB by default; can also do NLB
-  - can only do "instance targets"
-  - can use extra CLB features (TLS, HTTP)
+- [RBAC][eks-guidance-rbac]
 
-- AWS Load Balancer Controller (fka AWS ALB Ingress Controller)
+- [Pod security][eks-guidance-pods]
 
-  - optional add-on (requires additional config)
-  - primarily meant to be an Ingress Controller
-  - creates NLB and ALB
-  - can do "instance targets" and "IP targets"
-  - can also be used for LoadBalancer Services with type `nlb-ip`
+- [Runtime security][eks-guidance-runtime]
 
-- They can run side by side
+- [Network security][eks-guidance-network]
 
----
+- [Image security][eks-guidance-images]
 
-## Which one should we use?
+]
+]
 
-- AWS Load Balancer Controller supports "IP targets"
+.column-half[
+.small[
 
-  (which means direct routing of traffic to Pods)
+- [Secrets and encryption][eks-guidance-secrets]
 
-- It can be used as an Ingress controller
+- [Node security][eks-guidance-nodes]
 
-- It *seems* to be the perfect solution for EKS!
+- [Audit logs][eks-guidance-audit]
 
-- However ...
+- [Incident response][eks-guidance-response]
 
----
+- [Tenant isolation][eks-guidance-tenants]
 
-## Caveats
+- [Multi-account strategy][eks-guidance-accounts]
 
-- AWS Load Balancer Controller requires extensive configuration
+- [Upgrades][eks-guidance-upgrades]
 
-  - a few hours to a few days to get it to work in a POC ...
+- [IP capacity][eks-guidance-ips]
 
-  - a few days to a few weeks to industrialize that process?
+- [Application reliability][eks-guidance-reliability]
 
-- It's AWS-specific
+- [Autoscaling][eks-guidance-scaling]
 
-- It still introduces an extra hop, even if that hop is invisible
+]
+]
 
-- Other ingress controllers can have interesting features
-
-  (canary deployment, A/B testing ...)
-
----
-
-## Noteworthy annotations and docs
-
-- `service.beta.kubernetes.io/aws-load-balancer-type: nlb-ip`
-
-  - LoadBalancer Service with "IP targets" ([docs](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/service/nlb_ip_mode/))
-  - requires AWS Load Balancer Controller
-
-- `service.beta.kubernetes.io/aws-load-balancer-internal: "true"`
-
-  - internal load balancer (for private VPC)
-
-- `service.beta.kubernetes.io/aws-load-balancer-type: nlb`
-
-  - opt for NLB instead of CLB with in-tree controller
-
-- `service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"`
-
-  - use HAProxy [PROXY protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt)
-
----
-
-## TLS-related annotations
-
-- `service.beta.kubernetes.io/aws-load-balancer-ssl-cert`
-
-  - enable TLS and use that certificate
-  - example value: `arn:aws:acm:<region>:<account>:certificate/<cert-id>`
-
-- `service.beta.kubernetes.io/aws-load-balancer-ssl-ports`
-
-  - enable TLS *only* on the specified ports (when multiple ports are exposed)
-  - example value: `"443,8443"`
-
-- `service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy`
-
-  - specify ciphers and other TLS parameters to use (see [that list](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html))
-  - example value: `"ELBSecurityPolicy-TLS-1-2-2017-01"`
-
----
-
-## To HTTP(S) or not to HTTP(S)
-
-- `service.beta.kubernetes.io/aws-load-balancer-backend-protocol`
-
-  - can be either `http`, `https`, `ssl`, or `tcp`
-
-  - if `https` or `ssl`: enable TLS to the backend
-
-  - if `http` or `https`: enable HTTP `x-forwarded-for` headers (with `http` or `https`)
-
-???
-
-## Cluster autoscaling
-
-## Logging
-
-https://docs.aws.amazon.com/eks/latest/userguide/logging-using-cloudtrail.html
-
-:EN:- Working with EKS
-:EN:- Cluster and user provisioning
-:EN:- Networking and load balancing
-
-:FR:- Travailler avec EKS
-:FR:- Outils de déploiement
-:FR:- Intégration avec IAM
-:FR:- Fonctionalités réseau
+[eks-guidance-best-practices]: https://docs.aws.amazon.com/eks/latest/best-practices/
+[eks-guidance-security-guide]: https://docs.aws.amazon.com/eks/latest/best-practices/security.html
+[eks-guidance-security]: https://docs.aws.amazon.com/eks/latest/userguide/security.html
+[eks-guidance-auto-security]: https://docs.aws.amazon.com/eks/latest/best-practices/autosecure.html
+[eks-guidance-iam]: https://docs.aws.amazon.com/eks/latest/best-practices/identity-and-access-management.html
+[eks-guidance-access]: https://docs.aws.amazon.com/eks/latest/best-practices/cluster-access-management.html
+[eks-guidance-rbac]: https://docs.aws.amazon.com/eks/latest/userguide/rbac-hardening.html
+[eks-guidance-pods]: https://docs.aws.amazon.com/eks/latest/best-practices/pod-security.html
+[eks-guidance-runtime]: https://docs.aws.amazon.com/eks/latest/best-practices/runtime-security.html
+[eks-guidance-network]: https://docs.aws.amazon.com/eks/latest/best-practices/network-security.html
+[eks-guidance-images]: https://docs.aws.amazon.com/eks/latest/best-practices/image-security.html
+[eks-guidance-secrets]: https://docs.aws.amazon.com/eks/latest/best-practices/data-encryption-and-secrets-management.html
+[eks-guidance-nodes]: https://docs.aws.amazon.com/eks/latest/best-practices/protecting-the-infrastructure.html
+[eks-guidance-audit]: https://docs.aws.amazon.com/eks/latest/best-practices/auditing-and-logging.html
+[eks-guidance-response]: https://docs.aws.amazon.com/eks/latest/best-practices/incident-response-and-forensics.html
+[eks-guidance-tenants]: https://docs.aws.amazon.com/eks/latest/best-practices/tenant-isolation.html
+[eks-guidance-accounts]: https://docs.aws.amazon.com/eks/latest/best-practices/multi-account-strategy.html
+[eks-guidance-upgrades]: https://docs.aws.amazon.com/eks/latest/best-practices/cluster-upgrades.html
+[eks-guidance-ips]: https://docs.aws.amazon.com/eks/latest/best-practices/ip-opt.html
+[eks-guidance-reliability]: https://docs.aws.amazon.com/eks/latest/best-practices/application.html
+[eks-guidance-scaling]: https://docs.aws.amazon.com/eks/latest/best-practices/cost-opt-compute.html
