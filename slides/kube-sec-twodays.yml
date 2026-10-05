@@ -13,7 +13,6 @@
 #     KEEP         = active in template, matches the quote
 #     SUB-CHAPTER  = quote item is a section inside this file, no change needed
 #
-#
 # - Pod Security Policies were removed in Kubernetes 1.25. The quote's
 #   "PSP (legacy)" is covered by one line in the first slide of
 #   pod-security-admission.md ("PSA replaces PSP"). pod-security-policies.md
@@ -133,7 +132,6 @@ content:
     #- k8s/setup-managed.md
     #- k8s/setup-selfhosted.md
     - k8s/aws-eks.md
-    #- k8s/dashboard.md
     # MAYBE IF TIME: (not in quote)
     #- k8s/k9s.md
 
@@ -175,6 +173,17 @@ content:
     #- k8s/argocd.md           # potential after-hours lab
     #- k8s/argocd-advanced.md  # optional lecture for the Argo CD lab
 
+- title: Controlling resources and cluster policies
+  content:
+    - k8s/resource-limits.md
+    # Checking Node and Pod resource usage
+    - k8s/metrics-server.md
+    # Dynamic Admission Control. mechanism behind Kyverno and PSA
+    - k8s/admission.md
+    - k8s/kyverno.md
+    # Hands-on: immutable labels policy lab.
+    - k8s/kyverno-colors.md
+
 - title: AI, network policies, and authentication
   content:
     - k8s/AI.md
@@ -201,26 +210,11 @@ content:
     # (ADD HERE: k8s/kyverno.md for quote "Policy Management with Kyverno".
     # See ADD EXISTING FILES section at the bottom.)
 
-- title: Volumes, configuration, and secrets
+- title: ConfigMaps and Secrets
   content:
-    # COMMENT OUT: not in the quote.
-    - k8s/volumes.md
-    #- k8s/exercise-configmap.md
-    #- k8s/build-with-docker.md # Dockercoins 1
-    #- k8s/build-with-kaniko.md # Dockercoins 3
-    # COMMENT OUT: not in the quote.
+    # configmaps
     - k8s/configuration.md
     - k8s/secrets.md
-    #- k8s/sealed-secrets.md
-    - k8s/kyverno.md
-# k8s/kyverno-colors.md Hands-on: immutable labels policy lab.
-    - k8s/kyverno-colors.md
-    # See ADD EXISTING FILES section at the bottom.)
-    # Out: not in the quote, and its EFK stack (Elasticsearch 5, fluentd 2019)
-    # no longer works on containerd.
-    #- k8s/logs-centralized.md
-    #- k8s/prometheus.md
-    #- k8s/prometheus-stack.md
 
 - title: Storage concepts
   content:
@@ -228,9 +222,7 @@ content:
     # PVC, StorageClass). No storage labs: the "storage-lab" slides are
     # excluded, and the Consul, OpenEBS, and failover chapters are out.
     # Students use EKS, and the EKS section covers EBS storage.
-    # Still open: add "Restricting Workload Features" content
-    # (resource-limits.md, metrics-server.md) and "Security Guides and
-    # Recommendations" (shared/cloud-native-security.md plus net new slides).
+    - k8s/volumes.md
     - k8s/statefulsets.md
     #- k8s/consul.md
     - k8s/pv-pvc-sc.md
@@ -239,9 +231,7 @@ content:
     #- k8s/openebs.md
     #- k8s/stateful-failover.md
     #- k8s/extending-api.md
-    # (admission.md is "Dynamic Admission Control". Not in the quote, but it
-    # is the mechanism behind Kyverno and PSA. Optional background for day 2.)
-    #- k8s/admission.md
+
     #- k8s/operators.md
     #- k8s/operators-design.md
     #- k8s/operators-example.md
@@ -250,6 +240,7 @@ content:
 
 - title: Next steps and resources
   content:
+    - k8s/kubernetes-whats-new.md
     - k8s/whatsnext.md
     - k8s/lastwords.md
     - k8s/links.md
@@ -258,19 +249,6 @@ content:
 
 
 
-#
-# --- Day 2, Restricting Workload Features ---
-# k8s/resource-limits.md (1102 lines). One file holds four quote items as
-# chapters:
-#   line   1: "Resource Limits"
-#   line 728: "Defining min, max, and default resources"
-#   line 801: "Namespace quotas"
-#   line 969: "Limiting resources in practice"
-# Place right after the storage group (statefulsets.md, pv-pvc-sc.md).
-#- k8s/resource-limits.md
-# k8s/metrics-server.md (198 lines). Title "Checking Node and Pod resource
-# usage", exact match. Place right after resource-limits.md.
-#- k8s/metrics-server.md
 #
 
 # =============================================================================
@@ -281,16 +259,6 @@ content:
 # style. Each entry lists what exists today and what the new file needs.
 # =============================================================================
 #
-# 1. External secrets
-#    Quote group: Secrets and Hardening.
-#    Exists today: one bullet "External Secrets" in
-#      shared/cloud-native-security.md line 78. Nothing else.
-#    Needs: a chapter on External Secrets Operator (ESO). SecretStore and
-#      ClusterSecretStore, ExternalSecret resource, sync interval, one
-#      backend demo (AWS Secrets Manager fits the EKS theme; a Vault dev
-#      server or the "fake" provider works on lab VMs). Compare with
-#      sealed-secrets.md: encrypted-in-git vs pulled-from-store.
-#    Suggested file: k8s/external-secrets.md
 #
 # 2. Encrypting data at rest
 #    Quote group: Secrets and Hardening.

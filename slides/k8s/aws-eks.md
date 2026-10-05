@@ -196,6 +196,35 @@ class: pic
 
 ---
 
+## Secrets encryption: kubeadm vs EKS
+
+.small[
+| | kubeadm: Kubernetes Secrets | EKS: Secrets Manager + ASCP |
+| --- | --- | --- |
+| Storage | Kubernetes API stores values in etcd | Secrets Manager stores values; ASCP mounts files in the Pod |
+| Encryption at rest | kubeadm can enable API server encrypt/decrypt | KMS envelope encryption is always enabled in Secrets Manager |
+| Encryption in transit | TLS protects API server and etcd traffic | TLS protects ASCP requests to Secrets Manager |
+| Decryption key storage | Local keys: config file on API server; KMS: main key in external KMS | Main key in AWS KMS |
+| Who manages keys? | Customer for local keys; customer or provider for external KMS | AWS for `aws/secretsmanager`; customer for a customer managed KMS key |
+| Read access | Kubernetes RBAC controls API reads | Pod IAM role needs secret access and, for a customer managed key, `kms:Decrypt` |
+
+- AWS Envelope encryption: a data key encrypts the secret value;
+  a KMS key encrypts that data key
+
+- EKS also encrypts native Kubernetes Secrets at rest in etcd by default (Kubernetes 1.28+)
+
+- ASCP avoids etcd storage unless Secret sync is enabled
+
+[Kubernetes encryption][secrets-kube-encryption] · [Secrets Manager encryption][secrets-sm-encryption] · [EKS encryption][secrets-eks-encryption] · [CSI Secret sync][secrets-csi-sync]
+]
+
+[secrets-kube-encryption]: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+[secrets-sm-encryption]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/security-encryption.html
+[secrets-eks-encryption]: https://docs.aws.amazon.com/eks/latest/userguide/envelope-encryption.html
+[secrets-csi-sync]: https://secrets-store-csi-driver.sigs.k8s.io/topics/sync-as-kubernetes-secret
+
+---
+
 ## Operations and upgrades
 
 - EKS versions receive 14 months of standard support, then 12 months extended

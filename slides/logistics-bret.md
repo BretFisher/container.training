@@ -1,3 +1,4 @@
+name: intro
 toc: Getting started
 
 ## Getting started: Do these now
