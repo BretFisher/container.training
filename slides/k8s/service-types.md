@@ -1,4 +1,4 @@
-# Service Types
+# Service types
 
 - There are different types of services:
 

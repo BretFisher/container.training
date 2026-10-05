@@ -8,6 +8,8 @@ import re
 import string
 import subprocess
 import sys
+from collections import Counter
+from typing import NamedTuple
 import yaml
 
 
@@ -17,6 +19,13 @@ logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 # source file name and its "#anchor" (a "name:" property, or a generated
 # title or TOC anchor), and the footer is always visible.
 dev = os.environ.get("SLIDES_DEV") == "1"
+toc_exclude = []
+
+
+class SlideTOCEntry(NamedTuple):
+    label: str
+    target: str
+    filename: str
 
 
 def anchor(title):
@@ -70,11 +79,11 @@ class: title
  {title}
 
 .nav[
-[Previous Section](#{previouslink})
+[Previous lecture](#{previouslink})
 |
 [Table of Contents](#{toclink})
 |
-[Next Section](#{nextlink})
+[Next lecture](#{nextlink})
 ]
 
 .debug[{debug}]
@@ -86,7 +95,9 @@ class: title
 
 def flatten(titles):
     for title in titles:
-        if isinstance(title, list):
+        if isinstance(title, dict):
+            yield from flatten(title["content"])
+        elif isinstance(title, list):
             for t in flatten(title):
                 yield t
         else:
@@ -94,14 +105,16 @@ def flatten(titles):
 
 
 def generatefromyaml(manifest, filename):
-    global single_toc
+    global single_toc, toc_exclude
     single_toc = manifest.get("toc") == "single"
+    toc_exclude = manifest.get("exclude", [])
     markdown, titles = processcontent(manifest["content"], filename)
     logging.debug("Found {} titles.".format(len(titles)))
     toc = gentoc(titles)
     markdown = markdown.replace("@@TOC@@", toc)
     for title in flatten(titles):
-        markdown = insertslide(markdown, title)
+        if isinstance(title, str):
+            markdown = insertslide(markdown, title)
 
     exclude = manifest.get("exclude", [])
     logging.debug("exclude={!r}".format(exclude))
@@ -109,13 +122,21 @@ def generatefromyaml(manifest, filename):
         logging.warning("'exclude' is empty.")
     markdown = removeexcluded(markdown, exclude)
     markdown = removetitleonly(markdown)
+    # Validate against retained source slides and generated TOC/title anchors.
+    names = Counter(slideproperties(s).get("name") for s in markdown.split("\n---\n"))
+    for entry in flatten(titles):
+        if isinstance(entry, SlideTOCEntry) and names[entry.target] != 1:
+            raise ValueError("{}: toc target {!r} must name exactly one retained slide (found {})".format(
+                entry.filename, entry.target, names[entry.target]))
     exclude = ",".join('"{}"'.format(c) for c in exclude)
 
-    # Insert build info. This is super hackish.
-    markdown = markdown.replace(
-        ".debug[",
-        ".debug[\n```\n{}\n```\n\nThese slides have been built from commit: {}\n\n".format(dirtyfiles, commit),
-        1)
+    # Published decks keep build details in the hidden first footer.
+    # Dev footers stay one line so they do not cover slide content.
+    if not dev:
+        markdown = markdown.replace(
+            ".debug[",
+            ".debug[\n```\n{}\n```\n\nThese slides have been built from commit: {}\n\n".format(dirtyfiles, commit),
+            1)
 
     html = open("workshop.html").read()
     html = html.replace("@@TITLE@@", manifest["title"].replace("\n", " "))
@@ -163,6 +184,8 @@ def removeexcluded(markdown, exclude):
 # its own "## " title (or be excluded).
 def removetitleonly(markdown):
     def titleonly(slide):
+        if "toc" in slideproperties(slide):
+            return False
         lines = [l.strip() for l in slide.strip("\n").split("\n")]
         # Ignore slide properties (the first "key: value" lines), footers
         # (.debug[...]), and empty lines.
@@ -207,43 +230,106 @@ def processAtAtStrings(text):
 title2part = {}
 all_titles = []
 
+
+def slideproperties(slide):
+    properties = {}
+    duplicates = []
+    for line in slide.lstrip("\n").split("\n"):
+        match = re.match(r"^(\w+):[ \t]*(.*)$", line)
+        if not match:
+            break
+        key, value = match.groups()
+        if key in properties and key in ("toc", "name"):
+            duplicates.append(key)
+        properties[key] = value.strip()
+    if "toc" in properties and duplicates:
+        raise ValueError("Duplicate {!r} slide property".format(duplicates[0]))
+    return properties
+
+
+def contententries(content, filename):
+    entries = []
+    for slide in content.split("\n---\n"):
+        # Lecture detection keeps its existing behavior. Slide links only
+        # use initial Remark properties, never code, notes, or -- steps.
+        properties = slideproperties(slide)
+        if "toc" in properties and removeexcluded(slide, toc_exclude) == slide and properties.get("exclude") != "true":
+            label = properties["toc"]
+            target = properties.get("name", "")
+            if not label:
+                raise ValueError("{}: toc needs a non-empty label".format(filename))
+            if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", target):
+                raise ValueError("{}: toc needs an explicit name using letters, digits, '-' or '_'".format(filename))
+            if properties.get("layout") == "true":
+                raise ValueError("{}: toc cannot be set on a layout slide".format(filename))
+            entries.append(SlideTOCEntry(label, target, filename))
+        entries.extend(re.findall("^# (.*)", slide, re.MULTILINE))
+    return entries
+
+
+def tocitem(entry, section):
+    if isinstance(entry, SlideTOCEntry):
+        label = re.sub(r"([\\\[\]])", r"\\\1", entry.label)
+        return "- [{}](#{})\n".format(label, entry.target)
+    title2part[entry] = section
+    all_titles.append(entry)
+    return "- [{}](#{})\n".format(entry, anchor(entry))
+
 # Set from the manifest ("toc: single"): one TOC slide for all sections.
 single_toc = False
 
 # Generate the table of contents for a tree of titles.
 # "tree" is a list of titles, potentially nested.
-# Each entry is either:
-# - a title (then it's a top-level section that doesn't show up in the TOC)
-# - a list (then it's a section that will show up in the TOC on its own slide)
-# In a list, we can have:
-# - titles (simple entry)
-# - further lists (they are then flattened; we don't represent subsubsections)
+# Each list or named group is one TOC section. Its TOC entries are flattened.
+# Nested group names do not add TOC levels; only the outer name is displayed.
 def gentoc(tree):
-    # First, remove the top-level sections that don't show up in the TOC.
-    tree = [ entry for entry in tree if type(entry)==list ]
-    # Then, flatten the sublists.
-    tree = [ list(flatten(entry)) for entry in tree ]
+    tree = [(entry["title"], list(flatten(entry["content"])))
+            if isinstance(entry, dict) else (None, list(flatten(entry)))
+            for entry in tree if isinstance(entry, (list, dict))]
+    tree = [(name, part) for name, part in tree if name or part]
     # Now, process each section.
     if single_toc:
         return gentoc_single(tree)
     parts = []
-    for i, part in enumerate(tree):
-        slide = "name: toc-section-{}\n\n".format(i+1)
-        if len(tree) == 1:
+    pending_labels = []
+    section_count = sum(bool(part) for name, part in tree)
+    display_section = 0
+    for name, part in tree:
+        if part:
+            display_section += 1
+        if not any(isinstance(entry, str) for entry in part):
+            label = "## {}\n\n".format(name or "Section {}".format(display_section))
+            label += "".join(tocitem(entry, None) for entry in part)
+            if part:
+                label += "\n"  # End the link list before the next section heading.
+            if parts:
+                parts[-1] += "\n" + label
+            else:
+                pending_labels.append(label)
+            continue
+        # Labels without lecture links do not consume an anchor or a slide.
+        i = len(parts)
+        slide = "name: toc-section-{}\n\n".format(i+1) + "".join(pending_labels)
+        pending_labels = []
+        if name:
+            slide += "## {}\n\n".format(name)
+        elif section_count == 1:
             slide += "## Table of contents\n\n"
         else:
-            slide += "## Section {}\n\n".format(i+1)
+            slide += "## Section {}\n\n".format(display_section)
         for title in part:
             logging.debug("Generating TOC, section {}, title {}.".format(i+1, title))
-            title2part[title] = i+1
-            all_titles.append(title)
-            slide += "- [{}](#{})\n".format(title, anchor(title))
+            slide += tocitem(title, i+1)
             # If we don't have too many subsections, add some space to breathe.
             # (Otherwise, we display the titles smooched together.)
             if len(part) < 10:
                 slide += "\n"
-        slide += "\n.debug[{}]".format("toc.md · #toc-section-{}".format(i+1) if dev else "(auto-generated TOC)")
         parts.append(slide)
+    # A deck with only labels or direct slide links still needs one TOC slide.
+    if pending_labels:
+        parts.append("name: toc-section-1\n\n" + "".join(pending_labels))
+    parts = [slide + "\n.debug[{}]".format("toc.md · #toc-section-{}".format(i+1)
+             if dev else "(auto-generated TOC)") for i, slide in enumerate(parts)]
     return "\n---\n".join(parts)
 
 
@@ -251,12 +337,16 @@ def gentoc(tree):
 # Each section keeps its number, so the slide shows which titles belong to it.
 def gentoc_single(tree):
     slide = "name: toc\n\n## Table of contents\n\n.toc-single[\n"
-    for i, part in enumerate(tree):
-        slide += "\n**Section {}**\n\n".format(i+1)
+    section = 0
+    lecture_section = 0
+    for name, part in tree:
+        if part:
+            section += 1
+        if any(isinstance(entry, str) for entry in part):
+            lecture_section += 1
+        slide += "\n**{}**\n\n".format(name or "Section {}".format(section))
         for title in part:
-            title2part[title] = i+1
-            all_titles.append(title)
-            slide += "- [{}](#{})\n".format(title, anchor(title))
+            slide += tocitem(title, lecture_section)
     slide += "\n]\n\n.debug[{}]".format("toc.md · #toc" if dev else "(auto-generated TOC)")
     return slide
 
@@ -267,12 +357,11 @@ def gentoc_single(tree):
 #   to be recursively loaded and parsed
 # - `filename` is the name of the file that we're currently processing
 #   (to generate inline comments to facilitate edition)
-# Returns: (epxandedmarkdown,[list of titles])
-# The list of titles can be nested.
+# Returns expanded Markdown and a title tree (lists or named groups).
 def processcontent(content, filename):
     if isinstance(content, str):
         if "\n" in content:
-            titles = re.findall("^# (.*)", content, re.MULTILINE)
+            titles = contententries(content, filename)
             if dev:
                 slides = content.split("\n---\n")
                 slides = [addfooter(s, devfooter(s, filename)) for s in slides]
@@ -291,9 +380,19 @@ def processcontent(content, filename):
                 f.write(markdown)
             return processcontent(markdown, content)
         logging.warning("Content spans only one line (it's probably a file name) but no file found: {}".format(content))
+    if isinstance(content, dict):
+        title = content.get("title")
+        if not isinstance(title, str) or not title.strip() or "\n" in title:
+            raise ValueError("A named content group needs a non-empty, single-line title")
+        if not isinstance(content.get("content"), list):
+            raise ValueError("A named content group needs a content list")
+        markdown, titles = processcontent(content["content"], filename)
+        return markdown, {"title": title, "content": titles}
     if isinstance(content, list):
         subparts = [processcontent(c, filename) for c in content]
-        markdown = "\n---\n".join(c[0] for c in subparts)
+        # A label-only group has a title tree but no slide content. Do not
+        # insert a blank slide for it. Keep legacy empty-list behavior.
+        markdown = "\n---\n".join(m for m, t in subparts if m or not t)
         titles = [t for (m,t) in subparts if t]
         return (markdown, titles)
     logging.warning("Invalid content: {}".format(content))

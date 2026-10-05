@@ -239,13 +239,13 @@ div.pic img {
   max-width: 1210px;
   max-height: 550px;
 }
-/* "1 of :not(...)" skips the dev-mode footer paragraph (.debug), which
-   markmaker.py puts at the top of each slide. */
+/* Count content paragraphs only. A footer can be a paragraph containing a
+   .debug span or a separate .debug div with build details. */
 /* A picture alone uses 95% of the slide (1150x647 of 1210x681), so it
    does not cover the slide number (top right) and the buttons (bottom
    right). Before: 1210x681 (100%). "> img" (direct child) excludes the
    interstitials (p > span.interstitial > img), which stay full screen. */
-div.pic p:nth-child(1 of :not(p:has(> .debug:only-child))) > img {
+div.pic p:nth-child(1 of p:not(:has(> .debug:only-child))) > img {
   max-width: 1150px;
   max-height: 647px;
 }
@@ -263,7 +263,7 @@ div.title img {
 div.title {
   vertical-align: middle; 
 }
-div.title > p:nth-child(1 of :not(p:has(> .debug:only-child))) {
+div.title > p:nth-child(1 of p:not(:has(> .debug:only-child))) {
   text-align: center;
   font-size: 300%;
 }

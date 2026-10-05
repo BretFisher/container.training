@@ -5,35 +5,6 @@
 # Every "REVIEW:" comment above a .md line is a proposed change
 # and the reason for it. Work through them, then delete the comments.
 #
-# Client quote (topic list this deck must match):
-#
-#   Day 1: Kubernetes Orchestration Fundamentals
-#     Concepts: sample app, Kubernetes concepts, first contact with kubectl
-#     Basic Usage: first containers, batch jobs, labels and annotations,
-#       logs, declarative vs imperative, network model, image registries,
-#       running our app on Kubernetes
-#     Leveling Up: setting up Kubernetes, distros and installers, EKS on AWS,
-#       daemonsets, labels and selectors
-#     Working with Production Clusters: deploying with YAML, namespaces,
-#       controlling a cluster remotely, accessing internal services,
-#       exposing HTTP services
-#     Lifecycle and Healthchecks: rolling updates, healthchecks,
-#       recording deployment actions
-#     Deploying on Kubernetes: Helm and Kustomize, GitOps (Flux and Argo CD),
-#       cert-manager
-#
-#   Day 2: Platform and Workload Security
-#     Auth and RBAC: authn/authz, service accounts, user certificates,
-#       CSR API, OpenID Connect
-#     Workload and Network Policies: network policies, restricting pod
-#       permissions, PSP (legacy), Pod Security Admission, Kyverno
-#     Secrets and Hardening: managing secrets, sealed secrets,
-#       external secrets, securing the control plane, encrypting data at rest
-#     Restricting Workload Features: resource limits, min/max/default,
-#       namespace quotas, limiting in practice, node and pod resource usage
-#     Security Guides and Recommendations: default pod spec, Kyverno
-#       policies, GitOps and PR gating, linting, supply chain security
-#
 # General notes:
 #
 # - Legend for REVIEW comments below:
@@ -89,229 +60,204 @@ exclude:
 - registry-lab
 
 content:
-- shared/title.md
-- logistics-bret.md
-#- shared/chat-room-im.md
-#- shared/chat-room-slack.md
-#- shared/chat-room-zoom-meeting.md
-#- shared/chat-room-zoom-webinar.md
-- shared/about-slides.md
-#- k8s/prereqs-basic.md
-- shared/handson.md
-#- k8s/labs-live.md
-#- shared/connecting.md
-#- k8s/labs-async.md
-- shared/toc.md
--
-  - k8s/concepts-k8s.md
-  - k8s/kubectlget.md
-  - k8s/kubectl-run.md
-  #- k8s/batch-jobs.md
-  - k8s/batch-jobs-mini.md
-  #- k8s/labels-annotations.md
-  - k8s/labels-annotations-mini.md
-  - k8s/kubectl-logs.md
-  - k8s/logs-cli.md
-  - shared/declarative.md
-  - k8s/declarative.md
-  - k8s/deploymentslideshow.md
-  - k8s/kubectlexpose.md
-  - k8s/service-types.md
-  - k8s/kubenet.md
--
-  - shared/sampleapp.md
-  #- shared/composescale.md
-  #- shared/hastyconclusions.md
-  - shared/composedown.md
-  - k8s/shippingimages.md
-  #- k8s/buildshiprun-selfhosted.md
-  - k8s/buildshiprun-dockerhub.md
-  - k8s/ourapponkube.md
-  #- k8s/exercise-wordsmith.md
-  - k8s/yamldeploy.md
-  ## TODO: did we deploy our app on kube with yaml?
--
-  - k8s/setup-overview.md
-  #- k8s/setup-devel.md
-  #- k8s/setup-managed.md
-  #- k8s/setup-selfhosted.md
-  - k8s/aws-eks.md
-  # LEFT OFF HERE-----------------------------------------------------------------
-  #- k8s/dashboard.md
-  # MAYBE IF TIME: (not in quote)
-  #- k8s/k9s.md
-  #- k8s/tilt.md
-  #- k8s/kubectlscale.md
-  # COMMENT OUT: not in the quote.
-  - k8s/scalingdockercoins.md
-  # COMMENT OUT: not in the quote. Only makes sense after scalingdockercoins.md.
-  - shared/hastyconclusions.md
-  # KEEP: quote "Daemon sets"
-  # SUB-CHAPTER: quote "Labels and selectors" is the second chapter in this
-  # file (line 297). No separate file needed.
-  - k8s/daemonset.md
-  # COMMENT OUT: not in the quote.
-  - shared/yaml.md
-  #- k8s/exercise-yaml.md
--
-  # KEEP: quote "Controlling a Kubernetes cluster remotely"
-  - k8s/localkubeconfig.md
-  # COMMENT IN: hands-on part of quote "EKS on AWS". Depends on students
-  # having AWS credentials for a real EKS cluster. Consider moving it next
-  # to aws-eks.md in the "Leveling Up" group above.
-  #- k8s/access-eks-cluster.md
-  # KEEP: quote "Accessing internal services"
-  - k8s/accessinternal.md
-  #- k8s/kubectlproxy.md
-  # KEEP: quote "Rolling updates"
-  - k8s/rollout.md
-  # KEEP: quote "Healthchecks"
-  - k8s/healthchecks.md
-  #- k8s/healthchecks-more.md
-  # KEEP: quote "Recording deployment actions"
-  - k8s/record.md
--
-  # KEEP: quote "Namespaces"
-  - k8s/namespaces.md
-  # Quote "Exposing HTTP services": Gateway API with Envoy Gateway (labs),
-  # plus an "On EKS" slide. Ingress is frozen (one line in gateway-api.md).
-  #- k8s/ingress.md
-  #- k8s/ingress-setup.md
-  #- k8s/ingress-advanced.md
-  #- k8s/ingress-canary.md
-  #- k8s/ingress-tls.md
-  - k8s/gateway-api.md
-  # KEEP: intro to quote "Helm and Kustomize"
-  - k8s/templating.md
-  # KEEP: quote "Helm and Kustomize"
-  - k8s/kustomize.md
-  # Core Helm: operations, chart format, compact DockerCoins lab,
-  # values validation, and release-Secret security.
-  - k8s/helm-intro.md
-  - k8s/helm-chart-format.md
-  - k8s/helm-create-basic-chart.md
-  #- k8s/helm-create-better-chart.md # optional chart-authoring lab
-  #- k8s/helm-dependencies.md # optional dependency lab
-  - k8s/helm-values-schema-validation.md
-  # KEEP: also relevant to day 2 "Managing secrets" (shows release data
-  # stored as Secrets).
-  - k8s/helm-secrets.md
-  #- k8s/exercise-helm.md
-  #- k8s/ytt.md
-  # Quote uses Flux and Argo CD for GitOps, not GitLab CI/CD.
-  #- k8s/gitlab.md
-  #- k8s/cert-manager.md
-  # GitOps is the last lecture of day 1. The Flux and Argo CD chapters hold
-  # all the GitOps labs. Potential after-hours labs: uncomment one to offer it.
-  - k8s/gitworkflows.md
-  #- k8s/flux.md             # potential after-hours lab
-  #- k8s/argocd.md           # potential after-hours lab
-  #- k8s/argocd-advanced.md  # optional lecture for the Argo CD lab
--
-  - k8s/AI.md
-  # KEEP: quote "Network policies". Note the quote puts this under
-  # "Workload and Network Policies", after the Auth and RBAC group.
-  # Consider moving it below authn-authz.md and the auth files.
-  - k8s/netpol.md
-  # KEEP: quote "Authentication and authorization"
-  # SUB-CHAPTER: quote "Service accounts" is a section in this file
-  # (line 256 "Service accounts", line 276 "Service account tokens
-  # evolution"). No separate file needed.
-  - k8s/authn-authz.md
-  # (ADD HERE: k8s/user-cert.md for quote "Generating user certificates".
-  # See ADD EXISTING FILES section at the bottom.)
-  # COMMENT IN: quote "The CSR API"
-  #- k8s/csr-api.md
-  # COMMENT IN: quote "OpenID Connect". Needs an OIDC provider for the demo.
-  #- k8s/openid-connect.md
-  # COMMENT IN: title is "Restricting Pod Permissions", exact match with
-  # the quote.
-  #- k8s/pod-security-intro.md
-  # Out: PSP was removed in Kubernetes 1.25. Quote "PSP (legacy)" is one
-  # line in the first slide of pod-security-admission.md.
-  #- k8s/pod-security-policies.md
-  # COMMENT IN: quote "Pod Security Admission"
-  #- k8s/pod-security-admission.md
-  # (ADD HERE: k8s/kyverno.md for quote "Policy Management with Kyverno".
-  # See ADD EXISTING FILES section at the bottom.)
--
-  # COMMENT OUT: not in the quote.
-  - k8s/volumes.md
-  #- k8s/exercise-configmap.md
-  #- k8s/build-with-docker.md
-  #- k8s/build-with-kaniko.md
-  # COMMENT OUT: not in the quote.
-  - k8s/configuration.md
-  # KEEP: quote "Managing secrets" (exact title match). Has one short slide
-  # on encryption at rest at line 244 with a link only. See NET NEW SLIDES.
-  - k8s/secrets.md
-  # (ADD HERE: k8s/sealed-secrets.md for quote "Sealed secrets",
-  # k8s/control-plane-auth.md for quote "Securing the control plane".
-  # See ADD EXISTING FILES section at the bottom.)
-  # Out: not in the quote, and its EFK stack (Elasticsearch 5, fluentd 2019)
-  # no longer works on containerd.
-  #- k8s/logs-centralized.md
-  #- k8s/prometheus.md
-  #- k8s/prometheus-stack.md
--
-  # Storage: concepts only (what a StatefulSet is and when to use it; PV,
-  # PVC, StorageClass). No storage labs: the "storage-lab" slides are
-  # excluded, and the Consul, OpenEBS, and failover chapters are out.
-  # Students use EKS, and the EKS section covers EBS storage.
-  # Still open: add "Restricting Workload Features" content
-  # (resource-limits.md, metrics-server.md) and "Security Guides and
-  # Recommendations" (shared/cloud-native-security.md plus net new slides).
-  - k8s/statefulsets.md
-  #- k8s/consul.md
-  - k8s/pv-pvc-sc.md
-  #- k8s/volume-claim-templates.md
-  #- k8s/portworx.md
-  #- k8s/openebs.md
-  #- k8s/stateful-failover.md
-  #- k8s/extending-api.md
-  # (admission.md is "Dynamic Admission Control". Not in the quote, but it
-  # is the mechanism behind Kyverno and PSA. Optional background for day 2.)
-  #- k8s/admission.md
-  #- k8s/operators.md
-  #- k8s/operators-design.md
-  #- k8s/operators-example.md
-  #- k8s/staticpods.md
-  #- k8s/owners-and-dependents.md
--
-  - k8s/whatsnext.md
-  - k8s/lastwords.md
-  - k8s/links.md
-  - shared/thankyou.md
 
-# =============================================================================
-# ADD EXISTING FILES
-#
-# These files exist in slides/k8s/ or slides/shared/ but the two-day template
-# does not reference them. Each one matches a quote item. They are all
-# commented out here. Move each line up into the content group marked with
-# "(ADD HERE: ...)" when you work on that group. Line counts are from
-# 2026-09-18 and give a rough idea of teaching time.
-# =============================================================================
-#
-#
-# --- Day 2, Auth and RBAC: "Generating user certificates" ---
-# k8s/user-cert.md (276 lines). Title "Generating user certificates".
-# Needs access to the cluster CA key, so it will not work on EKS. Runs
-# on the lab VMs (kubeadm). Place after authn-authz.md, before csr-api.md.
-#- k8s/user-cert.md
-#
-# --- Day 2, Workload and Network Policies: "Policy Management with Kyverno" ---
-- k8s/kyverno.md
+- title: Intro
+  content:
+    - shared/title.md
+    - logistics-bret.md
+    #- shared/chat-room-im.md
+    #- shared/chat-room-slack.md
+    #- shared/chat-room-zoom-meeting.md
+    #- shared/chat-room-zoom-webinar.md
+    - shared/about-slides.md
+    #- k8s/prereqs-basic.md
+    - shared/handson.md
+    #- k8s/labs-live.md
+    #- shared/connecting.md
+    #- k8s/labs-async.md
+    - shared/toc.md
+
+- title: Kubernetes Architecture
+  content:
+    - k8s/concepts-k8s.md
+    - k8s/kubectlget.md
+    - k8s/kubectl-run.md
+    #- k8s/batch-jobs.md
+    - k8s/batch-jobs-mini.md
+    #- k8s/labels-annotations.md
+    - k8s/labels-annotations-mini.md
+    - k8s/kubectl-logs.md
+    - k8s/logs-cli.md
+    - shared/declarative.md
+    - k8s/declarative.md
+    - k8s/deploymentslideshow.md
+    - k8s/kubectlexpose.md
+    - k8s/service-types.md
+    - k8s/kubenet.md
+
+- title: Deploying DockerCoins
+  content:
+    - shared/sampleapp.md   # FIRST TIME with DockerCoins # Dockercoins 15
+    #- shared/composescale.md
+    #- shared/hastyconclusions.md
+    - shared/composedown.md
+    - k8s/shippingimages.md # Dockercoins 2
+    #- k8s/buildshiprun-selfhosted.md # Dockercoins 6
+    #- k8s/buildshiprun-dockerhub.md # Dockercoins 7
+    - k8s/ourapponkube.md # Dockercoins 5
+    - k8s/kubercoins.md # Dockercoins 20
+    #- k8s/exercise-wordsmith.md
+    # what is yaml
+    #- shared/yaml.md
+    # Deep dive into K8s YAML using color app
+    - k8s/yamldeploy.md
+    # COMMENT OUT: not in the quote.
+    - k8s/scalingdockercoins.md # Dockercoins 3
+    # COMMENT OUT: not in the quote. Only makes sense after scalingdockercoins.md. # Dockercoins 3
+    - shared/hastyconclusions.md
+    # Long way of creating a DaemonSet for DockerCoins
+    - k8s/daemonset.md # Dockercoins 2
+    # KEEP: quote "Rolling updates"
+    - k8s/rollout.md # Dockercoins 4
+    # KEEP: Probe types and basics
+    - k8s/healthchecks.md
+    # Lab of failing probes in DockerCoins
+    - k8s/healthchecks-more.md # Dockercoins 10
+    # COMMENT OUT: how to use annotate change-cause
+    #- k8s/record.md # Dockercoins 2
+
+- title: Cluster setup
+  content:
+    - k8s/setup-overview.md
+    #- k8s/setup-devel.md
+    #- k8s/setup-managed.md
+    #- k8s/setup-selfhosted.md
+    - k8s/aws-eks.md
+    #- k8s/dashboard.md
+    # MAYBE IF TIME: (not in quote)
+    #- k8s/k9s.md
+
+- title: Cluster remote access
+  content:
+    # KEEP: kubectl config and local kubeconfig
+    - k8s/localkubeconfig.md
+    # KEEP: kubectl proxy and kubectl port-forward basics
+    - k8s/accessinternal.md
+    # more kubectl proxy details and labs
+    #- k8s/kubectlproxy.md
+
+    # LEFT OFF HERE-----------------------------------------------------------------
+
+- title: Helm, Kustomize, GitOps
+  content:
+    # KEEP: quote "Namespaces"
+    - k8s/namespaces.md # Dockercoins 2
+    - k8s/gateway-api.md
+    # KEEP: intro to quote "Helm and Kustomize"
+    - k8s/templating.md
+    # KEEP: quote "Helm and Kustomize"
+    - k8s/kustomize.md # Dockercoins 27
+    # Core Helm: operations, chart format, compact DockerCoins lab,
+    # values validation, and release-Secret security.
+    - k8s/helm-intro.md
+    - k8s/helm-chart-format.md
+    - k8s/helm-create-basic-chart.md # Dockercoins 13
+    #- k8s/helm-create-better-chart.md # optional chart-authoring lab # Dockercoins 4
+    #- k8s/helm-dependencies.md # optional dependency lab # Dockercoins 15
+    - k8s/helm-values-schema-validation.md
+    # KEEP: also relevant to day 2 "Managing secrets" (shows release data
+    # stored as Secrets).
+    - k8s/helm-secrets.md
+    #- k8s/exercise-helm.md # Dockercoins 3
+    #- k8s/ytt.md # Dockercoins 5
+    - k8s/gitworkflows.md
+    #- k8s/flux.md             # potential after-hours lab # Dockercoins 12
+    #- k8s/argocd.md           # potential after-hours lab
+    #- k8s/argocd-advanced.md  # optional lecture for the Argo CD lab
+
+- title: AI, network policies, and authentication
+  content:
+    - k8s/AI.md
+    # KEEP: quote "Network policies". Note the quote puts this under
+    # "Workload and Network Policies", after the Auth and RBAC group.
+    # Consider moving it below authn-authz.md and the auth files.
+    - k8s/netpol.md # Dockercoins 4
+    # KEEP: quote "Authentication and authorization"
+    # SUB-CHAPTER: quote "Service accounts" is a section in this file
+    # (line 256 "Service accounts", line 276 "Service account tokens
+    # evolution"). No separate file needed.
+    - k8s/authn-authz.md
+    #- k8s/control-plane-auth.md
+    #- k8s/user-cert.md
+    # COMMENT IN: quote "The CSR API"
+    #- k8s/csr-api.md
+    # COMMENT IN: quote "OpenID Connect". Needs an OIDC provider for the demo.
+    #- k8s/openid-connect.md
+    # COMMENT IN: title is "Restricting Pod Permissions", exact match with
+    # the quote.
+    #- k8s/pod-security-intro.md
+    # COMMENT IN: quote "Pod Security Admission"
+    #- k8s/pod-security-admission.md
+    # (ADD HERE: k8s/kyverno.md for quote "Policy Management with Kyverno".
+    # See ADD EXISTING FILES section at the bottom.)
+
+- title: Volumes, configuration, and secrets
+  content:
+    # COMMENT OUT: not in the quote.
+    - k8s/volumes.md
+    #- k8s/exercise-configmap.md
+    #- k8s/build-with-docker.md # Dockercoins 1
+    #- k8s/build-with-kaniko.md # Dockercoins 3
+    # COMMENT OUT: not in the quote.
+    - k8s/configuration.md
+    - k8s/secrets.md
+    #- k8s/sealed-secrets.md
+    - k8s/kyverno.md
 # k8s/kyverno-colors.md Hands-on: immutable labels policy lab.
-- k8s/kyverno-colors.md
-#- k8s/sealed-secrets.md
-#
-# --- Day 2, Secrets and Hardening: "Securing the control plane" ---
-# k8s/control-plane-auth.md (419 lines). Title "Securing the control
-# plane", exact match. etcd peers/clients, API server TLS, kubelet auth.
-# Assumes a kubeadm cluster with access to /etc/kubernetes. Will not work
-# on EKS.
-#- k8s/control-plane-auth.md
+    - k8s/kyverno-colors.md
+    # See ADD EXISTING FILES section at the bottom.)
+    # Out: not in the quote, and its EFK stack (Elasticsearch 5, fluentd 2019)
+    # no longer works on containerd.
+    #- k8s/logs-centralized.md
+    #- k8s/prometheus.md
+    #- k8s/prometheus-stack.md
+
+- title: Storage concepts
+  content:
+    # Storage: concepts only (what a StatefulSet is and when to use it; PV,
+    # PVC, StorageClass). No storage labs: the "storage-lab" slides are
+    # excluded, and the Consul, OpenEBS, and failover chapters are out.
+    # Students use EKS, and the EKS section covers EBS storage.
+    # Still open: add "Restricting Workload Features" content
+    # (resource-limits.md, metrics-server.md) and "Security Guides and
+    # Recommendations" (shared/cloud-native-security.md plus net new slides).
+    - k8s/statefulsets.md
+    #- k8s/consul.md
+    - k8s/pv-pvc-sc.md
+    #- k8s/volume-claim-templates.md
+    #- k8s/portworx.md
+    #- k8s/openebs.md
+    #- k8s/stateful-failover.md
+    #- k8s/extending-api.md
+    # (admission.md is "Dynamic Admission Control". Not in the quote, but it
+    # is the mechanism behind Kyverno and PSA. Optional background for day 2.)
+    #- k8s/admission.md
+    #- k8s/operators.md
+    #- k8s/operators-design.md
+    #- k8s/operators-example.md
+    #- k8s/staticpods.md
+    #- k8s/owners-and-dependents.md
+
+- title: Next steps and resources
+  content:
+    - k8s/whatsnext.md
+    - k8s/lastwords.md
+    - k8s/links.md
+    - shared/thankyou.md
+
+
+
+
 #
 # --- Day 2, Restricting Workload Features ---
 # k8s/resource-limits.md (1102 lines). One file holds four quote items as
@@ -326,24 +272,6 @@ content:
 # usage", exact match. Place right after resource-limits.md.
 #- k8s/metrics-server.md
 #
-# --- Day 2, Security Guides and Recommendations ---
-# shared/cloud-native-security.md (103 lines, 8 slides). Title "Cloud
-# Native Security". A summary checklist: managed platforms, upgrades,
-# isolation, secret management, authn/authz. Mentions External Secrets
-# and supply chain in one bullet each. Use as the section opener, then
-# follow with the net new slides below.
-#- shared/cloud-native-security.md
-#
-# --- Optional background, not in the quote ---
-# k8s/admission.md (623 lines). "Dynamic Admission Control". Explains
-# the webhook mechanism used by Kyverno and PSA. Already listed as a
-# comment in the last content group above.
-# k8s/apiserver-deepdive.md (179 lines). "API server internals", has an
-# "AuthN and AuthZ" handler chain slide. Deep background for authn-authz.md.
-# k8s/harbor.md (253 lines). Self-hosted registry with TLS. Could support
-# a supply chain demo (image scanning, signing) if you build that content.
-# k8s/kuik.md (134 lines). Kube Image Keeper, registry mirror/cache.
-# Related to supply chain resilience, not security as such.
 
 # =============================================================================
 # NET NEW SLIDES
@@ -378,32 +306,7 @@ content:
 #      /etc/kubernetes). Place right after it.
 #    Suggested file: k8s/encryption-at-rest.md
 #
-# 3. Default pod specification
-#    Quote group: Security Guides and Recommendations.
-#    Exists today: nothing. The string "securityContext" does not appear
-#      in any slide file.
-#    Needs: a hardened pod template walk-through. runAsNonRoot, runAsUser,
-#      readOnlyRootFilesystem, allowPrivilegeEscalation: false,
-#      capabilities drop ALL, seccompProfile RuntimeDefault,
-#      automountServiceAccountToken: false, resource requests and limits,
-#      dedicated ServiceAccount. Show how each field maps to a Pod
-#      Security Standards level (ties back to pod-security-admission.md).
-#      Hands-on: take a dockercoins deployment and harden it, watch it
-#      break, fix the image (non-root port, writable tmp volume).
-#    Suggested file: k8s/pod-hardening.md
-#
-# 4. Kyverno policies (as a security baseline)
-#    Quote group: Security Guides and Recommendations.
-#    Exists today: k8s/kyverno.md teaches the tool. kyverno-colors.md and
-#      kyverno-ingress.md are demos about labels and Ingress, not security.
-#    Needs: the Kyverno "pod-security" policy set (the PSS baseline and
-#      restricted policies), plus common best-practice policies: require
-#      requests/limits, disallow latest tag, require non-root, restrict
-#      image registries, add default network policy per namespace
-#      (generate rule). Show audit vs enforce rollout, and the Policy
-#      Reporter UI. Hands-on: apply the set to the dockercoins namespace
-#      and fix the violations, which links to net new item 3.
-#    Suggested file: k8s/kyverno-security-policies.md
+
 #
 # 5. GitOps and PR gating
 #    Quote group: Security Guides and Recommendations.
@@ -415,7 +318,7 @@ content:
 #      "kyverno apply" or "kyverno test" in CI, Flux/Argo CD sync only
 #      from protected branches, signed commits. One example GitHub Actions
 #      workflow that runs the day 2 linters and policy tests on a PR.
-#    Depends on: gitworkflows.md, flux.md or argocd.md from day 1, and
+#    Depends on: gitworkflows.md, flux.md or argocd.md from day 1, and # Dockercoins 12 (flux.md)
 #      net new item 6.
 #    Suggested file: k8s/gitops-pr-gating.md
 #
@@ -432,27 +335,3 @@ content:
 #      manifests and the Helm chart from day 1, fix the findings.
 #    Suggested file: k8s/linting.md
 #
-# 7. Supply chain security
-#    Quote group: Security Guides and Recommendations.
-#    Exists today: one bullet in shared/cloud-native-security.md.
-#      k8s/harbor.md could host a registry demo but has no security content.
-#    Needs: the attack surface (base images, registries, CI, dependencies).
-#      SBOMs with syft, vulnerability scanning with trivy or grype, image
-#      signing and verification with cosign (keyless via Sigstore), SLSA
-#      levels in brief, admission-time verification with the Kyverno
-#      verifyImages rule (links to kyverno.md), pinning images by digest,
-#      private registry mirrors (kuik.md as optional aside). Hands-on:
-#      sign a dockercoins image, add a Kyverno verifyImages policy, try to
-#      deploy an unsigned image and watch it fail.
-#    Depends on: kyverno.md, shippingimages.md and buildshiprun-dockerhub.md
-#      from day 1.
-#    Suggested file: k8s/supply-chain-security.md
-#
-# Suggested order for the "Security Guides and Recommendations" group:
-#   shared/cloud-native-security.md
-#   k8s/pod-hardening.md                (new, item 3)
-#   k8s/kyverno-security-policies.md    (new, item 4)
-#   k8s/linting.md                      (new, item 6)
-#   k8s/gitops-pr-gating.md             (new, item 5)
-#   k8s/supply-chain-security.md        (new, item 7)
-# =============================================================================

@@ -1,10 +1,12 @@
+toc: Getting started
+
 ## Getting started: Do these now
 
 Welcome to the workshop! I'm glad you're here. Do these now, so we can start quickly:
 
 1. There are two pinned links in chat: slides, and server GSheet
 
-1. Open these slides in your browser: @@SLIDES@@
+1. Open those slides in your browser: @@SLIDES@@
 
 2. Navigate those slides with <- and ->
 
