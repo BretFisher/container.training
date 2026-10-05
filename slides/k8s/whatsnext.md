@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Next steps
 
 *Alright, how do I get started and containerize my apps?*
@@ -99,7 +100,7 @@ And *then* it is time to look at orchestration!
     <br/>
     (`redis.blue.svc.cluster.local` will be a `CNAME` record)
 
-  - `ClusterIP` services with explicit `Endpoints`
+  - `ClusterIP` services with explicit `EndpointSlices`
     <br/>
     (instead of letting Kubernetes generate the endpoints from a selector)
 
@@ -130,7 +131,7 @@ And *then* it is time to look at orchestration!
   |
   [StatefulSets](kube-selfpaced.yml.html#toc-statefulsets)
   |
-  [Persistent Volumes](kube-selfpaced.yml.html#toc-highly-available-persistent-volumes)
+  [Persistent Volumes](kube-selfpaced.yml.html#toc-pv-pvc-and-storage-classes)
 
 - Excellent [blog post](http://www.databasesoup.com/2018/07/should-i-run-postgres-on-kubernetes.html) tackling the question: “Should I run Postgres on Kubernetes?”
 
@@ -142,32 +143,34 @@ And *then* it is time to look at orchestration!
 
 - HTTP is a layer 7 protocol
 
-- It is handled by *ingresses* (a different resource kind)
+- It is handled by the *Gateway API* (`Gateway`, `HTTPRoute`...)
 
-- *Ingresses* allow:
+  (Ingress still works, but its API is frozen; new features go to Gateway API)
+
+- *HTTPRoutes* allow:
 
   - virtual host routing
-  - session stickiness
-  - URI mapping
+  - path matching and rewrites
+  - traffic splitting
   - and much more!
 
-- [This section](kube-selfpaced.yml.html#toc-exposing-http-services-with-ingress-resources) shows how to expose multiple HTTP apps using [Træfik](https://docs.traefik.io/user-guide/kubernetes/)
+- [This section](kube-selfpaced.yml.html#toc-the-gateway-api) shows how to use the Gateway API with [Envoy Gateway](https://gateway.envoyproxy.io/)
 
 ---
 
 ## Logging
 
-- Logging is delegated to the container engine
+- Logging is delegated to the container runtime
 
 - Logs are exposed through the API
 
-- Logs are also accessible through local files (`/var/log/containers`)
+- Logs are also accessible through local files (`/var/log/pods`, `/var/log/containers`)
 
 - Log shipping to a central platform is usually done through these files
 
   (e.g. with an agent bind-mounting the log directory)
 
-- [This section](kube-selfpaced.yml.html#toc-centralized-logging) shows how to do that with [Fluentd](https://docs.fluentd.org/v0.12/articles/kubernetes-fluentd) and the EFK stack
+- [This section](kube-selfpaced.yml.html#toc-centralized-logging) shows how to do that with [Fluentd](https://docs.fluentd.org/container-deployment/kubernetes) and the EFK stack
 
 ---
 
@@ -175,17 +178,15 @@ And *then* it is time to look at orchestration!
 
 - The kubelet embeds [cAdvisor](https://github.com/google/cadvisor), which exposes container metrics
 
-  (cAdvisor might be separated in the future for more flexibility)
+  (container stats are moving to the CRI: `PodAndContainerStatsFromCRI`)
 
 - It is a good idea to start with [Prometheus](https://prometheus.io/)
 
   (even if you end up using something else)
 
-- Starting from Kubernetes 1.8, we can use the [Metrics API](https://kubernetes.io/docs/tasks/debug-application-cluster/core-metrics-pipeline/)
+- `kubectl top` and the HPA use the [Metrics API](https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/)
 
-- [Heapster](https://github.com/kubernetes/heapster) was a popular add-on
-
-  (but is being [deprecated](https://github.com/kubernetes/heapster/blob/master/docs/deprecation.md) starting with Kubernetes 1.11)
+  (served by metrics-server)
 
 ---
 
@@ -232,14 +233,14 @@ And *then* it is time to look at orchestration!
 - [Kustomize](https://github.com/kubernetes-sigs/kustomize)
   (YAML manifests + patches applied on top)
 
-- [Helm](https://github.com/kubernetes/helm)
+- [Helm](https://github.com/helm/helm)
   (YAML manifests + templating engine)
 
-- [Spinnaker](https://www.spinnaker.io/)
-  (Netflix' CD platform)
+- [Argo CD](https://argo-cd.readthedocs.io/) or [Flux](https://fluxcd.io/)
+  (GitOps: the cluster pulls manifests from a repo)
 
-- [Brigade](https://brigade.sh/)
-  (event-driven scripting; no YAML)
+- [Spinnaker](https://spinnaker.io/)
+  (Netflix' CD platform)
 
 ---
 
@@ -261,7 +262,7 @@ Sorry Star Trek fans, this is not the federation you're looking for!
 
 ## Cluster federation
 
-- Kubernetes master operation relies on etcd
+- The Kubernetes control plane relies on etcd
 
 - etcd uses the [Raft](https://raft.github.io/) protocol
 
@@ -274,6 +275,8 @@ Sorry Star Trek fans, this is not the federation you're looking for!
 - Break it down in local clusters
 
 - Regroup them in a *cluster federation*
+
+  (e.g. with [Karmada](https://karmada.io/); KubeFed is archived)
 
 - Synchronize resources across clusters
 

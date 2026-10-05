@@ -1,10 +1,11 @@
+<!-- verified: 2026-10-05 -->
 # Revisiting `kubectl logs`
 
 - In this section, we assume that we have a Deployment with multiple Pods
 
   (e.g. `pingpong` that we scaled to at least 3 pods)
 
-- We will highlights some of the limitations of `kubectl logs`
+- We will highlight some of the limitations of `kubectl logs`
 
 ---
 
@@ -33,6 +34,8 @@
 ## Viewing logs of multiple pods
 
 - When we specify a deployment name, only one single pod's logs are shown
+
+  (unless we add `--all-pods`)
 
 - We can view the logs of multiple pods by specifying a *selector*
 
@@ -96,7 +99,7 @@ class: extra-details, bret-skip
 We see a message like the following one:
 ```
 error: you are attempting to follow 8 log streams,
-but maximum allowed concurency is 5,
+but maximum allowed concurrency is 5,
 use --max-log-requests to increase the limit
 ```
 
@@ -125,9 +128,9 @@ class: extra-details, bret-skip
 
 ## Shortcomings of `kubectl logs`
 
-- Defaults to a max of 5 pods in query
+- Follows at most 5 pods by default (`--max-log-requests`)
 
-- We don't see which pod sent which log line
+- We don't see which pod sent which log line (unless we add `--prefix`)
 
 - If pods are restarted / replaced, the log stream stops
 
@@ -138,24 +141,6 @@ class: extra-details, bret-skip
 - There are external tools to address these shortcomings
 
   (e.g.: [Stern](https://github.com/stern/stern))
-
----
-
-class: extra-details, bret-skip
-
-## `kubectl logs -l ... --tail N`
-
-- If we run this with Kubernetes 1.12, the last command shows multiple lines
-
-- This is a regression when `--tail` is used together with `-l`/`--selector`
-
-- It always shows the last 10 lines of output for each container
-
-  (instead of the number of lines specified on the command line)
-
-- The problem was fixed in Kubernetes 1.13
-
-*See [#70554](https://github.com/kubernetes/kubernetes/issues/70554) for details.*
 
 ???
 

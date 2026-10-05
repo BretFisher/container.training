@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # PV, PVC, and Storage Classes
 
 - When an application needs storage, it creates a PersistentVolumeClaim
@@ -28,7 +29,7 @@
 
   - ReadOnlyMany (multiple nodes can access, but they can't write)
 
-  - ReadWriteOncePod (only one pod can access the volume; new in Kubernetes 1.22)
+  - ReadWriteOncePod (only one pod can access the volume; CSI volumes only)
 
 - A PVC lists the access modes that it requires
 

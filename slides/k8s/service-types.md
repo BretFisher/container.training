@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Service types
 
 - There are different types of services:
@@ -167,7 +168,7 @@ class: pic
 
 - Under the hood: `kube-proxy` sets up a bunch of port forwarding rules on our nodes
 
-  (using `iptables`, `ipvs`, `nftables`... multiple implementations are available)
+  (using `iptables` (the default) or `nftables`; `ipvs` is deprecated since 1.35)
 
 - Very useful option for external traffic when `LoadBalancer` Services aren't available
 
@@ -226,7 +227,7 @@ class: extra-details
 
   - if we need to connect over arbitrary ports (instead of a few fixed ones)
 
-  - if we need to communicate over another protocol than UDP or TCP
+  - if we need to communicate over another protocol than TCP, UDP, or SCTP
 
   - if we want to decide how to balance the requests client-side
 
@@ -283,15 +284,17 @@ class: extra-details
 
 ## Viewing endpoint details
 
+- Kubernetes stores endpoints in *EndpointSlices* (up to 100 endpoints per slice)
+
 - When we have many endpoints, our display commands truncate the list
   ```bash
-  kubectl get endpoints
+  kubectl get endpointslices
   ```
 
 - If we want to see the full list, we can use one of the following commands:
   ```bash
-  kubectl describe endpoints blue
-  kubectl get endpoints blue -o yaml
+  kubectl describe endpointslices -l kubernetes.io/service-name=blue
+  kubectl get endpointslices -l kubernetes.io/service-name=blue -o yaml
   ```
 
 - These commands will show us a list of IP addresses
@@ -305,20 +308,19 @@ class: extra-details
 
 class: extra-details
 
-## `endpoints` not `endpoint`
+## EndpointSlices, not Endpoints
 
-- `endpoints` is the only resource that cannot be singular
+- The `v1` `Endpoints` API is deprecated since Kubernetes 1.33; use `EndpointSlice`
 
-```bash
-$ kubectl get endpoint
-error: the server doesn't have a resource type "endpoint"
-```
+  (`kubectl get endpoints` still works, but prints a deprecation warning)
 
-- This is because the type itself is plural (unlike every other resource)
+- EndpointSlices are in API group `discovery.k8s.io/v1`
 
-- There is no `endpoint` object: `type Endpoints struct`
+- A Service can have multiple EndpointSlices
 
-- The type doesn't represent a single endpoint, but a list of endpoints
+  (each slice holds up to 100 endpoints by default; this scales much better)
+
+- Each slice has the label `kubernetes.io/service-name=<service>`
 
 ---
 
@@ -375,7 +377,7 @@ class: extra-details
 
   - [Topology aware routing](https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/) annotation (beta)
 
-  - `spec.trafficDistribution` (alpha in 1.30, beta in 1.31)
+  - `spec.trafficDistribution` (stable since 1.33)
 
 ---
 
@@ -431,17 +433,15 @@ class: extra-details
 
 - Multiple values are supported
 
-- `PreferClose` (alpha since K8S 1.30, beta since K8S 1.31, stable since K8S 1.33)
+- `PreferSameZone` (stable since K8S 1.35)
 
   "try to route traffic to endpoints in the same zone as the client"
 
-- `PreferSameZone` (beta since K8S 1.34)
-
-  "same as `PreferClose` but clearer about the intended semantics"
-
-- `PreferSameNode` (beta since K8S 1.34)
+- `PreferSameNode` (stable since K8S 1.35)
 
   "try to route traffic to endpoints on the same node as the client"
+
+- `PreferClose` is deprecated; use `PreferSameZone` (same behavior, clearer name)
 
 [kep4444]: https://github.com/kubernetes/enhancements/issues/4444
 

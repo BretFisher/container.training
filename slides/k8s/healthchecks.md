@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Healthchecks
 
 - Healthchecks can improve the reliability of our applications, for instance:
@@ -78,7 +79,7 @@
 
 - If the container is not ready, its Pod is not ready
 
-- If the Pod belongs to a Service, it is removed from its Endpoints
+- If the Pod belongs to a Service, it is removed from its EndpointSlices
 
   (it stops receiving new connections but existing ones are not affected)
 
@@ -86,7 +87,7 @@
 
   (Kubernetes will try to respect the MaxUnavailable parameter)
 
-- As soon as the readiness probe suceeds again, everything goes back to normal
+- As soon as the readiness probe succeeds again, everything goes back to normal
 
 ---
 
@@ -290,7 +291,7 @@ class: extra-details
 
 <!-- https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-grpc-liveness-probe -->
 
-- Available in beta since Kubernetes 1.24
+- Stable (GA) since Kubernetes 1.27
 
 - Leverages standard [GRPC Health Checking Protocol][grpc]
 
@@ -410,7 +411,7 @@ class: extra-details
 
 - ...even in scenarios where a startup probe would seem more appropriate!
 
-- This is because startup probes are relatively recent
+- This is because startup probes came later than the other two
 
   (they reached GA status in Kubernetes 1.20)
 
@@ -483,7 +484,7 @@ class: extra-details
 
 - Liveness probes should not be influenced by the state of external services
 
-- Liveness probes and readiness probes should have different paramters
+- Liveness probes and readiness probes should have different parameters
 
 - For startup probes, remember to increase the `failureThreshold`
 
@@ -509,7 +510,7 @@ class: extra-details
 
 - Sometimes it can also make sense to embed a web server in the worker
 
-[grpc]: https://grpc.github.io/grpc/core/md_doc_health-checking.html
+[grpc]: https://grpc.io/docs/guides/health-checking/
 
 ???
 

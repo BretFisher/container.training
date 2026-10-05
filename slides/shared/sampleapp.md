@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Our sample application
 
 - We will clone the GitHub repository onto our `node1`
@@ -171,9 +172,9 @@ class: extra-details, bret-skip
 
 - Containers can have network aliases (resolvable through DNS)
 
-- Compose file version 2+ makes each container reachable through its service name
+- Compose makes each container reachable through its service name
 
-- Compose file version 1 required "links" sections to accomplish this
+  (`links` and the top-level `version` key are obsolete in the Compose Specification)
 
 - Network aliases are automatically namespaced
 
@@ -209,24 +210,6 @@ class: bret-skip
   (`hasher` is in the [hasher](https://@@GITREPO@@/blob/@@GITBRANCH@@/dockercoins/hasher/) directory,
   `rng` is in the [rng](https://@@GITREPO@@/blob/@@GITBRANCH@@/dockercoins/rng/)
   directory, etc.)
-
----
-
-class: extra-details, bret-skip
-
-## Compose file format version
-
-*This is relevant only if you have used Compose before 2016...*
-
-- Compose 1.6 introduced support for a new Compose file format (aka "v2")
-
-- Services are no longer at the top level, but under a `services` section
-
-- There has to be a `version` key at the top level, with value `"2"` (as a string, not an integer)
-
-- Containers are placed on a dedicated network, making links unnecessary
-
-- There are other minor differences, but upgrade is easy and straightforward
 
 ---
 
@@ -272,11 +255,9 @@ class: self-paced, extra-details
 If you just see a `Page not found` error, it might be because your
 Docker Engine is running on a different machine. This can be the case if:
 
-- you are using the Docker Toolbox
-
-- you are using a VM (local or remote) created with Docker Machine
-
 - you are controlling a remote Docker Engine
+
+  (e.g. with a Docker context or `DOCKER_HOST`)
 
 When you run DockerCoins in development mode, the web UI static files
 are mapped to the container using a volume. Alas, volumes can only
@@ -284,7 +265,7 @@ work on a local environment, or when using Docker Desktop for Mac or Windows.
 
 How to fix this?
 
-Stop the app with `^C`, edit `dockercoins.yml`, comment out the `volumes` section, and try again.
+Stop the app with `^C`, edit `compose.yml`, comment out the `volumes` section, and try again.
 
 ---
 

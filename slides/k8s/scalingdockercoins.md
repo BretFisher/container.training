@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Scaling our demo app
 
 - Our ultimate goal is to get more DockerCoins
@@ -129,7 +130,7 @@ class: extra-details
 
 - If this was high-quality, production code, we would have instrumentation
 
-  (Datadog, Honeycomb, New Relic, statsd, Sumologic, ...)
+  (OpenTelemetry, Prometheus, Datadog, Honeycomb, New Relic, ...)
 
 - It's not!
 

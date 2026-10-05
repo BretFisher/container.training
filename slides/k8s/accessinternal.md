@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Accessing internal services
 
 - When we are logged in on a cluster node, we can access internal services

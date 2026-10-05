@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Controlling a Kubernetes cluster remotely
 
 - `kubectl` can be used either on cluster instances or outside the cluster
@@ -34,11 +35,17 @@
 
 - Download the `kubectl` binary from one of these links:
 
-  [Linux](https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl)
+  [Linux amd64](https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kubectl)
   |
-  [macOS](https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/darwin/amd64/kubectl)
+  [Linux arm64](https://dl.k8s.io/release/v1.37.1/bin/linux/arm64/kubectl)
   |
-  [Windows](https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/windows/amd64/kubectl.exe)
+  [macOS arm64](https://dl.k8s.io/release/v1.37.1/bin/darwin/arm64/kubectl)
+  |
+  [macOS amd64](https://dl.k8s.io/release/v1.37.1/bin/darwin/amd64/kubectl)
+  |
+  [Windows](https://dl.k8s.io/release/v1.37.1/bin/windows/amd64/kubectl.exe)
+
+  (or use a [package manager](https://kubernetes.io/docs/tasks/tools/))
 
 - On Linux and macOS, make the binary executable with `chmod +x kubectl`
 
@@ -46,7 +53,7 @@
 
 ]
 
-Note: if you are following along with a different platform (e.g. Linux on an architecture different from amd64, or with a phone or tablet), installing `kubectl` might be more complicated (or even impossible) so feel free to skip this section.
+Note: if you are following along with a different platform (e.g. a phone or tablet), installing `kubectl` might be more complicated (or even impossible) so feel free to skip this section.
 
 ---
 
@@ -67,10 +74,8 @@ Note: if you are following along with a different platform (e.g. Linux on an arc
 
 The output should look like this:
 ```
-Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0",
-GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean",
-BuildDate:"2019-06-19T16:40:16Z", GoVersion:"go1.12.5", Compiler:"gc",
-Platform:"darwin/amd64"}
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
 ```
 
 ---

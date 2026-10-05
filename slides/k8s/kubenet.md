@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Kubernetes network model
 
 - TL,DR:
@@ -56,13 +57,13 @@
 
   (https://github.com/containernetworking/cni/ lists more than 25 plugins)
 
-- Pods have level 3 (IP) connectivity, but *services* are level 4 (TCP or UDP)
+- Pods have level 3 (IP) connectivity, but *services* are level 4 (TCP, UDP, or SCTP)
 
-  (Services map to a single UDP or TCP port; no port ranges or arbitrary IP packets)
+  (Services map to a single TCP, UDP, or SCTP port; no port ranges or arbitrary IP packets)
 
-- The default Kubernetes service proxy, `kube-proxy`, doesn't scale very well
+- The default `kube-proxy` mode, `iptables`, doesn't scale very well
 
-  (although this is improved considerably in [recent versions of kube-proxy][tables-have-turned])
+  (the [`nftables` mode][tables-have-turned], GA since Kubernetes 1.33, scales much better)
 
 [tables-have-turned]: https://www.youtube.com/watch?v=yOGHb2HjslY
 
@@ -90,10 +91,6 @@
 
 *It depends!*
 
-- [Weave] = super easy to install, no config needed, low footprint...
-  
-  *but it's not maintained anymore, alas!*
-
 - [Cilium] = very powerful and flexible, some consider it "best in class"...
 
   *but it's based on eBPF, which might make troubleshooting challenging!*
@@ -106,7 +103,6 @@
 
 - Do you want speed? Reliability? Security? Observability?
 
-[Weave]: https://github.com/weaveworks/weave
 [Cilium]: https://cilium.io/
 [Calico]: https://docs.tigera.io/calico/latest/about/
 [Flannel]: https://github.com/flannel-io/flannel
@@ -178,7 +174,7 @@ class: extra-details
 
 - It is possible to use multiple pod networks in parallel
 
-  (with "meta-plugins" like CNI-Genie or Multus)
+  (with "meta-plugins" like Multus)
 
 - Some solutions can fill multiple roles
 

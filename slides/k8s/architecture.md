@@ -228,12 +228,12 @@ What does that mean?
 
 - Create a namespace with the following command:
   ```bash
-    kubectl create -f- <<EOF
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: hello
-    EOF
+  kubectl create -f- <<EOF
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: hello
+  EOF
   ```
 
 ]

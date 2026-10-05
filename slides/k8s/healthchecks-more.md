@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 ## Adding healthchecks to an app
 
 - Let's add healthchecks to DockerCoins!
@@ -42,21 +43,21 @@
 
 ---
 
-- [hasher.rb](https://github.com/jpetazzo/container.training/blob/master/dockercoins/hasher/hasher.rb)
+- [hasher.rb](https://github.com/jpetazzo/container.training/blob/main/dockercoins/hasher/hasher.rb)
   ```ruby
     get '/' do
       "HASHER running on #{Socket.gethostname}\n"
     end
   ```
 
-- [rng.py](https://github.com/jpetazzo/container.training/blob/master/dockercoins/rng/rng.py)
+- [rng.py](https://github.com/jpetazzo/container.training/blob/main/dockercoins/rng/rng.py)
   ```python
     @app.route("/")
     def index():
       return "RNG running on {}\n".format(hostname)
   ```
 
-- [webui.js](https://github.com/jpetazzo/container.training/blob/master/dockercoins/webui/webui.js)
+- [webui.js](https://github.com/jpetazzo/container.training/blob/main/dockercoins/webui/webui.js)
   ```javascript
     app.get('/', function (req, res) {
       res.redirect('/index.html');
@@ -71,7 +72,7 @@
 
 - We will use a set of YAML manifests and pre-built images
 
-- We will add our new liveness probe to the YAML of the `rng` DaemonSet
+- We will add our new liveness probe to the YAML of the `rng` Deployment
 
 - Then, we will deploy the application
 
@@ -127,13 +128,13 @@ This is what our liveness probe should look like:
 ```yaml
 containers:
 - name: ...
-image: ...
-livenessProbe:
-  httpGet:
-    path: /
-    port: 80
-  initialDelaySeconds: 30
-  periodSeconds: 5
+  image: ...
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 5
 ```
 
 This will give 30 seconds to the service to start. (Way more than necessary!)
@@ -159,10 +160,18 @@ It will use the default success threshold (1 successful attempt = alive).
   vim rng-deployment.yaml
   ```
 
+<!-- ```skip students edit the file by hand``` -->
+
 - Load the YAML for all the resources of DockerCoins:
   ```bash
   kubectl apply -f .
   ```
+
+<!--
+```hide kubectl patch deployment rng --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/livenessProbe","value":{"httpGet":{"path":"/","port":80},"initialDelaySeconds":30,"periodSeconds":5}}]'```
+```hide kubectl rollout status deployment rng```
+```timeout 300```
+-->
 
 ]
 
@@ -202,15 +211,30 @@ It will use the default success threshold (1 successful attempt = alive).
   kubectl get events -w
   ```
 
+<!--
+```wait TYPE```
+```key ^C```
+-->
+
 - In another window, monitor the response time of rng:
   ```bash
   httping `<ClusterIP>`
   ```
 
+<!--
+```skip placeholder ClusterIP```
+```hide httping -c 3 $(kubectl get svc rng -o jsonpath={.spec.clusterIP})```
+-->
+
 - In another window, monitor pods status:
   ```bash
   kubectl get pods -w
   ```
+
+<!--
+```wait NAME```
+```key ^C```
+-->
 
 ]
 
@@ -224,14 +248,23 @@ It will use the default success threshold (1 successful attempt = alive).
 
 - In yet another window, generate traffic:
   ```bash
-  ab -c 10 -n 1000 http://`<ClusterIP>`/1
+  ab -r -c 10 -n 1000 http://`<ClusterIP>`/1
   ```
+
+<!--
+```skip placeholder ClusterIP```
+```hide ab -r -c 10 -n 1000 http://$(kubectl get svc rng -o jsonpath={.spec.clusterIP})/1```
+-->
 
 - Experiment with higher values of `-c` and see what happens
 
 ]
 
 - The `-c` parameter indicates the number of concurrent requests
+
+- The `-r` parameter keeps `ab` running when a connection is reset
+
+  (this happens when a container is restarted)
 
 - The final `/1` is important to generate actual traffic
 
@@ -330,7 +363,7 @@ class: extra-details
 
 - Or [share the PID namespace between containers of a pod](https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/)
 
-  (and have gcr.io/pause take care of the reaping)
+  (and have the `pause` container take care of the reaping)
 
 - Discussion of this in [Video - 10 Ways to Shoot Yourself in the Foot with Kubernetes, #9 Will Surprise You](https://www.youtube.com/watch?v=QKI-JRs2RIE)
 

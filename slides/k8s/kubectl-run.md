@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Running our first containers on Kubernetes
 
 - First things first: we cannot run a container
@@ -9,32 +10,6 @@
 --
 
 - In that container in the pod, we are going to run a simple `ping` command
-
----
-
-class: extra-details, bret-skip
-
-## If you're running Kubernetes 1.17 (or older)...
-
-- This material assumes that you're running a recent version of Kubernetes
-
-  (at least 1.19) <!-- ##VERSION## -->
-
-- You can check your version number with `kubectl version`
-
-  (look at the server part)
-
-- In Kubernetes 1.17 and older, `kubectl run` creates a Deployment
-
-- If you're running such an old version:
-
-  - it's obsolete and no longer maintained
-
-  - Kubernetes 1.17 is [EOL since January 2021][nonactive]
-
-  - **upgrade NOW!**
-
-[nonactive]: https://kubernetes.io/releases/patch-releases/#non-active-branch-history
 
 ---
 
@@ -93,7 +68,7 @@ pod/pingpong created
 
   - `--tail` to indicate how many lines you want to see (from the end)
 
-  - `--since` to get logs only after a given timestamp
+  - `--since` to get logs only from a recent time window (e.g. `--since=10m`)
 
 .lab[
 
@@ -127,6 +102,8 @@ pod/pingpong created
   ```bash
   kubectl scale pod pingpong --replicas=3
   ```
+
+<!-- ```expect-fail``` -->
 
 ]
 
@@ -175,7 +152,7 @@ class: extra-details, bret-skip
 
 - We see a `PATCH` request to `/scale`: that's the "scaling button"
 
-  (technically it's called a *subresource* of the Pod)
+  (technically it's called a *subresource*; Pods don't have one)
 
 ---
 
@@ -239,7 +216,7 @@ pod/pingpong                    1/1     Running       0          4m17s
 pod/pingpong-6ccbc77f68-kmgfn   1/1     Running       0          11s
 
 NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   3h45
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   3h45m
 
 NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/pingpong   1/1     1            1           11s

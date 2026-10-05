@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 ## Painting pods
 
 - As an example, we'll implement a policy regarding "Pod color"
@@ -26,11 +27,13 @@
 
 - One possible approach:
 
-  - *match* all pods that have a `color` label that is not `red`, `green`, or `blue`
+  - *match* all pods
 
-  - *deny* these pods
+  - *validate* with a CEL expression: if the `color` label exists,
+    <br/>it must be `red`, `green`, or `blue`
 
-- We could also *match* all pods, then *deny* with a condition
+- We could also use an *object selector* to *match* only the pods
+  <br/>with a `color` label that is not `red`, `green`, or `blue`
 
 ---
 
@@ -87,6 +90,8 @@
   kubectl label pod test-color-1 color-
   ```
 
+<!-- ```expect-fail``` -->
+
 ]
 
 ---
@@ -99,9 +104,9 @@
 
 - Our approach:
 
-  - *match* all pods
+  - *match* all pod updates
 
-  - add a *precondition* matching pods that have a `color` label
+  - add *matchConditions* selecting pods that have a `color` label
     <br/>
     (both in their "before" and "after" states)
 
@@ -121,31 +126,31 @@
 
 ## Comparing "old" and "new"
 
-- The fields of the webhook payload are available through `{{ request }}`
+- CEL expressions have access to the object before and after the request
 
 - For UPDATE requests, we can access:
 
-  `{{ request.oldObject }}` → the object as it is right now (before the request)
+  `oldObject` → the object as it is right now (before the request)
 
-  `{{ request.object }}` → the object with the changes made by the request
+  `object` → the object with the changes made by the request
 
 ---
 
 ## Missing labels
 
-- We can access the `color` label through `{{ request.object.metadata.labels.color }}`
+- We can access the `color` label through `object.metadata.labels.color`
 
-- If we reference a label (or any field) that doesn't exist, the policy fails
+- If we reference a label (or any field) that doesn't exist, the expression fails
 
-  (with an error similar to `JMESPAth query failed: Unknown key ... in path`)
+  (with an error similar to `no such key: color`)
 
-- If a precondition fails, the policy will be skipped altogether (and ignored!)
+- By default (`failurePolicy: Fail`), an error rejects the request!
 
-- To work around that, [use an OR expression][non-existence-checks]:
+- To work around that, check that the key exists first, with [optional fields][cel-optional]:
 
-  `{{ requests.object.metadata.labels.color || '' }}`
+  `'color' in object.metadata.?labels.orValue({})`
 
-[non-existence-checks]: https://kyverno.io/docs/policy-types/cluster-policy/jmespath/#non-existence-checks
+[cel-optional]: https://kubernetes.io/docs/reference/using-api/cel/
 
 ---
 
@@ -170,6 +175,8 @@
   kubectl label pod test-color-2 color=blue --overwrite
   ```
 
+<!-- ```expect-fail``` -->
+
 ]
 
 ---
@@ -178,13 +185,11 @@
 
 - Last rule: once a `color` label has been added, it cannot be removed
 
-- Our approach is to match all pods that:
+- Our approach is to match all pod updates that:
 
-  - *had* a `color` label (in `request.oldObject`)
+  - *had* a `color` label (in `oldObject`)
 
-  - *don't have* a `color` label (in `request.Object`)
-
-- And *deny* these pods
+- And *deny* them if they *don't have* a `color` label anymore (in `object`)
 
 - Again, other approaches are possible!
 
@@ -219,13 +224,15 @@
   kubectl label pod test-color-3 color-
   ```
 
+<!-- ```expect-fail``` -->
+
 ]
 
 ---
 
 ## Background checks
 
-- What about the `test-color-0` pod that we create initially?
+- What about the `test-color-0` pod that we created initially?
 
   (remember: we did set `color=purple`)
 

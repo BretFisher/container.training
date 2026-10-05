@@ -1,31 +1,23 @@
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: pod-color-policy-2
 spec:
-  background: false
-  rules:
-  - name: prevent-color-change
-    match:
-      resources:
-        kinds:
-        - Pod
-    preconditions:
-    - key: "{{ request.operation }}"
-      operator: Equals
-      value: UPDATE
-    - key: "{{ request.oldObject.metadata.labels.color || '' }}"
-      operator: NotEquals
-      value: ""
-    - key: "{{ request.object.metadata.labels.color || '' }}"
-      operator: NotEquals
-      value: ""
-    validate:
-      failureAction: Enforce
-      message: "Once label color has been added, it cannot be changed."
-      deny:
-        conditions:
-        - key: "{{ request.object.metadata.labels.color }}"
-          operator: NotEquals
-          value: "{{ request.oldObject.metadata.labels.color }}"
-
+  validationActions: [ Deny ]
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [ "" ]
+      apiVersions: [ v1 ]
+      operations: [ UPDATE ]
+      resources: [ pods ]
+  matchConditions:
+  - name: had-color
+    expression: "'color' in oldObject.metadata.?labels.orValue({})"
+  - name: has-color
+    expression: "'color' in object.metadata.?labels.orValue({})"
+  validations:
+  - expression: object.metadata.labels.color == oldObject.metadata.labels.color
+    message: "Once label color has been added, it cannot be changed."

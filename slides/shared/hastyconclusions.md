@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 ## Let's draw hasty conclusions
 
 - The bottleneck seems to be `rng`
@@ -10,4 +11,4 @@ Note: this is a fiction! We have enough entropy. But we need a pretext to scale 
 
 (In fact, the code of `rng` uses `/dev/urandom`, which never runs out of entropy...
 <br/>
-...and is [just as good as `/dev/random`](http://www.slideshare.net/PacSecJP/filippo-plain-simple-reality-of-entropy).)
+...and is [just as good as `/dev/random`](https://www.slideshare.net/slideshow/filippo-plain-simple-reality-of-entropy/54998144).)

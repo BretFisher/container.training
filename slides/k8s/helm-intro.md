@@ -1,442 +1,236 @@
-# Managing stacks with Helm
+<!-- verified: 2026-10-05 -->
+# Managing applications with Helm
 
-- Helm is a (kind of!) package manager for Kubernetes
+## Helm today
 
-- We can use it to:
+- Helm is a package manager for Kubernetes and a CNCF graduated project
 
-  - find existing packages (called "charts") created by other folks
+- A *chart* packages templates and default values
 
-  - install these packages, configuring them for our particular setup
+- A *release* is an installation of a chart in a namespace
 
-  - package our own things (for distribution or for internal use)
+- Helm calls the Kubernetes API with your current kubeconfig credentials
 
-  - manage the lifecycle of these installs (rollback to previous version etc.)
-
-- It's a "CNCF graduate project", indicating a certain level of maturity
-
-  (more on that later)
+- This workshop uses Helm **4.3.0** and stable `apiVersion: v2` charts
 
 ---
 
-## Helm features
+## What Helm 4 adds
 
-- With Helm, we create "charts"
+- Server-side apply by default for new releases
 
-- These charts can be used internally or distributed publicly
+- Better readiness monitoring with the `watcher` wait strategy
 
-- Public charts can be indexed through the [Artifact Hub](https://artifacthub.io/)
+- A redesigned plugin system, with an optional WebAssembly runtime
 
-- This gives us a way to find and install other folks' charts
+- Content-based chart caching and reproducible chart archives
 
-- Helm also gives us ways to manage the lifecycle of what we install:
+- The core workflow stays: install, inspect, upgrade, history, rollback
 
-  - keep track of what we have installed
+[Helm 4 overview](https://helm.sh/docs/overview/)
 
-  - upgrade versions, change parameters, roll back, uninstall
+???
 
-- Furthermore, even if it's not "the" standard, it's definitely "a" standard!
-
----
-
-## CNCF graduation status
-
-- On April 30th 2020, Helm was the 10th project to *graduate* within the CNCF
-
-  (alongside Containerd, Prometheus, and Kubernetes itself)
-
-- This is an acknowledgement by the CNCF for projects that
-
-  *demonstrate thriving adoption, an open governance process,
-  <br/>
-  and a strong commitment to community, sustainability, and inclusivity.*
-
-- See [CNCF announcement](https://www.cncf.io/announcement/2020/04/30/cloud-native-computing-foundation-announces-helm-graduation/)
-  and [Helm announcement](https://helm.sh/blog/celebrating-helms-cncf-graduation/)
-
-- In other words: Helm is here to stay
+Helm 4.0 shipped November 12, 2025. Verified with Helm 4.3.0.
+Upgrades preserve the previous release's apply method. Existing Helm 3
+releases keep client-side apply unless explicitly changed and tested.
+OCI digest installs already existed before Helm 4; do not present them as new.
 
 ---
 
-## Helm concepts
-
-- `helm` is a CLI tool
-
-- It is used to find, install, upgrade *charts*
-
-- A chart is an archive containing templatized YAML bundles
-
-- Charts are versioned
-
-- Charts can be stored on private or public repositories
-
----
-
-## Differences between charts and packages
-
-- A package (deb, rpm...) contains binaries, libraries, etc.
-
-- A chart contains YAML manifests
-
-  (the binaries, libraries, etc. are in the images referenced by the chart)
-
-- On most distributions, a package can only be installed once
-
-  (installing another version replaces the installed one)
-
-- A chart can be installed multiple times
-
-- Each installation is called a *release*
-
-- This allows to install e.g. 10 instances of MongoDB
-
-  (with potentially different versions and configurations)
-
----
-
-class: extra-details
-
-## Wait a minute ...
-
-*But, on my Debian system, I have Python 2 **and** Python 3.
-<br/>
-Also, I have multiple versions of the Postgres database engine!*
-
-Yes!
-
-But they have different package names:
-
-- `python2.7`, `python3.8`
-
-- `postgresql-10`, `postgresql-11`
-
-Good to know: the Postgres package in Debian includes
-provisions to deploy multiple Postgres servers on the
-same system, but it's an exception (and it's a lot of
-work done by the package maintainer, not by the `dpkg`
-or `apt` tools).
-
----
-
-## Helm 2 vs Helm 3
-
-- Helm 3 was released [November 13, 2019](https://helm.sh/blog/helm-3-released/)
-
-- Charts remain compatible between Helm 2 and Helm 3
-
-- The CLI is very similar (with minor changes to some commands)
-
-- The main difference is that Helm 2 uses `tiller`, a server-side component
-
-- Helm 3 doesn't use `tiller` at all, making it simpler (yay!)
-
-- If you see references to `tiller` in a tutorial, documentation... that doc is obsolete!
-
----
-
-class: extra-details
-
-## What was the problem with `tiller`?
-
-- With Helm 3:
-
-  - the `helm` CLI communicates directly with the Kubernetes API
-
-  - it creates resources (deployments, services...) with our credentials
-
-- With Helm 2:
-
-  - the `helm` CLI communicates with `tiller`, telling `tiller` what to do
-
-  - `tiller` then communicates with the Kubernetes API, using its own credentials
-
-- This indirect model caused significant permissions headaches
-
-- It also made it more complicated to embed Helm in other tools
-
----
-
-## Installing Helm
-
-- If the `helm` CLI is not installed in your environment, install it
+## Check the tools and credentials
 
 .lab[
 
-- Check if `helm` is installed:
+- Create a working directory, then check the tools and context:
   ```bash
-  helm
-  ```
-
-- If it's not installed, run the following command:
-  ```bash
-  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get-helm-3 \
-  | bash
+  mkdir -p ~/helm-workshop
+  cd ~/helm-workshop
+  helm version --short
+  kubectl config current-context
+  kubectl auth can-i create deployments
   ```
 
 ]
 
-(To install Helm 2, replace `get-helm-3` with `get`.)
+- Use Helm 4.3.0 for these labs
+
+- If it is missing, ask the instructor to prepare the lab
+
+- For other machines, use the [official installation instructions](https://helm.sh/docs/intro/install/)
 
 ---
 
-## Charts and repositories
+## Charts, registries, and releases
 
-- A *repository* (or repo in short) is a collection of charts
+- HTTP chart repositories contain an `index.yaml` and chart archives
 
-- It's just a bunch of files
+- OCI registries store charts at paths such as `oci://ghcr.io/...`
 
-  (they can be hosted by a static HTTP server, or on a local directory)
+- [Artifact Hub](https://artifacthub.io/) indexes charts from many publishers
 
-- We can add "repos" to Helm, giving them a nickname
+- Check the publisher, chart version, images, and required permissions
 
-- The nickname is used when referring to charts on that repo
-
-  (for instance, if we try to install `hello/world`, that
-  means the chart `world` on the repo `hello`; and that repo
-  `hello` might be something like https://blahblah.hello.io/charts/)
+- One chart can create many releases with different names and values
 
 ---
 
-## How to find charts
+## Install a chart
 
-- Go to the [Artifact Hub](https://artifacthub.io/packages/search?kind=0) (https://artifacthub.io)
+- We use the OWASP Juice Shop demo chart from secureCodeBox
 
-- Or use `helm search hub ...` from the CLI
-
-- Let's try to find a Helm chart for something called "OWASP Juice Shop"!
-
-  (it is a famous demo app used in security challenges)
-
----
-
-## Finding charts from the CLI
-
-- We can use `helm search hub <keyword>`
+- Keep this intentionally vulnerable app inside the lab cluster
 
 .lab[
 
-- Look for the OWASP Juice Shop app:
+- Install the pinned chart in a separate namespace:
   ```bash
-  helm search hub owasp juice
+  helm install my-juice-shop \
+    oci://ghcr.io/securecodebox/helm/juice-shop --version 5.9.0 \
+    --namespace helm-intro --create-namespace \
+    --wait=watcher --timeout 3m
+  ```
+<!-- ```timeout 240``` -->
+
+]
+
+[Publisher instructions](https://www.securecodebox.io/docs/getting-started/installation/)
+
+---
+
+## Inspect the release
+
+.lab[
+
+- List releases and inspect this release:
+  ```bash
+  helm list --namespace helm-intro
+  helm status my-juice-shop --namespace helm-intro
+  helm get values my-juice-shop --namespace helm-intro
   ```
 
-- Since the URLs are truncated, try with the YAML output:
+- Find the resources by the chart's instance label:
   ```bash
-  helm search hub owasp juice -o yaml
+  kubectl get all --namespace helm-intro \
+    --selector app.kubernetes.io/instance=my-juice-shop
   ```
 
 ]
 
-We only find `multi-juicer`, not the Juice Shop chart itself!
-
-(Not every chart is listed on the Artifact Hub.)
-
-<!--
-CHANGED 2026-10-03: the secureCodeBox juice-shop chart is no longer on the
-Artifact Hub, so the search above finds only "multi-juicer".
-OLD: "Then go to → https://artifacthub.io/packages/helm/securecodebox/juice-shop"
--->
+The chart sets this label. Helm does not add it to every chart automatically.
 
 ---
 
-## Finding charts on the web
+## Inspect the chart's values
 
-- Project docs and repos often tell us where their charts are
+- Values are the settings that a chart exposes
 
-- The Juice Shop chart is published by [secureCodeBox](https://github.com/secureCodeBox/secureCodeBox)
-
-  (in `demo-targets/juice-shop`)
-
-- It is stored in an *OCI registry* (GitHub's container registry):
-
-  `oci://ghcr.io/securecodebox/helm/juice-shop`
-
-- Helm can install charts from OCI registries, just like container images
-
-  (no `helm repo add` needed!)
-
-<!--
-CHANGED 2026-10-03: the Artifact Hub no longer lists this chart.
-OLD lab steps:
-- Go to https://artifacthub.io/
-- In the search box on top, enter "owasp juice"
-- Click on the "juice-shop" result (not "multi-juicer" or "juicy-ctf")
--->
-
----
-
-## Installing the chart
-
-- We pass the OCI reference of the chart to `helm install`
+- Defaults come from its `values.yaml`; templates decide how to use them
 
 .lab[
 
-- Install the chart:
+- Read the defaults for the pinned chart:
   ```bash
-  helm install my-juice-shop oci://ghcr.io/securecodebox/helm/juice-shop
+  helm show values oci://ghcr.io/securecodebox/helm/juice-shop \
+    --version 5.9.0
   ```
 
 ]
 
-Note: charts in a classic (HTTP) repo are installed with `helm repo add` first,
-<br/>
-or directly with `--repo https://...`
-
-<!--
-CHANGED 2026-10-03: charts.securecodebox.io no longer resolves (NXDOMAIN).
-The chart moved to oci://ghcr.io/securecodebox/helm/juice-shop (same chart, v5.9.0 tested).
-OLD:
-  - Click on the "Install" button, it will show instructions
-  helm repo add juice https://charts.securecodebox.io
-  helm install my-juice-shop juice/juice-shop
--->
+Use `--values file.yaml` for a set of settings; use `--set` for small changes.
 
 ---
 
-## Charts and releases
+## Upgrade the release
 
-- "Installing a chart" means creating a *release*
-
-- In the previous example, the release was named "my-juice-shop"
-
-- We can also use `--generate-name` to ask Helm to generate a name for us
+- The chart has `replicaCount: 1` by default
 
 .lab[
 
-- List the releases:
+- Change the number of replicas:
   ```bash
-  helm list
+  helm upgrade my-juice-shop \
+    oci://ghcr.io/securecodebox/helm/juice-shop --version 5.9.0 \
+    --namespace helm-intro --set replicaCount=2 \
+    --wait=watcher --timeout 3m
+  ```
+<!-- ```timeout 240``` -->
+
+- Inspect the values and history:
+  ```bash
+  helm get values my-juice-shop --namespace helm-intro
+  helm history my-juice-shop --namespace helm-intro
   ```
 
-- Check that we have a `my-juice-shop-...` Pod up and running:
+]
+
+The command needs both RELEASE and CHART, even for a values change.
+
+---
+
+## Wait and recover on failure
+
+- Without `--wait`, Helm waits for hooks, not all application resources
+
+- `--wait=watcher --timeout 3m` waits for Kubernetes readiness
+
+- `--rollback-on-failure` rolls a failed upgrade back to a successful revision
+
+- Readiness needs useful probes; it does not prove business operations work
+
+- Rollback does not reverse database migrations or external side effects
+
+[Upgrade flags](https://helm.sh/docs/helm/helm_upgrade/)
+
+---
+
+## Test an upgrade failure
+
+- Use a deliberately missing image tag and a short timeout
+
+.lab[
+
+- Run the failed upgrade and automatic rollback:
   ```bash
-  kubectl get pods
+  helm upgrade my-juice-shop \
+    oci://ghcr.io/securecodebox/helm/juice-shop --version 5.9.0 \
+    --namespace helm-intro --set image.tag=does-not-exist-helm-lab \
+    --wait=watcher --timeout 30s --rollback-on-failure
+  ```
+<!-- ```expect-fail``` -->
+<!-- ```timeout 180``` -->
+
+- Confirm that the release returned to its previous settings:
+  ```bash
+  helm history my-juice-shop --namespace helm-intro
+  helm get values my-juice-shop --namespace helm-intro
   ```
 
 ]
 
 ---
 
-## Viewing resources of a release
-
-- This specific chart labels all its resources with a `release` label
-
-- We can use a selector to see these resources
+## Roll back and clean up
 
 .lab[
 
-- List all the resources created by this release:
+- Restore revision 1, then inspect the new history entry:
   ```bash
-  kubectl get all --selector=app.kubernetes.io/instance=my-juice-shop
+  helm rollback my-juice-shop 1 --namespace helm-intro \
+    --wait=watcher --timeout 3m
+  helm history my-juice-shop --namespace helm-intro
+  ```
+<!-- ```timeout 240``` -->
+
+- Remove the release and its lab namespace:
+  ```bash
+  helm uninstall my-juice-shop --namespace helm-intro
+  kubectl delete namespace helm-intro
   ```
 
 ]
 
-Note: this label wasn't added automatically by Helm.
-<br/>
-It is defined in that chart. In other words, not all charts will provide this label.
-
----
-
-## Configuring a release
-
-- By default, the `juice-shop` chart creates a service of type `ClusterIP`
-
-- We would like to change that to a `NodePort`
-
-- We could use `kubectl edit service my-juice-shop`, but ...
-
-  ... our changes would get overwritten next time we update that chart!
-
-- Instead, we are going to *set a value*
-
-- Values are parameters that the chart can use to change its behavior
-
-- Values have default values
-
-- Each chart is free to define its own values and their defaults
-
----
-
-## Checking possible values
-
-- We can inspect a chart with `helm show` or `helm inspect`
-
-.lab[
-
-- Look at the README for the app:
-  ```bash
-  helm show readme oci://ghcr.io/securecodebox/helm/juice-shop
-  ```
-
-- Look at the values and their defaults:
-  ```bash
-  helm show values oci://ghcr.io/securecodebox/helm/juice-shop
-  ```
-
-]
-
-<!--
-CHANGED 2026-10-03: chart moved to OCI.
-OLD: helm show readme juice/juice-shop ; helm show values juice/juice-shop
--->
-
-The `values` may or may not have useful comments.
-
-The `readme` may or may not have (accurate) explanations for the values.
-
-(If we're unlucky, there won't be any indication about how to use the values!)
-
----
-
-## Setting values
-
-- Values can be set when installing a chart, or when upgrading it
-
-- We are going to update `my-juice-shop` to change the type of the service
-
-.lab[
-
-- Update `my-juice-shop`:
-  ```bash
-  helm upgrade my-juice-shop oci://ghcr.io/securecodebox/helm/juice-shop \
-       --set service.type=NodePort
-  ```
-
-]
-
-Note that we have to specify the chart that we use,
-even if we just want to update some values.
-
-<!--
-CHANGED 2026-10-03: chart moved to OCI.
-OLD: helm upgrade my-juice-shop juice/juice-shop --set service.type=NodePort
-OLD note: "we have to specify the chart that we use (`juice/my-juice-shop`)"
--->
-
-We can set multiple values. If we want to set many values, we can use `-f`/`--values` and pass a YAML file with all the values.
-
-All unspecified values will take the default values defined in the chart.
-
----
-
-## Connecting to the Juice Shop
-
-- Let's check the app that we just installed
-
-.lab[
-
-- Check the node port allocated to the service:
-  ```bash
-  kubectl get service my-juice-shop
-  PORT=$(kubectl get service my-juice-shop -o jsonpath={..nodePort})
-  ```
-
-- Connect to it:
-  ```bash
-  curl localhost:$PORT/
-  ```
-
-]
+Rollback creates a new revision. It does not erase the old history.
 
 ???
 
@@ -450,14 +244,14 @@ All unspecified values will take the default values defined in the chart.
 
 :T: Getting started with Helm and its concepts
 
-:Q: Which comparison is the most adequate?
-:A: Helm is a firewall, charts are access lists
-:A: ✔️Helm is a package manager, charts are packages
-:A: Helm is an artefact repository, charts are artefacts
-:A: Helm is a CI/CD platform, charts are CI/CD pipelines
+:Q: What is a Helm release?
+:A: A Helm binary version
+:A: ✔️An installation of a chart in a namespace
+:A: An image tag
+:A: An OCI registry
 
-:Q: What's required to distribute a Helm chart?
-:A: A Helm commercial license
-:A: A Docker registry
-:A: An account on the Helm Hub
-:A: ✔️An HTTP server
+:Q: Where can you distribute a chart?
+:A: Only on Artifact Hub
+:A: Only on Docker Hub
+:A: ✔️An HTTP chart repository or an OCI registry
+:A: Only in a Kubernetes Secret

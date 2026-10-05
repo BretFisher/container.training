@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Authentication and authorization
 
 - In this section, we will:
@@ -133,10 +134,6 @@
 
   (a secret token in the HTTP headers of the request)
 
-- [HTTP basic auth](https://en.wikipedia.org/wiki/Basic_access_authentication)
-
-  (carrying user and password in an HTTP header; [deprecated since Kubernetes 1.19](https://github.com/kubernetes/kubernetes/pull/89069))
-
 - Authentication proxy
 
   (sitting in front of the API and setting trusted headers)
@@ -193,7 +190,7 @@ class: extra-details
 
 - It can also be used to issue user certificates
 
-  (but it lacks flexibility; e.g. validity can't be customized)
+  (validity can be set with `spec.expirationSeconds`, but there is no revocation)
 
 ---
 
@@ -263,9 +260,9 @@ class: extra-details
 
   (they don't require hand-editing a file and restarting the API server)
 
-- A service account can be associated with a set of secrets
+- The API server issues short-lived tokens for service accounts
 
-  (the kind that you can view with `kubectl get secrets`)
+  (through the TokenRequest API)
 
 - Service accounts are generally used to grant permissions to applications, services...
 
@@ -281,7 +278,11 @@ class: extra-details
 
   - they are automatically invalidated when the object is deleted
 
-  - these tokens also expire quickly (e.g. 1 hour) and get rotated automatically
+  - kubelet refreshes them automatically (about every hour)
+
+  - by default, the API server still accepts them for up to 1 year
+
+    (for compatibility; see `--service-account-extend-token-expiration`)
 
 - We can get a short-lived token with `kubectl create token`
 
@@ -335,7 +336,7 @@ class: extra-details
 - `| openssl x509 -text` parses the certificate and outputs it as plain text
 - `| grep Subject:` shows us the line that interests us
 
-→ We are user `kubernetes-admin`, in group `system:masters`.
+→ We are user `kubernetes-admin`, in group `kubeadm:cluster-admins`.
 
 (We will see later how and why this gives us the permissions that we have.)
 
@@ -774,11 +775,7 @@ class: extra-details
 
 ## `kubectl run --serviceaccount`
 
-- `kubectl run` also has a `--serviceaccount` flag
-
-- ...But it's supposed to be deprecated "soon"
-
-  (see [kubernetes/kubernetes#99732](https://github.com/kubernetes/kubernetes/pull/99732) for details)
+- `kubectl run` doesn't have a `--serviceaccount` flag anymore (it was removed)
 
 - It's possible to specify the service account with an override:
   ```bash
@@ -877,10 +874,6 @@ class: extra-details
 
 - There are a few tools to help us with that, available as `kubectl` plugins:
 
-  - `kubectl who-can` / [kubectl-who-can](https://github.com/aquasecurity/kubectl-who-can) by Aqua Security
-
-  - `kubectl access-matrix` / [Rakkess (Review Access)](https://github.com/corneliusweig/rakkess) by Cornelius Weig
-
   - `kubectl rbac-lookup` / [RBAC Lookup](https://github.com/FairwindsOps/rbac-lookup) by FairwindsOps
 
   - `kubectl rbac-tool` / [RBAC Tool](https://github.com/alcideio/rbac-tool) by insightCloudSec
@@ -973,15 +966,15 @@ class: extra-details
 
 - We saw previously that this client certificate contained:
 
-  `CN=kubernetes-admin` and `O=system:masters`
+  `CN=kubernetes-admin` and `O=kubeadm:cluster-admins`
 
 - Let's look for these in existing ClusterRoleBindings:
   ```bash
   kubectl get clusterrolebindings -o yaml |
-    grep -e kubernetes-admin -e system:masters
+    grep -e kubernetes-admin -e kubeadm:cluster-admins
   ```
 
-  (`system:masters` should show up, but not `kubernetes-admin`.)
+  (`kubeadm:cluster-admins` should show up, but not `kubernetes-admin`.)
 
 - Where does this match come from?
 
@@ -989,16 +982,18 @@ class: extra-details
 
 class: extra-details
 
-## The `system:masters` group
+## The `kubeadm:cluster-admins` group
 
 - If we eyeball the output of `kubectl get clusterrolebindings -o yaml`, we'll find out!
 
-- It is in the `cluster-admin` binding:
+- It is in the `kubeadm:cluster-admins` binding:
   ```bash
-  kubectl describe clusterrolebinding cluster-admin
+  kubectl describe clusterrolebinding kubeadm:cluster-admins
   ```
 
-- This binding associates `system:masters` with the cluster role `cluster-admin`
+- This binding associates `kubeadm:cluster-admins` with the cluster role `cluster-admin`
+
+- kubeadm puts `system:masters` (which bypasses RBAC) only in `super-admin.conf`
 
 - And the `cluster-admin` is, basically, `root`:
   ```bash

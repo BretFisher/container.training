@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Helm chart format
 
 - What exactly is a chart?
@@ -6,7 +7,7 @@
 
 - What would be involved in creating a chart?
 
-  (we won't create a chart, but we'll see the required steps)
+  (we will create a small chart in the next lab)
 
 ---
 
@@ -20,9 +21,7 @@
 
 - These files are typically packed in a tarball
 
-- These tarballs are stored in "repos"
-
-  (which can be static HTTP servers)
+- Archives can be published in HTTP chart repositories or OCI registries
 
 - We can install from a repo, from a local tarball, or an unpacked tarball
 
@@ -32,59 +31,50 @@
 
 ## What's in a chart
 
-- A chart must have at least:
+- `Chart.yaml` is required; it contains chart metadata
 
-  - a `templates` directory, with YAML manifests for Kubernetes resources
+- Application charts usually also have:
 
-  - a `values.yaml` file, containing (tunable) parameters for the chart
+  - `templates/`: Kubernetes manifests and helper templates
 
-  - a `Chart.yaml` file, containing metadata (name, version, description ...)
+  - `values.yaml`: default settings
+
+- A chart can contain dependencies without its own resource templates
 
 - Let's look at a simple chart for a basic demo app
 
 ---
 
-## Where is the chart?
-
-- We will use the chart for the OWASP Juice Shop
-
-- It is stored in an OCI registry, so we don't need `helm repo add`:
-
-  `oci://ghcr.io/securecodebox/helm/juice-shop`
-
-<!--
-CHANGED 2026-10-03: charts.securecodebox.io no longer resolves (NXDOMAIN).
-The chart moved to oci://ghcr.io/securecodebox/helm/juice-shop.
-OLD slide title: "Adding the repo"
-OLD lab: helm repo add juice https://charts.securecodebox.io
--->
-
----
-
 ## Downloading a chart
 
-- We can use `helm pull` to download a chart from a repo
+- OCI charts do not need `helm repo add`
 
 .lab[
 
-- Download the tarball for the `juice-shop` chart:
+- Download and unpack the pinned chart:
   ```bash
-  helm pull oci://ghcr.io/securecodebox/helm/juice-shop
+  helm pull oci://ghcr.io/securecodebox/helm/juice-shop \
+    --version 5.9.0 --untar
   ```
-  (This will create a file named `juice-shop-X.Y.Z.tgz`.)
-
-- Or, download + untar the chart:
-  ```bash
-  helm pull oci://ghcr.io/securecodebox/helm/juice-shop --untar
-  ```
-  (This will create a directory named `juice-shop`.)
 
 ]
 
-<!--
-CHANGED 2026-10-03: chart moved to OCI.
-OLD: helm pull juice/juice-shop ; helm pull juice/juice-shop --untar
--->
+The unpacked chart is in `juice-shop/`. Without `--untar`, Helm saves a `.tgz`.
+
+---
+
+## Four different versions
+
+| Field | Meaning | Example |
+|---|---|---|
+| Helm version | Version of the CLI | `4.3.0` |
+| `apiVersion` | Chart metadata format | `v2` |
+| `version` | Chart package version | `5.9.0` |
+| `appVersion` | Application version metadata | `v20.2.0` |
+
+- `appVersion` does not set an image tag unless a template uses it
+
+- Use stable `v2` charts for this workshop
 
 ---
 
@@ -96,7 +86,7 @@ OLD: helm pull juice/juice-shop ; helm pull juice/juice-shop --untar
 
 - Display the tree structure of the chart we just downloaded:
   ```bash
-  tree juice-shop
+  find juice-shop -type f
   ```
 
 ]
@@ -130,17 +120,19 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
 - Tags are identified by `{{ ... }}`
 
-- `{{ template "x.y" }}` expands a [named template](https://helm.sh/docs/chart_template_guide/named_templates/#declaring-and-using-templates-with-define-and-template)
+- `{{ include "x.y" . }}` expands a [named template](https://helm.sh/docs/chart_template_guide/named_templates/#declaring-and-using-templates-with-define-and-template)
 
-  (previously defined with `{{ define "x.y" }}...stuff...{{ end }}`)
+  (previously defined with `{{ define "x.y" }}...stuff...{{ end }}`; Helm prefers `include` over `template`)
 
-- The `.` in `{{ template "x.y" . }}` is the *context* for that named template
+- The `.` in `{{ include "x.y" . }}` is the *context* for that named template
 
   (so that the named template block can access variables from the local context)
 
 - `{{ .Release.xyz }}` refers to [built-in variables](https://helm.sh/docs/chart_template_guide/builtin_objects/) initialized by Helm
 
-  (indicating the chart name, version, whether we are installing or upgrading ...)
+  (release name, namespace, revision, and install or upgrade operation)
+
+- `{{ .Chart.Version }}` reads chart metadata
 
 - `{{ .Values.xyz }}` refers to tunable/settable [values](https://helm.sh/docs/chart_template_guide/values_files/)
 
@@ -150,7 +142,7 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
 ## Values
 
-- Each chart comes with a
+- A chart can provide a
   [values file](https://helm.sh/docs/chart_template_guide/values_files/)
 
 - It's a YAML file containing a set of default parameters for the chart
@@ -159,7 +151,7 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
   (corresponding to field `y` in map `x` in the values file)
 
-- The values can be set or overridden when installing or ugprading a chart:
+- The values can be set or overridden when installing or upgrading a chart:
 
   - with `--set x.y=z` (can be used multiple times to set multiple values)
 
@@ -183,7 +175,7 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
 - `{{- x }}`/`{{ x -}}` will remove whitespace on the left/right
 
-- The whole [Sprig](http://masterminds.github.io/sprig/) library, with additions:
+- Most [Sprig](https://masterminds.github.io/sprig/) functions, with Helm additions:
 
   `lower` `upper` `quote` `trim` `default` `b64enc` `b64dec` `sha256sum` `indent` `toYaml` ...
 
@@ -203,7 +195,7 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
 - Pipelines are not specific to Helm, but a feature of Go templates
 
-  (check the [Go text/template documentation](https://golang.org/pkg/text/template/) for more details and examples)
+  (check the [Go text/template documentation](https://pkg.go.dev/text/template) for more details and examples)
 
 ---
 
@@ -225,7 +217,9 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
   - how to connect to the release they just deployed
 
-  - any passwords or other thing that we generated for them
+  - which resources and endpoints the release creates
+
+- Keep passwords out of notes and shared terminal output
 
 ---
 
@@ -253,9 +247,9 @@ We see the components mentioned above: `Chart.yaml`, `templates/`, `values.yaml`
 
 - Hook execution is *synchronous*
 
-  (if the resource is a Job or Pod, Helm will wait for its completion)
+  (for a hook Job or Pod, Helm waits for successful completion)
 
-- This can be use for database migrations, backups, notifications, smoke tests ...
+- This can be used for database migrations, backups, notifications, smoke tests ...
 
 - Hooks named `test` are executed only when running `helm test RELEASE-NAME`
 

@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Network policies
 
 - Namespaces help us to *organize* resources
@@ -236,13 +237,15 @@ The second command will fail and time out after 3 seconds.
 
 ## An important warning
 
-- Some network plugins only have partial support for network policies
+- Network policies are enforced by the network plugin (CNI)
 
-- For instance, Weave added support for egress rules [in version 2.4](https://github.com/weaveworks/weave/pull/3313) (released in July 2018)
+- Some network plugins don't enforce network policies at all
 
-- And added support for ipBlock [in version 2.5](https://github.com/weaveworks/weave/pull/3367) (released in Nov 2018)
+  (e.g. Flannel on its own)
 
-- Before 2023, AWS EKS didn't install a network policy controller at all
+- Some only enforce them when the feature is turned on
+
+  (e.g. on AWS EKS, the VPC CNI needs `enableNetworkPolicy` set to `true`)
 
 - Unsupported features might be silently ignored
 
@@ -358,7 +361,7 @@ spec:
 
 ]
 
-Note: using `kubectl proxy` or `kubectl port-forward` allows us to connect
+Note: using `kubectl port-forward` allows us to connect
 regardless of existing network policies. This allows us to debug and
 troubleshoot easily, without having to poke holes in our firewall.
 
@@ -411,11 +414,7 @@ troubleshoot easily, without having to poke holes in our firewall.
 
 ## Tools and resources
 
-- [Cilium Network Policy Editor](https://editor.cilium.io/)
-
-- [Tufin Network Policy Viewer](https://orca.tufin.io/netpol/)
-
-- [`kubectl np-viewer`](https://github.com/runoncloud/kubectl-np-viewer) (kubectl plugin)
+- [Cilium Network Policy Editor](https://editor.networkpolicy.io/)
 
 - Two resources by [Ahmet Alp Balkan](https://ahmet.im/):
 
@@ -431,11 +430,11 @@ troubleshoot easily, without having to poke holes in our firewall.
 
 - The API documentation has a lot of detail about the format of various objects: <!-- ##VERSION## -->
 
-  - [NetworkPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#networkpolicy-v1-networking-k8s-io)
+  - [NetworkPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.37/#networkpolicy-v1-networking-k8s-io)
 
-  - [NetworkPolicySpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#networkpolicyspec-v1-networking-k8s-io)
+  - [NetworkPolicySpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.37/#networkpolicyspec-v1-networking-k8s-io)
 
-  - [NetworkPolicyIngressRule](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#networkpolicyingressrule-v1-networking-k8s-io)
+  - [NetworkPolicyIngressRule](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.37/#networkpolicyingressrule-v1-networking-k8s-io)
 
   - etc.
 

@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Labels and annotations
 
 - Most resources can have *labels* and *annotations*: key/value pairs in `metadata`

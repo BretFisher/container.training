@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 class: title, self-paced
 
 Thank you!

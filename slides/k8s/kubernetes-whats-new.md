@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Kubernetes: What’s New
 
 - Selected changes in Kubernetes **v1.35, v1.36, and v1.37**

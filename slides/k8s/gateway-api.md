@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # The Gateway API
 
 - The Gateway API is how Kubernetes exposes HTTP (and other) services
@@ -50,7 +51,7 @@
 
 - Each persona owns different resources (next slides)
 
-[gateway-personas]: https://gateway-api.sigs.k8s.io/concepts/roles-and-personas/
+[gateway-personas]: https://gateway-api.sigs.k8s.io/docs/concepts/roles-and-personas/
 
 ---
 
@@ -106,7 +107,7 @@ class: pic
 
   (Envoy Gateway, NGINX Gateway Fabric, Istio, cloud load balancer controllers...)
 
-- We'll use [Envoy Gateway][envoy-gateway], the CNCF reference implementation
+- We'll use [Envoy Gateway][envoy-gateway], part of the CNCF Envoy project
 
   (it runs in any cluster, and it's common on EKS too)
 
@@ -320,7 +321,7 @@ We should get a response from the `blue` pod.
 
 - Some optional features are in the `Extended` set:
 
-  - they may or may not supported
+  - they may or may not be supported
 
   - but at least, their specification is part of the API definition
 
@@ -344,7 +345,7 @@ match:
   headers:                # Core
   - name: x-custom-header
     value: foo
-  queryparams:            # Extended
+  queryParams:            # Extended
   - type: Exact           # can also have implementation-specific values, e.g. Regex
     name: product
     value: pizza
@@ -381,9 +382,11 @@ type: RequestRedirect
 requestRedirect:
   scheme: https                     # http or https
   hostname: newxyz.example.com
-  path: /new
+  path:
+    type: ReplaceFullPath           # or ReplacePrefixMatch
+    replaceFullPath: /new
   port: 8080
-  statusCode: 302                   # default=302; can be 301 302 303 307 308
+  statusCode: 302                   # default=302; 301 and 302 are Core; 303 307 308 are Extended
 ```
 
 All fields are optional. Empty fields mean "leave as is".
@@ -392,7 +395,7 @@ Note that while `RequestRedirect` is `Core`, some options are `Extended`!
 
 (See the [API specification for details][http-request-redirect].)
 
-[http-request-redirect]: https://gateway-api.sigs.k8s.io/reference/spec/#httprequestredirectfilter
+[http-request-redirect]: https://gateway-api.sigs.k8s.io/reference/api-spec/1.6/spec/#httprequestredirectfilter
 
 ---
 
@@ -402,14 +405,16 @@ Note that while `RequestRedirect` is `Core`, some options are `Extended`!
 type: URLRewrite
 urlRewrite:
   hostname: newxyz.example.com
-  path: /new
+  path:
+    type: ReplacePrefixMatch        # or ReplaceFullPath
+    replacePrefixMatch: /new
 ```
 
 `hostname` will rewrite the HTTP `Host:` header.
 
 This is an `Extended` feature.
 
-It conflicts with `HTTPRequestRedirect`.
+It cannot be used in the same rule as `RequestRedirect`.
 
 ---
 

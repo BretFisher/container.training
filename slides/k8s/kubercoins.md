@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Deploying a sample application
 
 - We will connect to our new Kubernetes cluster

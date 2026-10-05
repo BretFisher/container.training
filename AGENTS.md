@@ -65,6 +65,9 @@ Content rules for every slide you write or edit:
   gets that one line, with what replaced it.
 - Test each command, image, and chart version on the current lab before it
   goes on a slide. A slide that reads well but fails on a lab is a bug.
+- After you check the facts of a Markdown file against current sources, put
+  `<!-- verified: YYYY-MM-DD -->` on line 1 (replace an older one). The
+  build and `labtest` remove this line, so slides do not show it.
 
 For a one-shot build without Docker, use Python 3 with dependencies from
 `slides/requirements.txt`, then run `cd slides && make build` (or `./build.sh once`).

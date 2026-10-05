@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Kustomize
 
 - Kustomize lets us transform Kubernetes resources:
@@ -177,8 +178,6 @@ patches:
 
   - opening the file with our favorite text editor
 
-  - ~~web wizards like [Replicated Ship](https://www.replicated.com/ship/)~~ (deprecated)
-
 - Let's see these in action!
 
 ---
@@ -238,7 +237,7 @@ General workflow:
 
 ## `kubectl` integration
 
-- Kustomize has been integrated in `kubectl` (since Kubernetes 1.14)
+- Kustomize is integrated in `kubectl`
 
   - `kubectl kustomize` is an equivalent to `kustomize build`
 
@@ -246,9 +245,7 @@ General workflow:
 
 - The `kustomize` tool is still needed if we want to use `create`, `edit`, ...
 
-- Kubernetes 1.14 to 1.20 uses Kustomize 2.0.3
-
-- Kubernetes 1.21 jumps to Kustomize 4.1.2
+- `kubectl` 1.37 embeds Kustomize 5.8.1 (check with `kubectl version`)
 
 - Kustomize is now officially part of [sig-cli]
 
@@ -272,9 +269,9 @@ General workflow:
 
   (but that's not well indicated in the docs; e.g. `commonLabels`)
 
-- Some features are documented but not released yet
+- Some features reach the `kustomize` CLI before the version embedded in `kubectl`
 
-  (e.g. regex selectors in `replacements` as of October 2025)
+  (e.g. `kustomize edit add configuration`, added in Kustomize 5.8.2)
 
 ---
 
@@ -288,7 +285,7 @@ General workflow:
 
   *automatically generate interesting labels / annotations*
 
-- `commonAnnotations`, `commonLabels`, `labels`
+- `commonAnnotations`, `labels`, `commonLabels` (deprecated)
 
   *add custom labels / annotations to all resources*
 
@@ -300,7 +297,7 @@ General workflow:
 
 ## Transforming resources
 
-- `patches` `patchesJson6902`, `patchesStrategicMerge`
+- `patches` (`patchesJson6902` and `patchesStrategicMerge` are deprecated)
 
   - perform (almost) arbitrary modifications to resources
 
@@ -344,9 +341,7 @@ General workflow:
 
   (only available with `--enable-helm` flag; not standard / GA yet!)
 
-- `vars` = define variables and reuse them elsewhere
-
-  (limited to some specific fields; ...actually, it's being deprecated already!)
+- `vars` is deprecated; use `replacements`
 
 - `components` = somewhat similar to an "include"
 
@@ -514,7 +509,7 @@ It works, but requires two lines per image. Can we do better? 🤔
 
 - `PrefixSuffixTransformer` applies to *all* resources
 
-  (as of Kustomize 5.7 (October 2025), there is no way to specify a filter)
+  (as of Kustomize 5.8 (October 2026), there is no way to specify a filter)
 
 - One workaround:
 
@@ -606,7 +601,7 @@ replacements:
 
 - It's possible to do a lot of transformations with Kustomize
 
-- In complex scenarios, it can quickly becomes a maintenance nightmare
+- In complex scenarios, it can quickly become a maintenance nightmare
 
 - One possible strategy:
 
@@ -618,7 +613,7 @@ replacements:
 
 - See [that kustomization][flux-kustomization] for an example adding command line flags to controllers
 
-[ollama-with-sidecar]: https://github.com/jpetazzo/container.training/blob/main/k8s/admission-configuration.yaml
+[ollama-with-sidecar]: https://github.com/jpetazzo/container.training/tree/main/k8s/kustomize-examples/ollama-with-sidecar
 [flux-kustomization]: https://github.com/fluxcd/flux2-multi-tenancy/blob/main/clusters/production/flux-system/kustomization.yaml
 
 ???

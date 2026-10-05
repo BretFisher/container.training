@@ -394,6 +394,10 @@ def processcontent(content, filename):
             return (content, titles)
         if os.path.isfile(content):
             markdown = open(content).read()
+            # Line 1 can be "<!-- verified: YYYY-MM-DD -->", the date of the
+            # last fact check of this file (see README.md). Remove it: slide
+            # properties ("class: ...") must be the first lines of a slide.
+            markdown = re.sub(r"\A<!-- verified: [^\n]*-->\n", "", markdown)
             markdown = processAtAtStrings(markdown)
             fragmentfile = os.path.join("fragments", content)
             fragmentdir = os.path.dirname(fragmentfile)

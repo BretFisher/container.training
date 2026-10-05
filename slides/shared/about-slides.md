@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 ## Accessing these slides now
 
 - We recommend that you open these slides in your browser:
@@ -117,5 +118,5 @@ class: bret-skip
 [docker-docs]: https://docs.docker.com/
 [k8s-docs]: https://kubernetes.io/docs/
 [docker-forums]: https://forums.docker.com/
-[docker-so]: http://stackoverflow.com/questions/tagged/docker
-[k8s-so]: http://stackoverflow.com/questions/tagged/kubernetes
+[docker-so]: https://stackoverflow.com/questions/tagged/docker
+[k8s-so]: https://stackoverflow.com/questions/tagged/kubernetes

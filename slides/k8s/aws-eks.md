@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Amazon EKS
 
 - EKS is Amazon's managed Kubernetes service
@@ -12,11 +13,11 @@
 
 - AWS operates, patches, and scales the EKS control plane
 
-- We cannot log in to its control planehosts or access etcd directly
+- We cannot log in to its control plane hosts or access etcd directly
 
 - We configure API endpoint access, IAM access, and Kubernetes RBAC
 
-  - EKS exposes a Kubernetes API endpoint. We control it's network policy
+  - EKS exposes a Kubernetes API endpoint. We control its network access
 
 - Customers always manage applications, data, permissions, and policies
 
@@ -30,7 +31,7 @@ class: pic
 
 ---
 
-## Provisioning clusers: kubeadm vs EKS
+## Provisioning clusters: kubeadm vs EKS
 
 .column-half[
 ### kubeadm+kubectl (vanilla K8s)
@@ -109,7 +110,7 @@ aws eks associate-access-policy \
 
 ---
 
-## Pod auth: Accesssing cluster resources vs AWS resources
+## Pod auth: Accessing cluster resources vs AWS resources
 
 .column-half[
 ### Accessing in-cluster resources
@@ -145,7 +146,7 @@ Both provide AWS IAM role credentials to Kubernetes Pods via the [AWS SDK][irsa-
 .column-half[
 ### [EKS Pod Identity][eks-pod-identity] launched 2023
 
-- Simpler than IRSA, Requires EKS, but no Fargate support
+- Simpler than IRSA, Requires EKS and Linux EC2 nodes (no Fargate or Windows)
 
 - Associate cluster, namespace, and ServiceAccount with a role that trusts EKS
 
@@ -167,7 +168,7 @@ Both provide AWS IAM role credentials to Kubernetes Pods via the [AWS SDK][irsa-
 [irsa-setup]: https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html
 
 [ascp-pod-id]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/ascp-pod-identity-integration.html
-[ascp-irsa]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/ascp-irsa-integration.html
+[ascp-irsa]: https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_ascp_irsa.html
 
 [irsa-sdks]: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts-minimum-sdk.html
 
@@ -211,7 +212,7 @@ class: pic
 - AWS Envelope encryption: a data key encrypts the secret value;
   a KMS key encrypts that data key
 
-- EKS also encrypts native Kubernetes Secrets at rest in etcd by default (Kubernetes 1.28+)
+- EKS also envelope-encrypts all Kubernetes API data, including Secrets, by default (Kubernetes 1.28+)
 
 - ASCP avoids etcd storage unless Secret sync is enabled
 

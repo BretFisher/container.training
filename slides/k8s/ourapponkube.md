@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Running our application on Kubernetes
 
 - We can now deploy our code (as well as a redis instance)
@@ -124,8 +125,6 @@ We should now see the `worker`, well, working happily.
 - Now we would like to access the Web UI
 
 - We will expose it with a `NodePort`
-
-  (just like we did for the registry)
 
 .lab[
 

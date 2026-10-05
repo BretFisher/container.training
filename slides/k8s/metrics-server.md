@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Checking Node and Pod resource usage
 
 - We've installed a few things on our cluster so far
@@ -44,7 +45,7 @@
 
 - It is necessary for some features (like the Horizontal Pod Autoscaler)
 
-[resource metrics pipeline]: https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/
+[resource metrics pipeline]: https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/
 [aggregation layer]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/
 
 ---
@@ -184,10 +185,6 @@ class: extra-details
 - It can show resource and limits, and compare them with usage
 
 - It can show utilization per node, or per pod
-
-- kube-resource-report can generate HTML reports
-
-  (https://codeberg.org/hjacobs/kube-resource-report)
 
 ???
 

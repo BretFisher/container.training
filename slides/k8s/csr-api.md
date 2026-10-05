@@ -317,19 +317,19 @@ The command above generates:
 
 - Generate and create the CSR resource:
   ```bash
-    kubectl apply -f - <<EOF
-    apiVersion: certificates.k8s.io/v1
-    kind: CertificateSigningRequest
-    metadata:
-      name: user=jean.doe
-    spec:
-      request: $(base64 -w0 < csr.pem)
-      signerName: kubernetes.io/kube-apiserver-client
-      usages:
-      - digital signature
-      - key encipherment
-      - client auth
-    EOF
+  kubectl apply -f - <<EOF
+  apiVersion: certificates.k8s.io/v1
+  kind: CertificateSigningRequest
+  metadata:
+    name: user=jean.doe
+  spec:
+    request: $(base64 -w0 < csr.pem)
+    signerName: kubernetes.io/kube-apiserver-client
+    usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  EOF
   ```
 
 ]

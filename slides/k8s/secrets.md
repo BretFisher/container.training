@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Managing secrets
 
 - Sometimes our code needs sensitive information:
@@ -22,7 +23,7 @@
 
   (a Secret can contain zero, one, or many key-value pairs)
 
-- They can both be exposed with the downward API or volumes
+- They can both be exposed with environment variables or volumes
 
 - They can both be created with YAML or with a CLI command
 
@@ -50,23 +51,21 @@
 
 ## Secrets have an optional *type*
 
-- The type indicates which keys must exist in the secrets, for instance:
+- The type tells the API server which keys to validate, for instance:
 
   `kubernetes.io/tls` requires `tls.crt` and `tls.key`
 
-  `kubernetes.io/basic-auth` requires `username` and `password`
+  `kubernetes.io/basic-auth` requires `username` and/or `password`
 
   `kubernetes.io/ssh-auth` requires `ssh-privatekey`
 
   `kubernetes.io/dockerconfigjson` requires `.dockerconfigjson`
 
-  `kubernetes.io/service-account-token` requires `token`, `namespace`, `ca.crt`
+  `kubernetes.io/service-account-token` is legacy; use the TokenRequest API
 
   (the whole list is in [the documentation](https://kubernetes.io/docs/concepts/configuration/secret/#secret-types))
 
-- This is merely for our (human) convenience:
-
-  “Ah yes, this secret is a ...”
+- The default type, `Opaque`, has no required keys
 
 ---
 
@@ -258,11 +257,11 @@ class: extra-details
 
   - snoops the e.g. iSCSI link between our etcd servers and SAN
 
-- However, starting the API server will now require human intervention
+- Prefer a KMS v2 provider: the key-encryption key stays in an external KMS
 
-  (to provide the decryption keys)
+  (`aescbc` / `secretbox` keep the key in a file on the control plane nodes)
 
-- This is only for extremely regulated environments (military, nation states...)
+- Many managed services (e.g. EKS) encrypt Secrets with a KMS by default
 
 ---
 
@@ -270,7 +269,7 @@ class: extra-details
 
 ## Immutable ConfigMaps and Secrets
 
-- Since Kubernetes 1.19, it is possible to mark a ConfigMap or Secret as *immutable*
+- We can mark a ConfigMap or Secret as *immutable*
 
   ```bash
   kubectl patch configmap xyz --patch='{"immutable": true}'

@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Declarative vs imperative
 
 - Our container orchestrator puts a very strong emphasis on being *declarative*

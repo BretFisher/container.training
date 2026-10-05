@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Shipping images with a registry
 
 - Initially, our app was running on a single node
@@ -18,15 +19,15 @@
 
 - If the Engine needs to pull the `alpine` image, it expands it into `library/alpine`
 
-- `library/alpine` is expanded into `index.docker.io/library/alpine`
+- `library/alpine` is expanded into `docker.io/library/alpine`
 
-- The Engine communicates with `index.docker.io` to retrieve `library/alpine:latest`
+- The Engine communicates with Docker Hub (`docker.io`) to retrieve `library/alpine:latest`
 
-- To use something else than `index.docker.io`, we specify it in the image name
+- To use something else than `docker.io`, we specify it in the image name
 
 - Examples:
   ```bash
-  docker pull gcr.io/google-containers/alpine-with-bash:1.0
+  docker pull registry.k8s.io/pause:3.10
 
   docker build -t registry.mycompany.io:5000/myimage:awesome .
   docker push registry.mycompany.io:5000/myimage:awesome
@@ -78,11 +79,11 @@
 
 - Each major cloud provider has an option as well
 
-  (ACR on Azure, ECR on AWS, GCR on Google Cloud...)
+  (ACR on Azure, ECR on AWS, Artifact Registry on Google Cloud...)
 
 - There are also commercial products to run our own registry
 
-  (Docker EE, Quay...)
+  (Red Hat Quay, JFrog Artifactory...)
 
 - And open source options, too!
 
@@ -98,7 +99,7 @@
 
 - Example: [ctr.run](https://ctr.run/)
 
-  (deprecated in August 2020, after being aquired by Datadog)
+  (deprecated in August 2020, after being acquired by Datadog)
 
 - It did allow something like this:
   ```bash

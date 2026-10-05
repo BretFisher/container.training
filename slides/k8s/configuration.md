@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Managing configuration
 
 - Some applications need to be configured (obviously!)
@@ -66,12 +67,12 @@
 
 - Both `command` and `args` are arrays
 
-- Example ([source](https://github.com/jpetazzo/container.training/blob/main/k8s/consul-1.yaml#L70)):
+- Example ([source](https://github.com/jpetazzo/container.training/blob/main/k8s/consul-1.yaml#L71)):
   ```yaml
     args:
     - "agent"
     - "-bootstrap-expect=3"
-    - "-retry-join=provider=k8s label_selector=\"app=consul\" namespace=\"$(NS)\""
+    - "-retry-join=provider=k8s label_selector=\"app=consul\" namespace=\"$(NAMESPACE)\""
     - "-client=0.0.0.0"
     - "-data-dir=/consul/data"
     - "-server"
@@ -94,7 +95,7 @@
 
   (they will be strung together, just like `ENTRYPOINT` and `CMD`)
 
-- See the [docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#notes) to see how they interact together
+- See the [docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/) to see how they interact together
 
 ---
 
@@ -213,9 +214,9 @@
 
 - Best practice: set a memory limit, and pass it to the runtime
 
-- Note: recent versions of the JVM can do this automatically
+- Note: since Java 10 (and 8u191), the JVM can do this automatically
 
-  (see [JDK-8146115](https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8146115))
+  (see [JDK-8146115](https://bugs.openjdk.org/browse/JDK-8146115))
   and
   [this blog post](https://very-serio.us/2017/12/05/running-jvms-in-kubernetes/)
   for detailed examples)
@@ -336,7 +337,7 @@ We'll cover them just after!*
 
 - Configmaps can be exposed as environment variables in the container
 
-  - this is achieved with the downward API
+  - this is achieved with `valueFrom.configMapKeyRef` (or `envFrom`)
 
   - this is particularly effective for configmaps containing individual parameters
 
@@ -431,7 +432,7 @@ Here is the file that we will use, @@LINK[k8s/haproxy.cfg]:
 
 - Create a ConfigMap named `haproxy` and holding the configuration file:
   ```bash
-  kubectl create configmap haproxy --from-file=~/container.training/k8s/haproxy.cfg
+  kubectl create configmap haproxy --from-file ~/container.training/k8s/haproxy.cfg
   ```
 
 - Check what our configmap looks like:
@@ -493,7 +494,7 @@ Here is @@LINK[k8s/haproxy.yaml], a Pod manifest using that ConfigMap:
 
 ---
 
-## Exposing configmaps with the downward API
+## Exposing configmaps as environment variables
 
 - We are going to run a Docker registry on a custom port
 

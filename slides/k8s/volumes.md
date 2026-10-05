@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Volumes
 
 - Volumes are special directories that are mounted in containers
@@ -23,10 +24,6 @@ class: extra-details
 ## Kubernetes volumes vs. Docker volumes
 
 - Kubernetes and Docker volumes are very similar
-
-  (the [Kubernetes documentation](https://kubernetes.io/docs/concepts/storage/volumes/) says otherwise ...
-  <br/>
-  but it refers to Docker 1.7, which was released in 2015!)
 
 - Docker volumes allow us to share data between containers running on the same host
 
@@ -209,7 +206,7 @@ spec:
 
   - this repository is https://github.com/octocat/Spoon-Knife
 
-  - it's very popular (more than 100K stars!)
+  - it's very popular (more than 100K forks!)
 
 ---
 
@@ -497,7 +494,7 @@ spec:
 
 ## Sidecars
 
-- Introduced as an alpha feature in K8S 1.28; GA in K8S 1.33
+- Stable since Kubernetes 1.33
 
 - A sidecar is an `initContainer` with a `restartPolicy: Always`
 

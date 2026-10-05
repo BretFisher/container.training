@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 class: title, bret-skip
 
 *Tell me and I forget.*
@@ -8,7 +9,7 @@ class: title, bret-skip
 
 Misattributed to Benjamin Franklin
 
-[(Probably inspired by Chinese Confucian philosopher Xunzi)](https://www.barrypopik.com/index.php/new_york_city/entry/tell_me_and_i_forget_teach_me_and_i_may_remember_involve_me_and_i_will_lear/)
+[(Probably inspired by Chinese Confucian philosopher Xunzi)](https://barrypopik.com/blog/tell_me_and_i_forget_teach_me_and_i_may_remember_involve_me_and_i_will_lear)
 
 ---
 

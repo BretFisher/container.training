@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 ## Declarative vs imperative in Kubernetes
 
 - With Kubernetes, we cannot say: "run this container"

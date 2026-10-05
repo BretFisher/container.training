@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Manifest Templating
 
 - In the Kubernetes ecosystem, we often use tools like Helm or Kustomize
@@ -22,7 +23,7 @@
 
 3. Create resources with `kubectl apply -f`, `kubectl create -f`...
 
-4. Combine multiple resources in a single YAML files
+4. Combine multiple resources in a single YAML file
 
    (making it convenient to deploy entire stacks)
 
@@ -145,11 +146,11 @@
 
 - Text templating engine
 
-  (based on Go's [text/template] + [Sprig] + other Kubernetes )
+  (based on Go's [text/template] + [Sprig] + Kubernetes-specific functions)
 
 - Templates can use "values"
 
-  (input parameters than can be provided e.g. in a structured YAML file)
+  (input parameters that can be provided e.g. in a structured YAML file)
 
 - Helm will manage application lifecycle, like a package manager
 

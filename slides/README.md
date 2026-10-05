@@ -21,6 +21,19 @@ you want to edit. The format should be self-explanatory.
 format. Once I settle for something, I will add better
 documentation.*
 
+### Fact-check date
+
+Line 1 of a Markdown file can hold the date of its last fact check:
+
+```markdown
+<!-- verified: 2026-10-05 -->
+```
+
+Update it when you check the facts of the file against current sources.
+`markmaker.py` removes this line before it reads the file, because slide
+properties such as `class:` must be the first lines of a slide. Slides
+do not show it. `labtest` also ignores it.
+
 ### Name TOC sections
 
 Use a `title` and a `content` list to name a section:

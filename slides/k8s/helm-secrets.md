@@ -1,251 +1,140 @@
-# Helm secrets
+<!-- verified: 2026-10-05 -->
+# Helm release Secrets
 
-- Helm can do *rollbacks*:
+- Helm must retain chart data and values to support rollback
 
-  - to previously installed charts
+- By default, each revision is stored in a Kubernetes Secret
 
-  - to previous sets of values
+- The Secret is in the release's namespace
 
-- How and where does it store the data needed to do that?
-
-- Let's investigate!
+- Reading these Secrets can expose sensitive values and manifests
 
 ---
 
-## We need a release
+## Create two revisions
 
-- We need to install something with Helm
-
-- Let's use the OWASP Juice Shop chart as an example
-
-  (stored in an OCI registry: `oci://ghcr.io/securecodebox/helm/juice-shop`)
+- Use a separate `orange` release with harmless demo values
 
 .lab[
 
-- Install a release called `orange` with the `juice-shop` chart:
+- Install the pinned chart, then change replica count:
   ```bash
-  helm upgrade orange oci://ghcr.io/securecodebox/helm/juice-shop --install
-  ```
-
-- Let's upgrade that release, and change a value:
-  ```bash
+  helm install orange oci://ghcr.io/securecodebox/helm/juice-shop \
+    --version 5.9.0 --namespace helm-secrets --create-namespace \
+    --wait=watcher --timeout 3m
   helm upgrade orange oci://ghcr.io/securecodebox/helm/juice-shop \
-       --set ingress.enabled=true
+    --version 5.9.0 --namespace helm-secrets --set replicaCount=2 \
+    --wait=watcher --timeout 3m
   ```
+<!-- ```timeout 480``` -->
 
 ]
 
-<!--
-CHANGED 2026-10-03: charts.securecodebox.io no longer resolves (NXDOMAIN).
-The chart moved to oci://ghcr.io/securecodebox/helm/juice-shop.
-OLD slide before this one, "Adding the repo":
-  helm repo add juice https://charts.securecodebox.io
-OLD: helm upgrade orange juice/juice-shop --install
-OLD: helm upgrade orange juice/juice-shop --set ingress.enabled=true
--->
-
 ---
 
-## Release history
-
-- Helm stores successive revisions of each release
+## Find the history Secrets
 
 .lab[
 
-- View the history for that release:
+- Compare release history with the stored Secrets:
   ```bash
-  helm history orange
+  helm history orange --namespace helm-secrets
+  kubectl get secrets --namespace helm-secrets \
+    --selector owner=helm,name=orange
+  ```
+
+- Select the deployed revision by label:
+  ```bash
+  SECRET=$(kubectl get secrets --namespace helm-secrets \
+    --selector owner=helm,name=orange,status=deployed \
+    -o jsonpath='{.items[0].metadata.name}')
+  kubectl describe secret "$SECRET" --namespace helm-secrets
   ```
 
 ]
 
-Where does that come from?
+The type is `helm.sh/release.v1`; the `release` field contains the payload.
 
 ---
 
-## Investigate
+## Decode the demo payload
 
-- Possible options:
-
-  - local filesystem (no, because history is visible from other machines)
-
-  - persistent volumes (no, Helm works even without them)
-
-  - ConfigMaps, Secrets?
+- Kubernetes adds one base64 layer; Helm adds base64 and gzip around JSON
 
 .lab[
 
-- Look for ConfigMaps and Secrets:
+- Decode to a local file without printing binary data:
   ```bash
-  kubectl get configmaps,secrets
+  kubectl get secret "$SECRET" --namespace helm-secrets \
+    -o go-template='{{ .data.release | base64decode | base64decode }}' \
+    | gzip -dc > orange-release.json
+  ```
+
+- Inspect the fields and demo values:
+  ```bash
+  python3 -c 'import json; r=json.load(open("orange-release.json")); print(sorted(r)); print(r["config"])'
   ```
 
 ]
 
---
-
-We should see a number of secrets with TYPE `helm.sh/release.v1`.
+Only use this procedure with the lab's demo data.
 
 ---
 
-## Unpacking a secret
+## What the payload contains
 
-- Let's find out what is in these Helm secrets
+- `chart`: chart metadata, templates, and default values
 
-.lab[
+- `config`: values supplied for this release
 
-- Examine the secret corresponding to the second release of `orange`:
-  ```bash
-  kubectl describe secret sh.helm.release.v1.orange.v2
-  ```
-  (`v1` is the secret format; `v2` means revision 2 of the `orange` release)
+- `manifest`: rendered Kubernetes manifests, including any Secrets
 
-]
+- `info`, `name`, `namespace`, `version`: release status and revision
 
-There is a key named `release`.
+- Earlier revisions retain earlier values, even after a value is changed
 
----
-
-## Unpacking the release data
-
-- Let's see what's in this `release` thing!
-
-.lab[
-
-- Dump the secret:
-  ```bash
-  kubectl get secret sh.helm.release.v1.orange.v2 \
-      -o go-template='{{ .data.release }}'
-  ```
-
-]
-
-Secrets are encoded in base64. We need to decode that!
-
----
-
-## Decoding base64
-
-- We can pipe the output through `base64 -d` or use go-template's `base64decode`
-
-.lab[
-
-- Decode the secret:
-  ```bash
-  kubectl get secret sh.helm.release.v1.orange.v2 \
-      -o go-template='{{ .data.release | base64decode }}'
-  ```
-
-]
-
---
-
-... Wait, this *still* looks like base64. What's going on?
-
---
-
-Let's try one more round of decoding!
-
----
-
-## Decoding harder
-
-- Just add one more base64 decode filter
-
-.lab[
-
-- Decode it twice:
-  ```bash
-  kubectl get secret sh.helm.release.v1.orange.v2 \
-      -o go-template='{{ .data.release | base64decode | base64decode }}'
-  ```
-
-]
-
---
-
-... OK, that was *a lot* of binary data. What should we do with it?
-
----
-
-## Guessing data type
-
-- We could use `file` to figure out the data type
-
-.lab[
-
-- Pipe the decoded release through `file -`:
-  ```bash
-  kubectl get secret sh.helm.release.v1.orange.v2 \
-      -o go-template='{{ .data.release | base64decode | base64decode }}' \
-      | file -
-  ```
-
-]
-
---
-
-Gzipped data! It can be decoded with `gunzip -c`.
-
----
-
-## Uncompressing the data
-
-- Let's uncompress the data and save it to a file
-
-.lab[
-
-- Rerun the previous command, but with `| gunzip -c > release-info` :
-  ```bash
-  kubectl get secret sh.helm.release.v1.orange.v2 \
-      -o go-template='{{ .data.release | base64decode | base64decode }}' \
-      | gunzip -c > release-info
-  ```
-
-- Look at `release-info`:
-  ```bash
-  cat release-info
-  ```
-
-]
-
---
-
-It's a bundle of ~~YAML~~ JSON.
-
----
-
-## Looking at the JSON
-
-If we inspect that JSON (e.g. with `jq keys release-info`), we see:
-
-- `chart` (contains the entire chart used for that release)
-- `config` (contains the values that we've set)
-- `info` (date of deployment, status messages)
-- `manifest` (YAML generated from the templates)
-- `name` (name of the release, so `orange`)
-- `namespace` (namespace where we deployed the release)
-- `version` (revision number within that release; starts at 1)
-
-The chart is in a structured format, but it's entirely captured in this JSON.
-
----
-
-## Conclusions
-
-- Helm stores each release information in a Secret in the namespace of the release
-
-- The secret is JSON object (gzipped and encoded in base64)
-
-- It contains the manifests generated for that release
-
-- ... And everything needed to rebuild these manifests
-
-  (including the full source of the chart, and the values used)
-
-- This allows arbitrary rollbacks, as well as tweaking values even without having access to the source of the chart (or the chart repo) used for deployment
+- Base64 and compression do **not** encrypt the data
 
 ???
+
+Verified against Helm 4.3.0 storage code and the lab's release Secrets.
+https://github.com/helm/helm/blob/v4.3.0/pkg/storage/driver/util.go
+
+---
+
+## Protect release history
+
+- Restrict `get`, `list`, and `watch` access to Secrets with namespace RBAC
+
+- Limit which users and automation can read release history
+
+- Avoid sending secret values through Helm when an existing Secret can be referenced
+
+- Treat rendered output, dry runs, and CI logs as possible secret exposures
+
+- Encryption at rest protects storage; it does not stop an authorized API reader
+
+- Apply the controls from the Secrets and encryption-at-rest chapters
+
+---
+
+## Clean up the demo
+
+.lab[
+
+- Delete the release, namespace, and decoded local data:
+  ```bash
+  helm uninstall orange --namespace helm-secrets
+  kubectl delete namespace helm-secrets
+  rm orange-release.json
+  ```
+
+]
+
+Default uninstall removes this release's history. `--keep-history` retains it.
+
+???
+
 
 :EN:- Deep dive into Helm internals
 :FR:- Fonctionnement interne de Helm

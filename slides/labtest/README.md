@@ -46,6 +46,20 @@ make labtest TAG=bret FROM=k8s/daemonset.md TO=k8s/rollout.md
 
 `FROM` also accepts `file:line`, for example `FROM=k8s/daemonset.md:500`.
 
+Test changes that you did not push yet:
+
+```bash
+make labtest TAG=bret LOCAL=1 ONLY="k8s/kyverno-colors.md"
+```
+
+Students get the repository with `git clone` (in `shared/sampleapp.md`), so
+the lab has the pushed branch. With `LOCAL=1`, the test copies this working
+tree to the lab instead: the tracked files and the untracked files that
+`.gitignore` does not exclude, but not `slides/` and `prepare-*/`. The step
+`git clone https://<gitrepo>` extracts that copy, and an existing
+`~/container.training` gets the copy over it. Before you teach, test once
+without `LOCAL=1`, to test what students get.
+
 ```bash
 make labtest-watch TAG=bret
 ```

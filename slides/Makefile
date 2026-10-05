@@ -48,6 +48,7 @@ clean: down ## Also remove generated files from a local (non-Docker) build
 #   make labtest-plan SLIDES_DECK=kube-sec-twodays.yml
 #   make labtest SLIDES_DECK=kube-sec-twodays.yml TAG=bret ONLY="k8s/daemonset.md k8s/rollout.md"
 #   make labtest SLIDES_DECK=kube-sec-twodays.yml TAG=bret FROM=k8s/daemonset.md TO=k8s/rollout.md
+#   make labtest TAG=bret LOCAL=1 ONLY=k8s/kyverno-colors.md   (test changes that are not pushed)
 TAG     ?=
 ONLY    ?=
 FROM    ?=
@@ -57,9 +58,9 @@ LABTEST_SELECT = $(foreach f,$(ONLY),--only $(f)) $(if $(FROM),--from $(FROM)) $
 labtest-plan: ## List the lab commands of SLIDES_DECK and the ones that probably hang (no lab needed)
 	python3 labtest/labtest.py plan "$${SLIDES_DECK:-kube-sec-twodays.yml}" $(LABTEST_SELECT)
 
-labtest: ## Run the labs of SLIDES_DECK on lab TAG (ONLY=, FROM=, TO= select files)
+labtest: ## Run the labs of SLIDES_DECK on lab TAG (ONLY=, FROM=, TO= select files; LOCAL=1 uses this checkout)
 	@test -n "$(TAG)" || { echo "Set TAG=<lab tag>, see prepare-labs/tags/"; exit 1; }
-	python3 labtest/labtest.py run "$${SLIDES_DECK:-kube-sec-twodays.yml}" --tag $(TAG) $(LABTEST_SELECT)
+	python3 labtest/labtest.py run "$${SLIDES_DECK:-kube-sec-twodays.yml}" --tag $(TAG) $(LABTEST_SELECT) $(if $(LOCAL),--local-repo)
 
 labtest-watch: ## Watch the test terminal on lab TAG live (read-only)
 	python3 labtest/labtest.py watch --tag $(TAG)

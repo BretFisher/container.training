@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Policy Management with Kyverno
 
 - Kyverno is a policy engine for Kubernetes
@@ -19,55 +20,45 @@
 
 ## Examples (validation)
 
-- [Disallow `:latest` tag](https://kyverno.io/policies/best-practices/disallow-latest-tag/disallow-latest-tag/)
+- [Disallow `:latest` tag](https://github.com/kyverno/policies/tree/main/best-practices-vpol/disallow-latest-tag)
 
-- [Disallow secrets in environment variables](https://kyverno.io/policies/other/disallow-secrets-from-env-vars/disallow-secrets-from-env-vars/)
+- [Disallow secrets in environment variables](https://github.com/kyverno/policies/tree/main/other-vpol/disallow-secrets-from-env-vars)
 
-- [Require that containers drop all capabilities](https://kyverno.io/policies/best-practices/require-drop-all/require-drop-all/)
+- [Require that containers drop all capabilities](https://github.com/kyverno/policies/tree/main/best-practices-vpol/require-drop-all)
 
-- [Prevent creation of Deployment, ReplicaSet, etc. without an HPA](https://kyverno.io/policies/other/check-hpa-exists/check-hpa-exists/)
+- [Prevent creation of Deployment, ReplicaSet, etc. without an HPA](https://github.com/kyverno/policies/tree/main/other-vpol/check-hpa-exists)
 
-- [Forbid CPU limits](https://kyverno.io/policies/other/forbid-cpu-limits/forbid-cpu-limits/)
+- [Forbid CPU limits](https://github.com/kyverno/policies/tree/main/other-vpol/forbid-cpu-limits)
 
-- [Check that memory requests are equal to limits](https://kyverno.io/policies/other/memory-requests-equal-limits/memory-requests-equal-limits/)
+- [Check that memory requests are equal to limits](https://github.com/kyverno/policies/tree/main/other-vpol/memory-requests-equal-limits)
 
-- [Require containers to have healthchecks](https://kyverno.io/policies/best-practices/require-probes/require-probes/)
+- [Require containers to have healthchecks](https://github.com/kyverno/policies/tree/main/best-practices-vpol/require-probes)
 
 ---
 
 ## Examples (mutation)
 
-- [Automatically add environment variables from a ConfigMap](https://kyverno.io/policies/other/add-env-vars-from-cm/add-env-vars-from-cm/)
+- [Automatically add environment variables from a ConfigMap](https://github.com/kyverno/policies/tree/main/other-mpol/add-env-vars-from-cm)
 
-- [Add image as an environment variable](https://kyverno.io/policies/other/add-image-as-env-var/add-image-as-env-var/)
-
-- [Add image `LABEL` as an environment variable](https://kyverno.io/policies/other/inject-env-var-from-image-label/inject-env-var-from-image-label/)
-
-- [When creating a Deployment, copy some labels from its Namespace](https://kyverno.io/policies/other/copy-namespace-labels/copy-namespace-labels/)
-
-- [Automatically restart a given Deployment when a given ConfigMap changes](https://kyverno.io/policies/other/restart-deployment-on-secret-change/restart-deployment-on-secret-change/)
+- [Add image as an environment variable](https://github.com/kyverno/policies/tree/main/other-mpol/add-image-as-env-var)
 
 ---
 
 ## Examples (generation)
 
-- [Automatically create a PDB when a Deployment is created](https://kyverno.io/policies/other/create-default-pdb/create-default-pdb/)
+- [Automatically create a PDB when a Deployment is created](https://github.com/kyverno/policies/tree/main/other-gpol/create-default-pdb)
 
-- [Create an event when an object is deleted (for auditing purposes)](https://kyverno.io/policies/other/audit-event-on-delete/audit-event-on-delete/)
+- [Automatically create a NetworkPolicy when a Namespace is created](https://github.com/kyverno/policies/tree/main/best-practices-gpol/add-network-policy)
 
-- [Create an audit event when using `kubectl exec`](https://kyverno.io/policies/other/audit-event-on-exec/audit-event-on-exec/)
-
-- [Automatically create a Secret (e.g. for registry auth) when a Namespace is created](https://kyverno.io/policies/other/sync-secrets/sync-secrets/)
+- [Automatically create a ResourceQuota and a LimitRange when a Namespace is created](https://github.com/kyverno/policies/tree/main/best-practices-gpol/add-ns-quota)
 
 ---
 
 ## Examples (advanced validation)
 
-- [Only allow root user in images coming from a trusted registry](https://kyverno.io/policies/other/only-trustworthy-registries-set-root/only-trustworthy-registries-set-root/)
+- [Prevent Ingresses with the same host and path](https://github.com/kyverno/policies/tree/main/other-vpol/unique-ingress-paths)
 
-- [Prevent images that haven't been checked by a vulnerability scanner](https://kyverno.io/policies/other/require-vulnerability-scan/require-vulnerability-scan/)
-
-- [Prevent ingress with the same host and path](https://kyverno.io/policies/other/unique-ingress-host-and-path/unique-ingress-host-and-path/)
+- [Only allow images with a verified build provenance (SLSA attestation)](https://github.com/kyverno/policies/tree/main/other-ivpol/verify-image-slsa)
 
 ---
 
@@ -83,7 +74,7 @@
 
 - It's not the only solution!
 
-  (see e.g. [Open Policy Agent](https://www.openpolicyagent.org/docs/v0.12.2/kubernetes-admission-control/) or [Validating Admission Policies](https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/))
+  (see e.g. [OPA Gatekeeper](https://open-policy-agent.github.io/gatekeeper/website/docs/) or [Validating Admission Policies](https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/))
 
 ---
 
@@ -91,11 +82,17 @@
 
 - Kyverno is implemented as a *controller* or *operator*
 
-- It typically runs as a Deployment on our cluster
+- It typically runs as a few Deployments on our cluster
 
 - Policies are defined as *custom resources*
 
 - They are implemented with a set of *dynamic admission control webhooks*
+
+- Policy rules are written in [CEL] (Common Expression Language)
+
+  (the same language as Kubernetes `ValidatingAdmissionPolicy`)
+
+[CEL]: https://kubernetes.io/docs/reference/using-api/cel/
 
 ---
 
@@ -103,13 +100,16 @@
 
 - When we install Kyverno, it will register new resource types, including:
 
-  - Policy and ClusterPolicy (per-namespace and cluster-scope policies)
+  - ValidatingPolicy, MutatingPolicy, GeneratingPolicy, DeletingPolicy
+    <br/>(cluster-scope; each one also has a `Namespaced...` version)
 
   - PolicyReport and ClusterPolicyReport (used in audit mode)
 
-  - GenerateRequest (used internally when generating resources asynchronously)
+  - UpdateRequest (used internally when generating resources asynchronously)
 
-- We will be able to do e.g. `kubectl get clusterpolicyreports --all-namespaces`
+- ClusterPolicy and Policy (the older, JMESPath-based types) are deprecated since 1.19
+
+- We will be able to do e.g. `kubectl get policyreports --all-namespaces`
 
   (to see policy violations across all namespaces)
 
@@ -133,7 +133,7 @@ The recommended [installation method][install-kyverno] is to use Helm charts.
 
 ]
 
-[install-kyverno]: https://kyverno.io/docs/installation/methods/
+[install-kyverno]: https://kyverno.io/docs/installation/installation/
 
 ---
 
@@ -141,15 +141,16 @@ The recommended [installation method][install-kyverno] is to use Helm charts.
 
 - Which resources does it *select?*
 
-  - *match* and/or *exclude* resources
+  - `matchConstraints`: by API group, version, resource, and operation
+    <br/>(and optionally *namespace selector*, *object selector*)
 
-  - match by *kind*, *selector*, *namespace selector*, user/roles doing the action...
+  - `matchConditions`: extra CEL conditions (e.g. "the object has a label")
 
 - Which operation should be done?
 
-  - validate, mutate, or generate
+  - validate, mutate, or generate (one policy kind for each)
 
-- For validation, whether it should *enforce* or *audit* failures
+- For validation, whether it should *deny*, *audit*, or *warn* about failures
 
 - Operation details (what exactly to validate, mutate, or generate)
 
@@ -160,22 +161,20 @@ The recommended [installation method][install-kyverno] is to use Helm charts.
 Example: [require resource requests and limits][kyverno-requests-limits].
 
 ```yaml
-validate:
+validations:
+- expression: >-
+    object.spec.containers.all(c,
+      c.?resources.?requests.?memory.hasValue() &&
+      c.?resources.?requests.?cpu.hasValue() &&
+      c.?resources.?limits.?memory.hasValue())
   message: "CPU and memory resource requests and memory limits are required."
-  pattern:
-    spec:
-      containers:
-      - resources:
-          requests:
-            memory: "?*"
-            cpu: "?*"
-          limits:
-            memory: "?*"
 ```
 
-(The full policy also has sections for `initContainers` and `ephemeralContainers`.)
+(`?` makes each field optional: a missing field is a policy failure, not an error.)
 
-[kyverno-requests-limits]: https://kyverno.io/policies/best-practices/require-pod-requests-limits/require-pod-requests-limits/
+(The full policy also checks `initContainers` and `ephemeralContainers`.)
+
+[kyverno-requests-limits]: https://github.com/kyverno/policies/tree/main/best-practices-vpol/require-pod-requests-limits
 
 ---
 
@@ -184,50 +183,52 @@ validate:
 Example: [disallow `NodePort` Services][kyverno-disallow-nodeports].
 
 ```yaml
-validate:
+validations:
+- expression: object.spec.?type.orValue('') != 'NodePort'
   message: "Services of type NodePort are not allowed."
-  pattern:
-    spec:
-      =(type): "!NodePort"
 ```
 
-`=(...):` means that the field is optional.
+`?type` means that the field is optional.
 
-`type: "!NodePort"` would *require* the field to exist, but be different from `NodePort`.
+`.orValue('')` gives the value to use when the field doesn't exist.
 
-[kyverno-disallow-nodeports]: https://kyverno.io/policies/best-practices/restrict-node-port/restrict-node-port/
+`object.spec.type` alone would cause an error if the field doesn't exist.
+
+[kyverno-disallow-nodeports]: https://github.com/kyverno/policies/tree/main/best-practices-vpol/restrict-node-port
 
 ---
 
-## `spec.rules.validate.failureAction`
+## `spec.validationActions`
 
-- By default, this is set to `Audit`
+- `Deny` = reject the request
 
-- This means that rule violations are not enforced
-
-- They still generate a warning (at the API level) and a PolicyReport
+- `Audit` = don't reject the request, but report the violation in a PolicyReport
 
   (more on that later)
 
-- We (very often) need to change the `failureAction` to `Enforce`
+- `Warn` = don't reject the request, but return a warning in the API response
+
+  (`kubectl` shows it as a `Warning:` line)
+
+- We can combine `Audit` and `Warn`
+
+- To enforce a policy, we need `Deny`
 
 ---
 
-## `background`, `admission`, `emitWarning`
+## `spec.evaluation`
 
-- Policies have three boolean flags to control what they do and when
+- Policies have two flags to control when they run
 
-- `admission` = run that policy at admission
+- `evaluation.admission.enabled` = run that policy at admission
 
   (when an object gets created/updated and validation controllers get invoked)
 
-- `background` = run that policy in the background
+- `evaluation.background.enabled` = run that policy in the background
 
   (periodically check if existing objects fit the policy)
 
-- `emitWarning` = generate an `Event` of type `Warning` associated to the validated objct
-
-  (visible with e.g. `kubectl describe` on that object)
+- Both are `true` by default
 
 ---
 
@@ -239,11 +240,11 @@ validate:
 
   (e.g. if we create "invalid" objects *before* installing the policy)
 
-- Kyvero can also run checks in the background, and report violations
+- Kyverno can also run checks in the background, and report violations
 
   (we'll see later how they are reported)
 
-- `background: true/false` controls that
+- `evaluation.background.enabled: true/false` controls that
 
 ---
 
@@ -251,57 +252,51 @@ validate:
 
 Example: [require image tags][kyverno-disallow-latest].
 
-This uses `request`, which gives access to the `AdmissionRequest` payload.
+This uses `object`, the object that we're validating.
 
-`request` has an `object` field containing the object that we're validating.
+CEL *macros* like `all()`, `exists()`, `filter()`, `map()` loop over lists.
 
 ```yaml
-validate:
+validations:
+- expression: "object.spec.containers.all(c, c.image.contains(':'))"
   message: "An image tag is required."
-  foreach:
-    - list: "request.object.spec.containers"
-      pattern:
-        image: "*:*"
 ```
 
-Note: again, there should also be an entry for `initContainers` and `ephemeralContainers`.
+Note: again, there should also be a check for `initContainers` and `ephemeralContainers`.
 
-[kyverno-disallow-latest]: https://kyverno.io/policies/best-practices/disallow-latest-tag/disallow-latest-tag/
+[kyverno-disallow-latest]: https://github.com/kyverno/policies/tree/main/best-practices-vpol/disallow-latest-tag
 
 ---
 
 class: extra-details
 
-## ...Or not to loop
+## Variables
 
-Requiring image tags can also be achieved like this:
+Requiring image tags in all containers can also be done with a *variable*:
 
 ```yaml
-validate:
+variables:
+- name: allContainers
+  expression: >-
+    object.spec.containers +
+    object.spec.?initContainers.orValue([]) +
+    object.spec.?ephemeralContainers.orValue([])
+validations:
+- expression: "variables.allContainers.all(c, c.image.contains(':'))"
   message: "An image tag is required."
-  pattern:
-    spec:
-      containers:
-      - image: "*:*"
-      =(initContainers):
-      - image: "*:*"
-      =(ephemeralContainers):
-      - image: "*:*"
 ```
 
 ---
 
 ## `request` and other variables
 
-- `request` gives us access to the `AdmissionRequest` payload
+- CEL expressions have access to a few variables, including:
 
-- This gives us access to a bunch of interesting fields:
+  `object`: the object being created or modified
+
+  `oldObject`: the object being modified (only for UPDATE)
 
   `request.operation`: CREATE, UPDATE, DELETE, or CONNECT
-
-  `request.object`: the object being created or modified
-
-  `request.oldObject`: the object being modified (only for UPDATE)
 
   `request.userInfo`: information about the user making the API request
 
@@ -309,9 +304,9 @@ validate:
 
   (e.g. making some labels or annotations immutable)
 
-(See [here][kyverno-request] for details.)
+(See [here][kyverno-cel] for details.)
 
-[kyverno-request]: https://kyverno.io/docs/policy-types/cluster-policy/variables/#variables-from-admission-review-requests
+[kyverno-cel]: https://kyverno.io/docs/policy-types/validating-policy/
 
 ---
 
@@ -327,27 +322,25 @@ validate:
 
   - a NetworkPolicy (to isolate the namespace)
 
-- We can do that with a Kyverno policy with a *generate* action
-
-  (it is mutually exclusive with the *validate* action)
+- We can do that with a Kyverno GeneratingPolicy
 
 ---
 
 ## Overview
 
-- The *generate* action must specify:
+- A GeneratingPolicy has a `generate` section with a CEL expression
 
-  - the `kind` of resource to generate
+- That expression calls `generator.Apply(namespace, [objects])`, with:
 
-  - the `name` of the resource to generate
+  - the Namespace in which to create the objects
 
-  - its `namespace`, when applicable
+  - a list of objects to create
 
-  - *either* a `data` structure, to be used to populate the resource
+- Each object can be:
 
-  - *or* a `clone` reference, to copy an existing resource
+  - *either* written in the policy (with `apiVersion`, `kind`, `metadata`, `spec`)
 
-Note: the `apiVersion` field appears to be optional.
+  - *or* a copy of an existing resource (obtained with `resource.Get(...)`)
 
 ---
 
@@ -355,46 +348,41 @@ Note: the `apiVersion` field appears to be optional.
 
 - We will use the policy @@LINK[k8s/kyverno-namespace-setup.yaml]
 
-- We need to generate 3 resources, so we have 3 rules in the policy
+- We need to generate 3 resources, so we define 3 variables in the policy
 
 - Excerpt:
   ```yaml
-    generate: 
-      kind: LimitRange
-      name: default-limitrange
-      namespace: "{{request.object.metadata.name}}" 
-      data:
-        spec:
-          limits:
+    generate:
+    - expression: >-
+        generator.Apply(object.metadata.name,
+          [ variables.limitrange, variables.resourcequota, variables.networkpolicy ])
   ```
 
-- Note that we have to specify the `namespace`
+- Note that we have to specify the Namespace
 
-  (and we infer it from the name of the resource being created, i.e. the Namespace)
+  (and we get it from the name of the resource being created, i.e. the Namespace)
 
 ---
 
-## Templates and JMESpath
+## CEL expressions
 
-- We can use `{{ }}` templates in Kyverno policies
+- All the fields of the objects are available in CEL expressions
 
-  (when generating or validating resources; in conditions, pre-conditions...)
+  (when generating, mutating, or validating resources; in `matchConditions`...)
 
-- This lets us access `request` as well as [a few other variables][kyverno-variables]
+- We can use `object` and `request`, as well as [a few other variables][kyverno-cel]
 
-- We can also use JMESPath expressions, for instance:
+- We can filter and transform lists, for instance:
 
-  `{{request.object.spec.containers[?name=='worker'].image}}`
+  `object.spec.containers.filter(c, c.name == 'worker').map(c, c.image)`
 
-  `{{request.object.spec.[containers,initContainers][][].image}}`
+  `(object.spec.containers + object.spec.?initContainers.orValue([])).map(c, c.image)`
 
-- To experiment with JMESPath, use e.g. [jmespath.org] or [install the kyverno CLI][kyverno-cli]
+- To test policies without a cluster, [install the kyverno CLI][kyverno-cli]
 
-  (then use `kubectl kyverno jp query < data.json ...expression... `)
+  (then use `kyverno apply policy.yaml --resource object.yaml`)
 
-[jmespath.org]: https://jmespath.org/
-[kyverno-cli]: https://kyverno.io/docs/kyverno-cli/install/
-[kyverno-variables]: https://kyverno.io/docs/policy-types/cluster-policy/variables/#pre-defined-variables
+[kyverno-cli]: https://kyverno.io/docs/kyverno-cli/
 
 ---
 
@@ -402,17 +390,16 @@ Note: the `apiVersion` field appears to be optional.
 
 - It's also possible to access data in Kubernetes ConfigMaps:
   ```yaml
-    context:
+    variables:
     - name: ingressconfig
-      configMap:
-        name: ingressconfig
-        namespace: {{request.object.metadata.namespace}}
+      expression: >-
+        resource.Get("v1", "configmaps", object.metadata.namespace, "ingressconfig")
   ```
 
 - And then use it e.g. in a policy generating or modifying Ingress resources:
   ```yaml
   ...
-  host: {{request.object.metadata.name}}.{{ingressconfig.data.domainsuffix}}
+  host: object.metadata.name + "." + variables.ingressconfig.data.domainsuffix
   ...
   ```
 
@@ -420,25 +407,26 @@ Note: the `apiVersion` field appears to be optional.
 
 ## Kubernetes API calls
 
-- It's also possible to access arbitrary Kubernetes resources through API calls:
+- It's also possible to access arbitrary Kubernetes resources with `resource.Get`:
   ```yaml
-    context:
+    variables:
     - name: dns
-      apiCall:
-        urlPath: "/api/v1/namespaces/kube-system/services/kube-dns"
-        jmesPath: "spec.clusterIP"
+      expression: >-
+        resource.Get("v1", "services", "kube-system", "kube-dns").spec.clusterIP
   ```
 
-- And then use that e.g. in a mutating policy:
+- And then use that e.g. in a MutatingPolicy:
   ```yaml
-    mutate:
-      patchStrategicMerge:
-        spec:
-          containers:
-          - (name): "*"
-            env:
-            - name: DNS
-              value: "{{dns}}"
+    mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >-
+          Object{ spec: Object.spec{
+            containers: object.spec.containers.map(c, Object.spec.containers{
+              name: c.name,
+              env: [ Object.spec.containers.env{ name: "DNS", value: variables.dns } ]
+            })
+          }}
   ```
 
 ---
@@ -449,9 +437,10 @@ Note: the `apiVersion` field appears to be optional.
 
   (Kyverno won't automatically revert them)
 
-- Except if we use `clone` together with the `synchronize` flag
+- Except if we set `evaluation.synchronize.enabled: true`
 
-  (in that case, Kyverno will watch the cloned resource)
+  (in that case, Kyverno reverts changes, and updates the generated objects
+  <br/>when the policy or the copied resource changes)
 
 - This is convenient for e.g. ConfigMaps shared between Namespaces
 
@@ -459,23 +448,21 @@ Note: the `apiVersion` field appears to be optional.
 
 class: extra-details
 
-## Managing `ownerReferences`
+## Deleting the policy or the trigger
 
 - By default, the generated object and triggering object have independent lifecycles
 
   (deleting the triggering object doesn't affect the generated object)
 
-- It is possible to associate the generated object with the triggering object
+- With `evaluation.synchronize.enabled: true`, deleting the triggering object
+  <br/>also deletes the generated objects
 
-  (so that deleting the triggering object also deletes the generated object)
+- With `evaluation.orphanDownstreamOnPolicyDelete.enabled: true`, the generated
+  <br/>objects stay when we delete the policy
 
-- This is done by adding the triggering object information to `ownerReferences`
+- See the [GeneratingPolicy documentation][kyverno-gpol] for details
 
-  (in the generated object `metadata`)
-
-- See [Linking resources with ownerReferences][kyverno-ownerref] for an example
-
-[kyverno-ownerref]: https://kyverno.io/docs/policy-types/cluster-policy/generate/#linking-trigger-with-downstream
+[kyverno-gpol]: https://kyverno.io/docs/policy-types/generating-policy/
 
 ---
 
@@ -485,15 +472,15 @@ class: extra-details
 
 - Kyverno creates resources asynchronously
 
-  (by creating a GenerateRequest resource first)
+  (by creating an UpdateRequest resource first)
 
 - This is useful when the resource cannot be created
 
   (because of permissions or dependency issues)
 
-- Kyverno will periodically loop through the pending GenerateRequests
+- Kyverno will periodically loop through the pending UpdateRequests
 
-- Once the ressource is created, the GenerateRequest is marked as Completed
+- Once the resource is created, the UpdateRequest is marked as Completed
 
 ---
 
@@ -513,35 +500,23 @@ class: extra-details
 
   (when we create a Pod policy, it will automatically create policies on Pod controllers)
 
-- This can be customized if needed; [see documentation for details][kyverno-autogen]
+- This can be customized with `spec.autogen.podControllers` if needed
 
-  (it can be disabled, or extended to Custom Resources)
+  ([see documentation for details][kyverno-autogen])
 
-[kyverno-autogen]: https://kyverno.io/docs/policy-types/cluster-policy/autogen/
+[kyverno-autogen]: https://kyverno.io/docs/policy-types/validating-policy/
 
 ---
 
-## Footprint (current versions)
+## Footprint
 
-- 14 CRDs
+- 22 CRDs
 
 - 10 webhooks
 
 - 6 services, 4 Deployments, 2 ConfigMaps
 
-- Internal resources (GenerateRequest) "parked" in a Namespace
-
----
-
-## Footprint (older versions)
-
-- 8 CRDs
-
-- 5 webhooks
-
-- 2 Services, 1 Deployment, 2 ConfigMaps
-
-*We can see the number of resources increased over time, as Kyverno added features.*
+- Internal resources (UpdateRequest) "parked" in a Namespace
 
 ---
 
@@ -555,13 +530,13 @@ class: extra-details
 
 - It offers both namespaced and cluster-scope policies
 
-- The policy language leverages existing constructs
+- The policy language is CEL, which is also used by Kubernetes itself
 
-  (e.g. `matchExpressions`)
+  (e.g. in ValidatingAdmissionPolicy and in CRD validation rules)
 
 - It has pretty good documentation, including many examples
 
-- There is also a CLI tool (not discussed here)
+- There is also a CLI tool to test policies without a cluster
 
 - It continues to evolve and gain new features
 

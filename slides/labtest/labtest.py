@@ -97,7 +97,7 @@ def read_manifest(path):
             section = m.group(1)
             meta[section] = m.group(2).strip().strip("\"'")
             continue
-        m = re.match(r"^\s*-\s*(\S+)\s*$", line)
+        m = re.match(r"^\s*-\s*(\S+)\s*(?:#.*)?$", line)  # YAML allows "- a.md  # note"
         if not m:
             continue
         if section == "exclude":
@@ -116,6 +116,10 @@ def atat(text, meta):
 def parse_markdown(relpath, exclude, meta):
     """Return the raw snippets of every .lab[] block of one Markdown file."""
     lines = open(os.path.join(SLIDES, relpath)).read().split("\n")
+    # "<!-- verified: YYYY-MM-DD -->" on line 1 is not slide content. Make it
+    # empty (not removed), so the line numbers stay the same.
+    if lines[0].startswith("<!-- verified: "):
+        lines[0] = ""
     snippets = []
     title, classes, in_props, in_notes, in_lab = "", [], True, False, False
     block = None
@@ -281,7 +285,8 @@ def make_plan(deck, only=(), start=None, stop=None):
             snippets += parse_markdown(f, exclude, meta)
     steps = [s for s in build_plan(snippets) if not s["excluded"]]
     steps = select(steps, only, start, stop)
-    return dict(deck=deck, created=time.strftime("%Y-%m-%d %H:%M:%S"), steps=steps)
+    return dict(deck=deck, created=time.strftime("%Y-%m-%d %H:%M:%S"), steps=steps,
+                gitrepo=meta.get("gitrepo", ""))
 
 
 def short(text, width=90):
@@ -327,9 +332,29 @@ COMPOUND_OPEN = re.compile(r"(?:^|[;&|(]\s*|\b(?:then|do|else)\s+)(for|while|unt
 COMPOUND_CLOSE = re.compile(r"(?:^|[;&|]\s*|\s)(done|fi|esac)\b")
 
 
+def open_quote(line, quote):
+    """Return the quote (' or ") still open at the end of line, or None."""
+    i = 0
+    while i < len(line):
+        c = line[i]
+        if quote:
+            if c == "\\" and quote == '"':
+                i += 1  # Skip the escaped character.
+            elif c == quote:
+                quote = None
+        elif c == "\\":
+            i += 1
+        elif c == "#" and (i == 0 or line[i - 1].isspace()):
+            break  # A comment: quotes in it do not count.
+        elif c in "'\"":
+            quote = c
+        i += 1
+    return quote
+
+
 def split_commands(text):
     """Split a block into the commands that a student types one at a time."""
-    cmds, cur, heredoc, depth = [], [], None, 0
+    cmds, cur, heredoc, depth, quote = [], [], None, 0, None
     for line in text.split("\n"):
         cur.append(line)
         if heredoc:
@@ -337,7 +362,10 @@ def split_commands(text):
                 heredoc = None
             else:
                 continue
-        else:
+        quote = open_quote(line, quote)
+        if quote:
+            continue  # In a multi-line '...' or "..." string.
+        if not heredoc:
             m = re.search(r"<<-?\s*['\"]?(\w+)['\"]?", line)
             if m:
                 heredoc = m.group(1)
@@ -502,6 +530,16 @@ class Runner:
             self.write_log(step, res, res.get("output_tail", ""))
             self.report(step, res)
 
+    def unstick(self):
+        """After a hang: Ctrl-C, then quit vim (Escape :q!), then "q" (less, k9s)."""
+        for keys in (["C-c"], ["Escape", ":q!", "Enter"], ["q"]):
+            for k in keys:
+                self.term.tmux("send-keys", "-t", self.term.target,
+                               *(["-l", k] if k.startswith(":") else [k]))
+            time.sleep(1)
+            if self.probe(10) is not None:
+                return
+
     def diagnostics(self):
         cmds = [
             "kubectl get pods -A -o wide --field-selector=status.phase!=Running,status.phase!=Succeeded",
@@ -526,6 +564,7 @@ class Runner:
         rcs = []
         for i, cmd in enumerate(cmds):
             last = i == len(cmds) - 1
+            cmd = self.local_repo_command(cmd)
             self.term.type(cmd)
             if last and step["mode"] == "interactive":
                 self.term.settle()
@@ -546,11 +585,10 @@ class Runner:
                 self.term.settle(maximum=8)  # Let the nested session close first.
             rc = self.probe(step["timeout"])
             if rc is None:
-                self.term.key("C-c")
-                self.probe(10)
+                self.unstick()
                 return dict(res, status="FAIL", output=self.term.since(mark),
                             seconds=round(time.time() - t0, 1),
-                            reason="hung: no prompt after {}s (sent ^C) in command {} of {}: {}".format(
+                            reason="hung: no prompt after {}s (sent ^C, then :q!) in command {} of {}: {}".format(
                                 step["timeout"], i + 1, len(cmds), short(cmd, 60)))
             rcs.append(rc)
             if rc and not step.get("expect_fail"):
@@ -589,6 +627,9 @@ class Runner:
             self.term.settle()
         elif method == "tmux":
             self.term.tmux(*shlex.split(data))
+            if data.split()[0] in ("split-pane", "split-window", "splitw", "new-window", "neww"):
+                # The program in the first pane runs on purpose ("in another window, ...").
+                self.pending = None
             self.term.settle(maximum=3)
         elif method in ("wait", "longwait"):
             timeout = LONGWAIT_TIMEOUT if method == "longwait" else WAIT_TIMEOUT
@@ -639,9 +680,23 @@ class Runner:
             flag, step["id"], step["file"], step["line"], short(res["command"], 70),
             "  ← " + res["reason"] if res["status"] == "FAIL" else ""))
 
+    def local_repo_command(self, cmd):
+        """With --local-repo, replace "git clone https://<gitrepo>" by the local copy."""
+        archive = self.plan.get("local_repo")
+        repo = re.escape(self.plan.get("gitrepo", "").strip("/"))
+        if archive and repo and re.match(r"^git clone https://{}(\.git)?/?\s*$".format(repo), cmd.strip()):
+            return "mkdir container.training && tar -xzf {} -C container.training".format(archive)
+        return cmd
+
     def run(self):
         self.term.start()
-        self.progress.write("START {} steps\n".format(len(self.plan["steps"])))
+        archive = self.plan.get("local_repo")
+        repo_dir = os.path.expanduser("~/container.training")
+        if archive and os.path.isdir(repo_dir):
+            # A re-test (ONLY=...) on a lab that has the repo already: update it.
+            subprocess.run(["tar", "-xzf", archive, "-C", repo_dir], check=True)
+        self.progress.write("START {} steps{}\n".format(
+            len(self.plan["steps"]), " (local repo)" if archive else ""))
         for step in self.plan["steps"]:
             if step["method"] in ("bash", "hide"):
                 res = self.run_command(step)
@@ -766,6 +821,18 @@ def fetch(lab, runid):
     print(open(os.path.join(local, "summary.md")).read())
 
 
+def local_repo_archive():
+    """The working tree (tracked and untracked, not ignored files) as a .tar.gz.
+    Not slides/ (no lab files) and not prepare-*/ (lab keys and state)."""
+    files = subprocess.run(["git", "-C", REPO, "ls-files", "-co", "--exclude-standard", "-z"],
+                           capture_output=True, check=True).stdout.split(b"\0")
+    files = [f for f in files if f and not f.startswith((b"slides/", b"prepare-"))
+             and os.path.isfile(os.path.join(REPO, f.decode()))]
+    return subprocess.run(["tar", "--no-xattrs", "-czf", "-", "-C", REPO, "--null", "-T", "-"],
+                          input=b"\0".join(files), capture_output=True, check=True,
+                          env=dict(os.environ, COPYFILE_DISABLE="1")).stdout  # No macOS "._*" files.
+
+
 def cmd_run(args):
     plan = make_plan(args.deck, args.only, args.start, args.stop)
     plan["stop_on_fail"] = args.stop_on_fail
@@ -780,6 +847,12 @@ def cmd_run(args):
     rdir = "{}/runs/{}".format(REMOTE_DIR, runid)
     lab.ssh("mkdir -p {} && cat > {}/labtest.py".format(rdir, REMOTE_DIR),
             stdin=open(__file__).read())
+    if args.local_repo:
+        archive = local_repo_archive()
+        lab.ssh("cat > {}/repo.tar.gz".format(rdir), stdin=archive)
+        plan["local_repo"] = "{}/{}/repo.tar.gz".format(lab.ssh("echo $HOME").strip(), rdir)
+        print("Local repo: {} KB (replaces the git clone of {})".format(
+            len(archive) // 1024, plan["gitrepo"]))
     lab.ssh("cat > {}/plan.json".format(rdir), stdin=json.dumps(plan))
     lab.ssh("cd {d} && setsid nohup python3 labtest.py exec runs/{r} > runs/{r}/exec.log 2>&1 < /dev/null &"
             .format(d=REMOTE_DIR, r=runid))
@@ -833,6 +906,8 @@ def main():
     selection(sp)
     target(sp)
     sp.add_argument("--stop-on-fail", action="store_true", help="stop at the first failure")
+    sp.add_argument("--local-repo", action="store_true",
+                    help="use this working tree instead of the git clone of the repo")
     sp.set_defaults(func=cmd_run)
 
     sp = sub.add_parser("attach", help="follow a run again, then download its results")

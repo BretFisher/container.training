@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Namespaces
 
 - Resources like Pods, Deployments, Services... exist in *Namespaces*
@@ -36,9 +37,9 @@
 
   - `kube-system` (for the control plane)
 
-  - `kube-public` (contains one ConfigMap for cluster discovery)
+  - `kube-public` (readable by everyone; kubeadm stores the `cluster-info` ConfigMap there)
 
-  - `kube-node-lease` (in Kubernetes 1.14 and later; contains Lease objects)
+  - `kube-node-lease` (contains one Lease object per Node, for node heartbeats)
 
 - Over time, we will almost certainly create more Namespaces!
 
@@ -57,12 +58,12 @@
 
 - Then, with a YAML snippet:
   ```bash
-    kubectl apply -f- <<EOF
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: green
-    EOF
+  kubectl apply -f- <<EOF
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: green
+  EOF
   ```
 
 ]
@@ -176,7 +177,7 @@ class: extra-details
 
   (e.g. developer with "regular" access vs. cluster-admin)
 
-- Switch context with `kubectl config set-context` or `kubectx` / `kctx`
+- Switch context with `kubectl config use-context` or `kubectx` / `kctx`
 
 - It is also possible to switch the kubeconfig file altogether
 
@@ -296,7 +297,7 @@ instead of a Kubernetes Namespace).
 
 - It gives us a prompt looking like this one:
   ```
-  [123.45.67.89] `(kubernetes-admin@kubernetes:default)` docker@node1 ~
+  [123.45.67.89] `(kubernetes-admin@kubernetes:default)` k8s@node1 ~
   ```
   (The highlighted part is `context:namespace`, managed by `kube-ps1`)
 

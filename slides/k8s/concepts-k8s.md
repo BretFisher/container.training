@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Kubernetes concepts
 
 - Kubernetes is a container management system
@@ -195,9 +196,6 @@ class: bret-skip
 
   (Courtesy of [Yongbok Kim](https://www.yongbok.net/blog/))
 
-- The second one is a simplified representation of a Kubernetes cluster
-
-  (Courtesy of [Imesh Gunaratne](https://medium.com/containermind/a-reference-architecture-for-deploying-wso2-middleware-on-kubernetes-d4dee7601e8e))
 
 ---
 
@@ -245,7 +243,7 @@ class: extra-details
 
 - Normal applications are restricted from running on this node
 
-  (By using a mechanism called ["taints"](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/))
+  (By using a mechanism called ["taints"](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/))
 
 - When high availability is required, each service of the control plane must be resilient
 
@@ -341,7 +339,7 @@ No!
 
 - Then the CRI standard (Container Runtime Interface) was introduced
 
-- Built-in support for Docker (`dockershim`) was removed in 2023 with K8s 1.24
+- Built-in support for Docker (`dockershim`) was removed in 2022 with K8s 1.24
 
   - But it lives on as a supported CRI via `cri-dockerd`
 
@@ -355,16 +353,16 @@ class: extra-details
 
 ## Some runtimes available through CRI
 
-- [containerd](https://github.com/containerd/containerd/blob/master/README.md)
+- [containerd](https://github.com/containerd/containerd/blob/main/README.md)
 
-  - maintained by Docker, IBM, and community
-  - used by Docker Engine, microk8s, k3s, GKE; also standalone
+  - CNCF graduated project, maintained by many vendors and community
+  - used by Docker Engine, microk8s, k3s, EKS, AKS, GKE; also standalone
   - comes with its own CLI, `ctr`
 
-- [CRI-O](https://github.com/cri-o/cri-o/blob/master/README.md):
+- [CRI-O](https://github.com/cri-o/cri-o/blob/main/README.md):
 
-  - maintained by Red Hat, SUSE, and community
-  - used by OpenShift and Kubic
+  - CNCF graduated project, maintained by Red Hat, SUSE, and community
+  - used by OpenShift and Oracle Cloud Native Environment
   - designed specifically as a minimal runtime for Kubernetes
 
 - [And more](https://kubernetes.io/docs/setup/production-environment/container-runtimes/)

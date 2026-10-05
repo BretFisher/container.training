@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Last words
 
 - Congratulations!
@@ -84,7 +85,7 @@
 
   (hopefully built automatically from a source repository)
 
-- Team "run" uses theses images to create e.g. Kubernetes resources
+- Team "run" uses these images to create e.g. Kubernetes resources
 
 ✔️ universal artefact (support all languages uniformly)
 

@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 
 # Accessing logs with other CLIs
 
@@ -9,9 +10,10 @@ class: bret-skip
 
 - The `kubectl logs` command has limitations:
 
-  - it cannot stream logs from multiple pods at a time
+  - it streams logs from only a few pods at a time (5 by default)
 
   - when showing logs from multiple pods, it mixes them all together
+    <br/>(unless we add `--prefix`)
 
 - We are going to see how to do it better
 
@@ -41,8 +43,8 @@ class: bret-skip
 
 ## Stern
 
-[Stern](https://github.com/stern/stern) is an open source project
-originally by [Wercker](http://www.wercker.com/).
+[Stern](https://github.com/stern/stern) is an open source project,
+a community fork of the discontinued Wercker version.
 
 From the README:
 
@@ -62,8 +64,7 @@ class: bret-skip
 
   ```
   $ stern
-  Tail multiple pods and containers from Kubernetes
-
+  Error: One of pod-query, --selector, --field-selector, --prompt or --stdin is required
   Usage:
     stern pod-query [flags]
   ```

@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # First contact with `kubectl`
 
 - `kubectl` is (almost) the only tool we'll need to talk to Kubernetes
@@ -10,7 +11,7 @@
 
   - the Kubernetes API address
 
-  - the path to our TLS certificates used to authenticate
+  - the TLS certificate and key used to authenticate
 
 - You can also use the `--kubeconfig` flag to pass a config file
 
@@ -176,7 +177,7 @@ class: extra-details
 
 - Some resources do not have a short name
 
-- `Endpoints` only have a plural form
+- `Endpoints` only have a plural form (and are deprecated; use `EndpointSlice`)
 
   (because even a single `Endpoints` resource is actually a list of endpoints)
 
@@ -287,7 +288,7 @@ class: extra-details
   kubectl get pods --all-namespaces
   ```
 
-- Since Kubernetes 1.14, we can also use `-A` as a shorter version:
+- We can also use `-A` as a shorter version:
   ```bash
   kubectl get pods -A
   ```
@@ -306,7 +307,7 @@ class: extra-details
 
 - `kube-controller-manager` and `kube-scheduler` are other control plane components
 
-- `coredns` provides DNS-based service discovery ([replacing kube-dns as of 1.11](https://kubernetes.io/blog/2018/07/10/coredns-ga-for-kubernetes-cluster-dns/))
+- `coredns` provides DNS-based service discovery
 
 - `kube-proxy` is the (per-node) component managing internal service access
 
@@ -367,7 +368,7 @@ class: extra-details, bret-skip
 
 Nothing!
 
-`kube-public` is created by kubeadm & [used for security bootstrapping](https://kubernetes.io/blog/2017/01/stronger-foundation-for-creating-and-managing-kubernetes-clusters).
+`kube-public` is readable by everyone; kubeadm [uses it for security bootstrapping](https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/).
 
 ---
 
@@ -391,7 +392,7 @@ class: extra-details, bret-skip
 
 ]
 
-Note the `selfLink` URI: `/api/v1/namespaces/kube-public/configmaps/cluster-info`
+Its API path is: `/api/v1/namespaces/kube-public/configmaps/cluster-info`
 
 We can use that!
 
@@ -448,20 +449,18 @@ class: extra-details, bret-skip
 
 ## What about `kube-node-lease`?
 
-- Starting with Kubernetes 1.14, there is a `kube-node-lease` namespace
-
-  (or in Kubernetes 1.13 if the NodeLease feature gate is enabled)
+- Every cluster has a `kube-node-lease` namespace
 
 - That namespace contains one Lease object per node
 
-- *Node leases* are a new way to implement node heartbeats
+- *Node leases* implement lightweight node heartbeats
 
   (i.e. node regularly pinging the control plane to say "I'm alive!")
 
-- For more details, see [Efficient Node Heartbeats KEP] or the [node controller documentation]
+- For more details, see [Efficient Node Heartbeats KEP] or the [node heartbeats documentation]
 
 [Efficient Node Heartbeats KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-node/589-efficient-node-heartbeats/README.md
-[node controller documentation]: https://kubernetes.io/docs/concepts/architecture/nodes/#node-controller
+[node heartbeats documentation]: https://kubernetes.io/docs/concepts/architecture/leases/#node-heart-beats
 
 ---
 

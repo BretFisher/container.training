@@ -680,16 +680,16 @@ class: extra-details
 
 - We can schedule a pod in `Pending` state by creating a Binding, e.g.:
   ```bash
-    kubectl create -f- <<EOF
+  kubectl create -f- <<EOF
+  apiVersion: v1
+  kind: Binding
+  metadata:
+    name: name-of-the-pod
+  target:
     apiVersion: v1
-    kind: Binding
-    metadata:
-      name: name-of-the-pod
-    target:
-      apiVersion: v1
-      kind: Node
-      name: name-of-the-node
-    EOF
+    kind: Node
+    name: name-of-the-node
+  EOF
   ```
 
 - This is actually how the scheduler works!

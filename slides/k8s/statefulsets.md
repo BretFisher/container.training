@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # StatefulSets
 
 - StatefulSets are a type of resource in the Kubernetes API
@@ -24,11 +25,11 @@
 
 - Pods in a StatefulSet are numbered (from 0 to *R-1*) and ordered
 
-- They are started and updated in order (from 0 to *R-1*)
+- They are started in order (from 0 to *R-1*)
 
-- A pod is started (or updated) only when the previous one is ready
+- A pod is started only when the previous one is ready
 
-- They are stopped in reverse order (from *R-1* to 0)
+- They are updated and stopped in reverse order (from *R-1* to 0)
 
 - Each pod knows its identity (i.e. which number it is in the set)
 

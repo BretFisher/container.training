@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Rolling updates
 
 - How should we update a running application?
@@ -75,7 +76,7 @@
 
 ## Rolling updates in practice
 
-- As of Kubernetes 1.8, we can do rolling updates with:
+- We can do rolling updates with:
 
   `deployments`, `daemonsets`, `statefulsets`
 
@@ -97,8 +98,12 @@
   ```
 
 <!--
-```wait NAME```
-```key ^C```
+```skip one watch per terminal; the test checks each list once```
+```hide
+kubectl get pods
+kubectl get replicasets
+kubectl get deployments
+```
 -->
 
 - Update `worker` either with `kubectl edit`, or by running:
@@ -132,7 +137,7 @@ That rollout should be pretty quick. What shows in the web UI?
 
 - After a grace period, Kubernetes gets impatient and kills the container
 
-  (The grace period is 30 seconds, but [can be changed](https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods) if needed)
+  (The grace period is 30 seconds, but [can be changed](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) if needed)
 
 ---
 
@@ -207,13 +212,13 @@ class: extra-details
 
 ---
 
-## Checking the dashboard during the bad rollout
+## Checking Headlamp during the bad rollout
 
-If you didn't deploy the Kubernetes dashboard earlier, just skip this slide.
+If you didn't deploy Headlamp earlier, just skip this slide.
 
 .lab[
 
-- Connect to the dashboard that we deployed earlier
+- Connect to Headlamp
 
 - Check that we have failures in Deployments, Pods, and ReplicaSets
 

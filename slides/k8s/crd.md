@@ -154,12 +154,12 @@ spec:
 
 - Only provide the most basic YAML manifest:
   ```bash
-    kubectl create -f- <<EOF
-    kind: Pizza
-    apiVersion: container.training/v1alpha1
-    metadata:
-      name: hawaiian
-    EOF
+  kubectl create -f- <<EOF
+  kind: Pizza
+  apiVersion: container.training/v1alpha1
+  metadata:
+    name: hawaiian
+  EOF
   ```
 
 ]

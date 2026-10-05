@@ -178,23 +178,25 @@ content:
     - k8s/resource-limits.md
     # Checking Node and Pod resource usage
     - k8s/metrics-server.md
+    # COMMENT IN: title is "Restricting Pod Permissions", exact match with
+    # the quote.
+    - k8s/pod-security-intro.md
+    # COMMENT IN: quote "Pod Security Admission"
+    - k8s/pod-security-admission.md
     # Dynamic Admission Control. mechanism behind Kyverno and PSA
     - k8s/admission.md
     - k8s/kyverno.md
     # Hands-on: immutable labels policy lab.
     - k8s/kyverno-colors.md
+    # intro to network policies
+    - k8s/netpol.md # Dockercoins 4
 
-- title: AI, network policies, and authentication
+- title: Using AI with Kubernetes
   content:
     - k8s/AI.md
-    # KEEP: quote "Network policies". Note the quote puts this under
-    # "Workload and Network Policies", after the Auth and RBAC group.
-    # Consider moving it below authn-authz.md and the auth files.
-    - k8s/netpol.md # Dockercoins 4
-    # KEEP: quote "Authentication and authorization"
-    # SUB-CHAPTER: quote "Service accounts" is a section in this file
-    # (line 256 "Service accounts", line 276 "Service account tokens
-    # evolution"). No separate file needed.
+
+- title: Authentication and authorization
+  content:
     - k8s/authn-authz.md
     #- k8s/control-plane-auth.md
     #- k8s/user-cert.md
@@ -202,13 +204,6 @@ content:
     #- k8s/csr-api.md
     # COMMENT IN: quote "OpenID Connect". Needs an OIDC provider for the demo.
     #- k8s/openid-connect.md
-    # COMMENT IN: title is "Restricting Pod Permissions", exact match with
-    # the quote.
-    #- k8s/pod-security-intro.md
-    # COMMENT IN: quote "Pod Security Admission"
-    #- k8s/pod-security-admission.md
-    # (ADD HERE: k8s/kyverno.md for quote "Policy Management with Kyverno".
-    # See ADD EXISTING FILES section at the bottom.)
 
 - title: ConfigMaps and Secrets
   content:
@@ -230,13 +225,14 @@ content:
     #- k8s/portworx.md
     #- k8s/openebs.md
     #- k8s/stateful-failover.md
-    #- k8s/extending-api.md
 
-    #- k8s/operators.md
-    #- k8s/operators-design.md
-    #- k8s/operators-example.md
-    #- k8s/staticpods.md
-    #- k8s/owners-and-dependents.md
+- title: Extending the Kubernetes API
+  content:
+    - k8s/extending-api.md
+    - k8s/crd.md
+    - k8s/operators.md
+    - k8s/operators-design.md
+    - k8s/operators-example.md
 
 - title: Next steps and resources
   content:
@@ -245,61 +241,3 @@ content:
     - k8s/lastwords.md
     - k8s/links.md
     - shared/thankyou.md
-
-
-
-
-#
-
-# =============================================================================
-# NET NEW SLIDES
-#
-# Quote topics with no matching markdown file anywhere in slides/.
-# All belong to day 2. Suggested file names use the existing k8s/ naming
-# style. Each entry lists what exists today and what the new file needs.
-# =============================================================================
-#
-#
-# 2. Encrypting data at rest
-#    Quote group: Secrets and Hardening.
-#    Exists today: k8s/secrets.md line 244, one slide with a link to the
-#      upstream docs. shared/cloud-native-security.md line 85, one bullet.
-#    Needs: EncryptionConfiguration resource, providers (aescbc, aesgcm,
-#      secretbox, kms v2), the --encryption-provider-config API server
-#      flag, verifying with etcdctl that a Secret is no longer plaintext,
-#      re-encrypting existing Secrets with "kubectl get secrets -A -o json
-#      | kubectl replace -f -", key rotation steps. Note EKS does this via
-#      KMS envelope encryption, so also show the managed-cluster view.
-#    Depends on: control-plane-auth.md (same kubeadm access to
-#      /etc/kubernetes). Place right after it.
-#    Suggested file: k8s/encryption-at-rest.md
-#
-
-#
-# 5. GitOps and PR gating
-#    Quote group: Security Guides and Recommendations.
-#    Exists today: k8s/gitworkflows.md mentions pull requests as part of
-#      the road to production. k8s/argocd-advanced.md mentions PRs for
-#      generated apps. No content on gating.
-#    Needs: branch protection and required reviews, CODEOWNERS, CI checks
-#      that block a merge (lint, policy test, diff preview), Kyverno CLI
-#      "kyverno apply" or "kyverno test" in CI, Flux/Argo CD sync only
-#      from protected branches, signed commits. One example GitHub Actions
-#      workflow that runs the day 2 linters and policy tests on a PR.
-#    Depends on: gitworkflows.md, flux.md or argocd.md from day 1, and # Dockercoins 12 (flux.md)
-#      net new item 6.
-#    Suggested file: k8s/gitops-pr-gating.md
-#
-# 6. Linting
-#    Quote group: Security Guides and Recommendations.
-#    Exists today: nothing. No slide mentions kubeconform, kube-linter,
-#      kube-score, kubeval, or Kyverno CLI.
-#    Needs: why lint manifests (schema errors, security smells, best
-#      practice drift). Tools: kubeconform for schema validation,
-#      kube-linter or kube-score for security and reliability checks,
-#      "kubectl apply --dry-run=server" for admission-time checks,
-#      Kyverno CLI to test policies offline, Helm "helm lint" and
-#      "helm template | kubeconform". Hands-on: lint the dockercoins
-#      manifests and the Helm chart from day 1, fix the findings.
-#    Suggested file: k8s/linting.md
-#

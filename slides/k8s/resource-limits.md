@@ -1,8 +1,9 @@
+<!-- verified: 2026-10-05 -->
 # Resource Limits
 
 - We can attach resource indications to our pods
 
-  (or rather: to the *containers* in our pods; but [KEP 2837](https://kep.k8s.io/2837) is coming!)
+  (usually to the *containers* in our pods; pod-level resources, [KEP 2837](https://kep.k8s.io/2837), are beta since 1.34)
 
 - We can specify *limits* and/or *requests*
 
@@ -98,7 +99,7 @@ class: extra-details
 
 - A container with a CPU limit will be "rationed" by the kernel
 
-- Every `cfs_period_us`, it will receive a CPU quota, like an "allowance"
+- Every period (`cpu.max` in cgroups v2), it will receive a CPU quota, like an "allowance"
 
   (that interval defaults to 100ms)
 
@@ -184,13 +185,13 @@ class: extra-details
 
   ("highly-threaded, user-interactive, non-cpu bound applications")
 
-- Check the `nr_throttled` and `throttled_time` metrics in `cpu.stat`
+- Check the `nr_throttled` and `throttled_usec` metrics in `cpu.stat`
 
 - Possible solutions/workarounds:
 
   - be generous with the limits
 
-  - make sure your kernel has the [appropriate patch](https://lkml.org/lkml/2019/5/17/581)
+  - make sure your kernel has the [appropriate patch](https://lkml.org/lkml/2019/5/17/581) (Linux 5.4+)
 
   - use [static CPU manager policy](https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/#static-policy)
 
@@ -288,26 +289,6 @@ This ensures fair, deterministic access to swap.
 
 class: extra-details
 
-## Why did it take so long to support swap?
-
-- With cgroups v1, it wasn't possible to disable swap for a cgroup
-
-  (the closest option is to [reduce "swappiness"](https://unix.stackexchange.com/questions/77939/turning-off-swapping-for-only-one-process-with-cgroups))
-
-- It is possible with cgroups v2 (see the [kernel docs](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html) and the [fbatx docs](https://facebookmicrosites.github.io/cgroup2/docs/memory-controller.html#using-swap))
-
-- Cgroups v2 were merged in Linux kernel 4.5, in 2016
-
-  (i.e. after Kubernetes came out)
-
-- It took a long time for distros to move to cgroups v2
-
-- It took a long time for Kubernetes to adopt / adapt to cgroups v2
-
----
-
-class: extra-details
-
 ## One point of view...
 
 - The architects of Kubernetes wanted to ensure that Guaranteed pods never swap
@@ -360,7 +341,7 @@ class: extra-details
 
 - ...And can't/won't disable swap...
 
-- ...You will need to add the flag `--fail-swap-on=false` to kubelet
+- ...You will need to set `failSwapOn: false` in the kubelet configuration
 
 ---
 
@@ -462,15 +443,9 @@ class: extra-details
 
 - The container engine applies these requests and limits with specific mechanisms
 
-- Example: on Linux, this is typically done with control groups aka cgroups
+- Example: on Linux, this is done with control groups (cgroups v2)
 
-- When Kubernetes came out, Linux was using cgroups v1
-
-- Cgroups v2 were merged into the kernel later; and then were slowly rolled out
-
-  (e.g. in Ubuntu, they became the default in Ubuntu 22.04 LTS)
-
-- Cgroups v2 have new, interesting features for memory control:
+- Cgroups v2 have interesting features for memory control:
 
   - ability to set "minimum" memory amounts (to effectively reserve memory)
 
@@ -532,7 +507,7 @@ Each pod is assigned a QoS class (visible in `status.qosClass`).
 
 - Memory and ephemeral disk storage are expressed in bytes
 
-- These can have k, M, G, T, ki, Mi, Gi, Ti suffixes
+- These can have k, M, G, T, Ki, Mi, Gi, Ti suffixes
 
   (corresponding to 10^3, 10^6, 10^9, 10^12, 2^10, 2^20, 2^30, 2^40)
 
@@ -609,7 +584,7 @@ This set of resources makes sure that this service won't be killed (as long as i
 
   - relatively simple, very minimal involvement beyond initial setup
 
-  - not compatible with HPAv1, can disrupt long-running workloads (see [limitations][vpa-limitations])
+  - not compatible with HPA on the same CPU/memory metric, can disrupt long-running workloads (see [limitations][vpa-limitations])
 
 - Option 3: semi-automatically, with tools like [Robusta KRR][robusta]
 
@@ -621,7 +596,7 @@ This set of resources makes sure that this service won't be killed (as long as i
 
 [robusta]: https://github.com/robusta-dev/krr
 [vpa]: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
-[vpa-limitations]: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler#known-limitations
+[vpa-limitations]: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/docs/known-limitations.md
 
 ---
 
@@ -629,7 +604,7 @@ class: extra-details
 
 ## In-place Pod Resize
 
-- New feature (alpha in 1.27, beta and enabled by default in 1.33)
+- Stable since 1.35 (alpha in 1.27, beta in 1.33)
 
 - Lets us change CPU and memory requests and limits for existing Pods
 
@@ -659,9 +634,9 @@ class: extra-details
 
 - Not integrated with controllers in the `apps` API group at this point
 
-  (=Pods must be resized manually or by custom controllers)
+  (=Pods are resized manually, by VPA's `InPlaceOrRecreate` mode, or by custom controllers)
 
-- Containers using swap need to be restarted
+- Memory resize of containers using swap needs `resizePolicy: RestartContainer`
 
 ---
 
@@ -669,7 +644,7 @@ class: extra-details
 
 ## More info about in-place resize
 
-- [Kubernetes 1.33 blog announcement](https://kubernetes.io/blog/2025/05/16/kubernetes-v1-33-in-place-pod-resize-beta/)
+- [Kubernetes 1.35 blog announcement](https://kubernetes.io/blog/2025/12/19/kubernetes-v1-35-in-place-pod-resize-ga/)
 
 - [Kubernetes documentation](https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/)
 
@@ -721,7 +696,7 @@ class: extra-details
 
   - users create ResourceClaims or ResourceClaimTemplates
 
-  - users create Pods referencing ReosurceClaims or ResourceClaimTemplates
+  - users create Pods referencing ResourceClaims or ResourceClaimTemplates
 
 ---
 
@@ -772,9 +747,9 @@ spec:
 The YAML on the previous slide shows an example LimitRange object specifying very detailed limits on CPU usage,
 and providing defaults on RAM usage.
 
-Note the `type: Container` line: in the future,
-it might also be possible to specify limits
-per Pod, but it's not [officially documented yet](https://github.com/kubernetes/website/issues/9585).
+Note the `type: Container` line: `type: Pod` also exists,
+to set `min` and `max` for the sum of all containers in a Pod
+(without defaults).
 
 ---
 
@@ -916,7 +891,7 @@ services.nodeports               0     0
 
 - Pods can have a *priority*
 
-- The priority is a number from 0 to 1000000000
+- The priority is a number up to 1000000000
 
   (or even higher for system-defined priorities)
 
@@ -1072,7 +1047,7 @@ class: extra-details
 
 ## Additional resources
 
-- [A Practical Guide to Setting Kubernetes Requests and Limits](http://blog.kubecost.com/blog/requests-and-limits/)
+- [A Practical Guide to Setting Kubernetes Requests and Limits](https://medium.com/kubecost/a-practical-guide-to-setting-kubernetes-requests-and-limits-8bf7c1b61ed8)
 
   - explains what requests and limits are
 
@@ -1081,13 +1056,9 @@ class: extra-details
   - gives PromQL expressions to compute good values
     <br/>(our app needs to be running for a while)
 
-- [Kube Resource Report](https://codeberg.org/hjacobs/kube-resource-report)
+- [Kyverno GeneratingPolicy](https://kyverno.io/docs/policy-types/generating-policy/)
 
-  - generates web reports on resource usage
-
-- [nsinjector](https://github.com/blakelead/nsinjector)
-
-  - controller to automatically populate a Namespace when it is created
+  - automatically populates a Namespace when it is created
 
 ???
 

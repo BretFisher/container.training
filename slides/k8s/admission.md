@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Dynamic Admission Control
 
 - This is one of the many ways to extend the Kubernetes API
@@ -6,7 +7,7 @@
 
   - dynamic (can be added/removed on the fly)
 
-  - running inside our outside the cluster
+  - running inside or outside the cluster
 
   - *validating* (yay/nay) or *mutating* (can change objects that are created/updated)
 
@@ -108,7 +109,7 @@
 
   - `response.status.message` (optional string; useful when denying requests)
 
-  - `response.patchType` (when a mutating webhook changes the object; e.g. `json`)
+  - `response.patchType` (when a mutating webhook changes the object: `JSONPatch`)
 
   - `response.patch` (the patch, encoded in base64)
 
@@ -146,9 +147,11 @@
 
 - In the latter case, the Service has to accept TLS connections on port 443
 
-- It has to use a certificate with CN `<name>.<namespace>.svc`
+  (that's the default; it can be changed with `service.port`)
 
-  (**and** a `subjectAltName` extension with `DNS:<name>.<namespace>.svc`)
+- It has to use a certificate with a `subjectAltName` extension with `DNS:<name>.<namespace>.svc`
+
+  (the CN alone is not enough: the API server ignores it)
 
 - The certificate needs to be valid (signed by a CA trusted by the API server)
 
@@ -160,7 +163,7 @@
 
 - "Outside" webhook server is defined with `url` option
 
-  - convenient for external webooks (e.g. tamper-resistent audit trail)
+  - convenient for external webhooks (e.g. tamper-resistant audit trail)
 
   - also great for initial development (e.g. with ngrok)
 
@@ -190,7 +193,7 @@
 
 - Development will happen in local containers, plumbed with ngrok
 
-- The we will deploy to the cluster 🔥
+- Then we will deploy to the cluster 🔥
 
 ---
 
@@ -214,9 +217,9 @@ class: extra-details
 
 - Example: run `ngrok http 1234`
 
-- `ngrok` will display a publicly-available URL (e.g. https://xxxxyyyyzzzz.ngrok.app)
+- `ngrok` will display a publicly-available URL (e.g. https://xxxxyyyyzzzz.ngrok-free.dev)
 
-- Connections to https://xxxxyyyyzzzz.ngrok.app will terminate at `localhost:1234`
+- Connections to https://xxxxyyyyzzzz.ngrok-free.dev will terminate at `localhost:1234`
 
 - Basic product is free; extra features (vanity domains, end-to-end TLS...) for $$$
 
@@ -236,7 +239,7 @@ class: extra-details
 
 - Including some that are very relevant to Kubernetes
 
-  (e.g. [ngrok Ingress Controller](https://github.com/ngrok/kubernetes-ingress-controller)
+  (e.g. [ngrok Kubernetes Operator](https://github.com/ngrok/ngrok-operator))
 
 ---
 
@@ -272,7 +275,7 @@ cp ~/ngrok.env ~/container.training/webhooks/admission/.env
 
 ]
 
-*Note the URL in `ngrok-echo_1` looking like `url=https://xxxx.ngrok.io`.*
+*Note the URL in `ngrok-echo-1` looking like `url=https://xxxx.ngrok-free.dev`.*
 
 ---
 
@@ -291,7 +294,7 @@ cp ~/ngrok.env ~/container.training/webhooks/admission/.env
 
 - **Uncomment** the `url:` line
 
-- **Update** the `.ngrok.io` URL with the URL shown by Compose
+- **Update** the placeholder `.ngrok.io` URL with the URL shown by Compose
 
 - Save and quit
 
@@ -375,9 +378,9 @@ Note: the webhook doesn't do anything (other than printing the request payload).
 
 - Then, edit the webhook configuration:
   ```bash
-  kubectl edit validatingwebhookconfiguration admission.container.training
+  kubectl edit validatingwebhookconfiguration admission.webhook.container.training
   ```
-- Find the `url:` field with the `.ngrok.io` URL and update it
+- Find the `url:` field with the ngrok URL and update it
 
 - Save and quit; the new configuration is applied immediately
 
@@ -391,7 +394,7 @@ Note: the webhook doesn't do anything (other than printing the request payload).
 
 - What happens if we try to make changes to the earlier pod?
 
-  (the one that has `label=pink`)
+  (the one that has `color=pink`)
 
 ---
 
@@ -585,9 +588,9 @@ Shell to the rescue!
 
 ## Real world examples
 
-- [kube-image-keeper][kuik] rewrites image references to use cached images
+- [kube-image-keeper][kuik] rewrites image references to use mirrored images
 
-  (e.g. `nginx` → `localhost:7439/nginx`)
+  (e.g. when the source registry is unavailable)
 
 - [Kyverno] implements very extensive policies
 
@@ -610,12 +613,14 @@ Shell to the rescue!
 
   (no external webhook = no latency, no deployment complexity...)
 
+- Mutating Admission Policies do the same for mutations (GA: 1.36)
+
 - Not as powerful as full-fledged webhook engines like Kyverno
 
   (see e.g. [this page of the Kyverno doc][kyverno-vap] for a comparison)
 
 [kyverno-vap]: https://kyverno.io/docs/policy-types/validating-policy/
-[cel-spec]: https://github.com/google/cel-spec
+[cel-spec]: https://github.com/cel-expr/cel-spec
 
 ???
 

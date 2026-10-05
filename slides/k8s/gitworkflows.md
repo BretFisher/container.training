@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Git-based workflows (GitOps)
 
 - Deploying with `kubectl` has downsides:
@@ -99,7 +100,7 @@ In no specific order, we need to at least:
 
   - simple setup (just apply YAMLs / install Helm chart)
 
-  - fewer CRDs (basic workflow can be implement with a single "Application" resource)
+  - fewer CRDs (basic workflow can be implemented with a single "Application" resource)
 
   - supports Helm charts, Jsonnet, Kustomize, raw YAML, and arbitrary plugins
 
@@ -110,11 +111,13 @@ In no specific order, we need to at least:
 - Flux:
 
   - sync interval is configurable per app
-  - no web UI out of the box
+  - no web UI in core Flux (the Flux Operator adds one)
   - CLI relies on Kubernetes API access
   - CLI can easily generate custom resource manifests (with `--export`)
   - self-hosted (flux controllers are managed by flux itself by default)
-  - one flux instance manages a single cluster
+  - one flux instance usually manages its own cluster
+    <br/>
+    (remote clusters are possible with `kubeConfig`)
 
 - ArgoCD:
 

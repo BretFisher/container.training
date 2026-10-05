@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # Exposing containers
 
 - We can connect to our pods using their IP address

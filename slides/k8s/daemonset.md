@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-05 -->
 # DaemonSets
 
 - We want to scale `rng` in a way that is different from how we scaled `worker`
@@ -44,7 +45,7 @@
 
   - etc.
 
-- They can also be restricted to run [only on some nodes](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#running-pods-on-only-some-nodes)
+- They can also be restricted to run [only on some nodes](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#running-pods-on-select-nodes)
 
 ---
 
@@ -52,7 +53,7 @@
 
 <!-- ##VERSION## -->
 
-- Unfortunately, as of Kubernetes 1.36, the CLI cannot create DaemonSets
+- Unfortunately, as of Kubernetes 1.37, the CLI cannot create DaemonSets
 
 --
 
@@ -270,9 +271,9 @@ daemonset.apps/rng  2        2        2      2           2          <none>      
 
 The DaemonSet created one pod per node, except on the control plane node.
 
-The control plane node has [taints](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/) preventing pods from running there.
+The control plane node has [taints](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/) preventing pods from running there.
 
-(To schedule a pod on this node anyway, the pod will require appropriate [tolerations](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/).)
+(To schedule a pod on this node anyway, the pod will require appropriate [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/).)
 
 .footnote[(Off by one? We don't run these pods on the node hosting the control plane.)]
 
@@ -418,11 +419,11 @@ class: extra-details
 
   (It looks like `app=rng,pod-template-hash=abcd1234`)
 
-- *DaemonSets* also have a more specific selector, but it's invisible
+- *DaemonSets* use the plain `app=rng` selector
 
-  (It looks like `app=rng,controller-revision-hash=abcd1234`)
+  (but they ignore pods owned by another controller, via `ownerReferences`)
 
-- As a result, each controller only "sees" the pods it manages
+- As a result, each controller only manages its own pods
 
 ---
 
@@ -730,8 +731,8 @@ class: extra-details
 
 - Relevant documentation:
 
-  [Service spec](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec),
-  [LabelSelector spec](https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/label-selector/),
+  [Service spec](https://kubernetes.io/docs/reference/kubernetes-api/core/service-v1/#ServiceSpec),
+  [LabelSelector spec](https://kubernetes.io/docs/reference/kubernetes-api/definitions/label-selector-v1-meta/),
   [label selector doc](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors)
 
 ---
@@ -765,19 +766,19 @@ A `nil` selector matches *nothing*, a `{}` selector matches *everything*.
 
 class: extra-details
 
-## Services and Endpoints
+## Services and EndpointSlices
 
-- Each Service has a corresponding Endpoints resource
+- Each Service has one or more corresponding EndpointSlice resources
 
-  (see `kubectl get endpoints` or `kubectl get ep`)
+  (see `kubectl get endpointslices`; the older Endpoints API is deprecated)
 
-- That Endpoints resource is used by various controllers
+- These EndpointSlices are used by various controllers
 
-  (e.g. `kube-proxy` when setting up `iptables` rules for ClusterIP services)
+  (e.g. `kube-proxy` when setting up `iptables` or `nftables` rules for ClusterIP services)
 
-- These Endpoints are populated (and updated) with the Service selector
+- These EndpointSlices are populated (and updated) with the Service selector
 
-- We can update the Endpoints manually, but our changes will get overwritten
+- We can update the EndpointSlices manually, but our changes will get overwritten
 
 - ... Except if the Service selector is empty!
 
@@ -787,9 +788,9 @@ class: extra-details
 
 ## Empty Service selector
 
-- If a service selector is empty, Endpoints don't get updated automatically
+- If a service selector is empty, EndpointSlices don't get created automatically
 
-  (but we can still set them manually)
+  (but we can still create them manually)
 
 - This lets us create Services pointing to arbitrary destinations
 
@@ -797,7 +798,7 @@ class: extra-details
 
 - Another use-case: the `kubernetes` service in the `default` namespace
 
-  (its Endpoints are maintained automatically by the API server)
+  (its EndpointSlice is maintained automatically by the API server)
 
 ???
 

@@ -1,191 +1,123 @@
-# Helm and invalid values
+<!-- verified: 2026-10-05 -->
+# Helm values schema validation
 
-- A lot of Helm charts let us specify an image tag like this:
-  ```bash
-  helm install ... --set image.tag=v1.0
-  ```
+- A typo such as `imagetag` can be ignored if templates do not use it
 
-- What happens if we make a small mistake, like this:
-  ```bash
-  helm install ... --set imagetag=v1.0
-  ```
+- A wrong type such as `image=redis` can cause a template error
 
-- Or even, like this:
-  ```bash
-  helm install ... --set image=v1.0
-  ```
+- `values.schema.json` checks the merged values before templates render
 
-🤔
+- Helm uses the schema with `lint`, `template`, `install`, and `upgrade`
+
+- The schema is optional; put it beside `Chart.yaml` and `values.yaml`
 
 ---
 
-## Making mistakes
+## Start with a small chart
 
-- In the first case:
-
-  - we set `imagetag=v1.0` instead of `image.tag=v1.0`
-
-  - Helm will ignore that value (if it's not used anywhere in templates)
-
-  - the chart is deployed with the default value instead
-
-- In the second case:
-
-  - we set `image=v1.0` instead of `image.tag=v1.0`
-
-  - `image` will be a string instead of an object
-
-  - Helm will *probably* fail when trying to evaluate `image.tag`
-
----
-
-## Preventing mistakes
-
-- To prevent the first mistake, we need to tell Helm:
-
-  *"let me know if any additional (unknown) value was set!"*
-
-- To prevent the second mistake, we need to tell Helm:
-
-  *"`image` should be an object, and `image.tag` should be a string!"*
-
-- We can do this with *values schema validation*
-
----
-
-## Helm values schema validation
-
-- We can write a spec representing the possible values accepted by the chart
-
-- Helm will check the validity of the values before trying to install/upgrade
-
-- If it finds problems, it will stop immediately
-
-- The spec uses [JSON Schema](https://json-schema.org/):
-
-  *JSON Schema is a vocabulary that allows you to annotate and validate JSON documents.*
-
-- JSON Schema is designed for JSON, but can easily work with YAML too
-
-  (or any language with `map|dict|associativearray` and `list|array|sequence|tuple`)
-
----
-
-## In practice
-
-- We need to put the JSON Schema spec in a file called `values.schema.json`
-
-  (at the root of our chart; right next to `values.yaml` etc.)
-
-- The file is optional
-
-- We don't need to register or declare it in `Chart.yaml` or anywhere
-
-- Let's write a schema that will verify that ...
-
-  - `image.repository` is an official image (string without slashes or dots)
-
-  - `image.pullPolicy` can only be `Always`, `Never`, `IfNotPresent`
-
----
-
-## `values.schema.json`
-
-```json
-{
-  "$schema": "http://json-schema.org/schema#",
-  "type": "object",
-  "properties": {
-    "image": {
-      "type": "object",
-      "properties": {
-        "repository": {
-          "type": "string",
-          "pattern": "^[a-z0-9-_]+$"
-        },
-        "pullPolicy": {
-          "type": "string",
-          "pattern": "^(Always|Never|IfNotPresent)$"
-        }
-      } 
-    } 
-  } 
-}
-```
-
----
-
-## Testing our schema
-
-- Let's try to install a couple releases with that schema!
+- This lab works without either optional chart-authoring chapter
 
 .lab[
 
-- Try an invalid `pullPolicy`:
+- Copy the example, inspect its defaults, and validate them:
   ```bash
-  helm install broken --set image.pullPolicy=ShallNotPass
-  ```
-
-- Try an invalid value:
-  ```bash
-  helm install should-break --set ImAgeTAg=toto
+  cp -R ~/container.training/k8s/helm-labs/schema-check .
+  cat schema-check/values.yaml
+  cat schema-check/values.schema.json
+  helm lint ./schema-check
+  helm template valid ./schema-check > schema-rendered.yaml
   ```
 
 ]
 
-- The first one fails, but the second one still passes ...
-
-- Why?
+Check that defaults pass before you test invalid overrides.
 
 ---
 
-## Bailing out on unkown properties
+## Schema rules
 
-- We told Helm what properties (values) were valid
+- The example uses JSON Schema draft 7
 
-- We didn't say what to do about additional (unknown) properties!
+- `type` checks objects, strings, and integers
 
-- We can fix that with `"additionalProperties": false`
+- `required` lists required keys; `minimum` limits replica count
 
-.lab[
+- `enum` limits `image.pullPolicy` to the three Kubernetes choices
 
-- Edit `values.schema.json` to add `"additionalProperties": false`
-  ```json
-    {
-      "$schema": "http://json-schema.org/schema#",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-      ...
-  ```
+- `additionalProperties: false` rejects unknown keys at **each** object level
 
-]
+- The root lists all keys in this chart's defaults
+
+[JSON Schema in charts](https://helm.sh/docs/topics/charts/#schema-files)
 
 ---
 
-## Testing with unknown properties
+## Reject invalid values
+
+- These client dry runs validate values without creating a release
 
 .lab[
 
-- Try to pass an extra property:
+- Try an invalid pull policy:
   ```bash
-  helm install should-break --set ImAgeTAg=toto
+  helm install broken ./schema-check --dry-run=client \
+    --set image.pullPolicy=ShallNotPass
   ```
+<!-- ```expect-fail``` -->
 
-- Try to pass an extra nested property:
+- Try a string where the chart requires an object:
   ```bash
-  helm install does-it-work --set image.hello=world
+  helm install wrong-type ./schema-check --dry-run=client \
+    --set image=redis
   ```
+<!-- ```expect-fail``` -->
 
 ]
 
-The first command should break.
+Both commands fail schema validation.
 
-The second will not.
+---
 
-`"additionalProperties": false` needs to be specified at each level.
+## Reject unknown keys
+
+.lab[
+
+- Test an unknown key at the root:
+  ```bash
+  helm install typo ./schema-check --dry-run=client \
+    --set imagetag=v1.0
+  ```
+<!-- ```expect-fail``` -->
+
+- Test an unknown nested key:
+  ```bash
+  helm install nested-typo ./schema-check --dry-run=client \
+    --set image.hello=world
+  ```
+<!-- ```expect-fail``` -->
+
+]
+
+Both fail because the schema rejects extra keys at both levels.
+
+---
+
+## Three separate validation layers
+
+- **Values schema:** does the input match the chart's declared settings?
+
+- **Kubernetes validation:** are the rendered resources valid API objects?
+
+- **Cluster policy:** are these resources allowed in this cluster?
+
+- This example's repository pattern checks a name format only
+
+- It does not prove that an image is trusted or secure
+
+- Do not use `--skip-schema-validation` as the normal fix for invalid values
 
 ???
+
 
 :EN:- Helm schema validation
 :FR:- Validation de schema Helm
