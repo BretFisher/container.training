@@ -128,10 +128,12 @@ The recommended [installation method][install-kyverno] is to use Helm charts.
 - Install Kyverno:
   ```bash
     helm upgrade --install --repo https://kyverno.github.io/kyverno/ \
-      --namespace kyverno --create-namespace kyverno kyverno
+      --namespace kyverno --create-namespace kyverno kyverno --wait
   ```
 
 ]
+
+(`--wait` waits until Kyverno is ready to check our policies.)
 
 [install-kyverno]: https://kyverno.io/docs/installation/installation/
 
@@ -482,6 +484,8 @@ class: extra-details
 
 - Once the resource is created, the UpdateRequest is marked as Completed
 
+  (and then deleted)
+
 ---
 
 class: extra-details
@@ -512,7 +516,9 @@ class: extra-details
 
 - 22 CRDs
 
-- 10 webhooks
+- About a dozen webhooks
+
+  (Kyverno adds webhooks when we add policies)
 
 - 6 services, 4 Deployments, 2 ConfigMaps
 

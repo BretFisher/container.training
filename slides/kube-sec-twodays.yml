@@ -85,34 +85,31 @@ content:
     - k8s/batch-jobs-mini.md
     #- k8s/labels-annotations.md
     - k8s/labels-annotations-mini.md
+    - k8s/namespaces.md # Dockercoins 2
     - k8s/kubectl-logs.md
     - k8s/logs-cli.md
     - shared/declarative.md
     - k8s/declarative.md
+    #- shared/yaml.md
+    - k8s/yamldeploy.md
+    - k8s/templating.md
     - k8s/deploymentslideshow.md
     - k8s/kubectlexpose.md
     - k8s/service-types.md
     - k8s/kubenet.md
+    # TODO: copy a few Gateway API slides to aws-eks.md and make AWS ingress a topic in aws section
+    - k8s/gateway-api.md
 
 - title: Deploying DockerCoins
   content:
     - shared/sampleapp.md   # FIRST TIME with DockerCoins # Dockercoins 15
-    #- shared/composescale.md
-    #- shared/hastyconclusions.md
     - shared/composedown.md
     - k8s/shippingimages.md # Dockercoins 2
     #- k8s/buildshiprun-selfhosted.md # Dockercoins 6
     #- k8s/buildshiprun-dockerhub.md # Dockercoins 7
     - k8s/ourapponkube.md # Dockercoins 5
     - k8s/kubercoins.md # Dockercoins 20
-    #- k8s/exercise-wordsmith.md
-    # what is yaml
-    #- shared/yaml.md
-    # Deep dive into K8s YAML using color app
-    - k8s/yamldeploy.md
-    # COMMENT OUT: not in the quote.
     - k8s/scalingdockercoins.md # Dockercoins 3
-    # COMMENT OUT: not in the quote. Only makes sense after scalingdockercoins.md. # Dockercoins 3
     - shared/hastyconclusions.md
     # Long way of creating a DaemonSet for DockerCoins
     - k8s/daemonset.md # Dockercoins 2
@@ -135,7 +132,7 @@ content:
     # MAYBE IF TIME: (not in quote)
     #- k8s/k9s.md
 
-- title: Cluster remote access
+- title: Cluster remote access (Optional)
   content:
     # KEEP: kubectl config and local kubeconfig
     - k8s/localkubeconfig.md
@@ -146,13 +143,8 @@ content:
 
     # LEFT OFF HERE-----------------------------------------------------------------
 
-- title: Helm, Kustomize, GitOps
+- title: Helm, Kustomize, GitOps (Optional)
   content:
-    # KEEP: quote "Namespaces"
-    - k8s/namespaces.md # Dockercoins 2
-    - k8s/gateway-api.md
-    # KEEP: intro to quote "Helm and Kustomize"
-    - k8s/templating.md
     # KEEP: quote "Helm and Kustomize"
     - k8s/kustomize.md # Dockercoins 27
     # Core Helm: operations, chart format, compact DockerCoins lab,
@@ -163,8 +155,6 @@ content:
     #- k8s/helm-create-better-chart.md # optional chart-authoring lab # Dockercoins 4
     #- k8s/helm-dependencies.md # optional dependency lab # Dockercoins 15
     - k8s/helm-values-schema-validation.md
-    # KEEP: also relevant to day 2 "Managing secrets" (shows release data
-    # stored as Secrets).
     - k8s/helm-secrets.md
     #- k8s/exercise-helm.md # Dockercoins 3
     #- k8s/ytt.md # Dockercoins 5
@@ -195,7 +185,7 @@ content:
   content:
     - k8s/AI.md
 
-- title: Authentication and authorization
+- title: Authentication and authorization (Optional)
   content:
     - k8s/authn-authz.md
     #- k8s/control-plane-auth.md
@@ -205,13 +195,13 @@ content:
     # COMMENT IN: quote "OpenID Connect". Needs an OIDC provider for the demo.
     #- k8s/openid-connect.md
 
-- title: ConfigMaps and Secrets
+- title: ConfigMaps and Secrets (Optional)
   content:
     # configmaps
     - k8s/configuration.md
     - k8s/secrets.md
 
-- title: Storage concepts
+- title: Storage concepts (Optional)
   content:
     # Storage: concepts only (what a StatefulSet is and when to use it; PV,
     # PVC, StorageClass). No storage labs: the "storage-lab" slides are
@@ -226,7 +216,7 @@ content:
     #- k8s/openebs.md
     #- k8s/stateful-failover.md
 
-- title: Extending the Kubernetes API
+- title: Extending the Kubernetes API (Optional)
   content:
     - k8s/extending-api.md
     - k8s/crd.md
@@ -237,7 +227,8 @@ content:
 - title: Next steps and resources
   content:
     - k8s/kubernetes-whats-new.md
-    - k8s/whatsnext.md
-    - k8s/lastwords.md
-    - k8s/links.md
-    - shared/thankyou.md
+    #- k8s/whatsnext.md
+    #- k8s/lastwords.md
+    #- k8s/links.md
+    #- shared/thankyou.md
+    #- thankyou-bret.md TODO=============================================

@@ -164,7 +164,7 @@ It expires after one hour (use `--duration` to change that).
 
 - We can see most resources, but we can't change them
 
-- Headlamp hides the actions that our token can't do
+- If we try to edit or delete something, the API server denies it
 
 .lab[
 

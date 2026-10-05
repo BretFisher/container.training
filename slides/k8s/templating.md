@@ -1,5 +1,5 @@
 <!-- verified: 2026-10-05 -->
-# Manifest Templating
+# Manifest templating
 
 - In the Kubernetes ecosystem, we often use tools like Helm or Kustomize
 

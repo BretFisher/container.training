@@ -586,6 +586,28 @@ Shell to the rescue!
 
 ---
 
+## Cleaning up
+
+- Our webhook checks every Pod in every Namespace
+
+- Let's remove it, so that it doesn't affect the next labs
+
+.lab[
+
+- Remove the webhook configuration:
+  ```bash
+  kubectl delete validatingwebhookconfiguration admission.webhook.container.training
+  ```
+
+- Switch back to the `default` Namespace:
+  ```bash
+  kubectl config set-context --current --namespace=default
+  ```
+
+]
+
+---
+
 ## Real world examples
 
 - [kube-image-keeper][kuik] rewrites image references to use mirrored images

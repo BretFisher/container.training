@@ -73,6 +73,12 @@
   vim ~/container.training/k8s/hacktheplanet.yaml
   ```
 
+<!--
+```wait DaemonSet```
+```keys :q!```
+```key ^J```
+-->
+
 - If you would like, change the SSH key (by changing the GitHub user name)
 
 ]

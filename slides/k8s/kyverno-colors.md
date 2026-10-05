@@ -245,6 +245,11 @@
   kubectl get pods -L color
   ```
 
+<!--
+```hide until kubectl get polr | grep -q test-color-0; do sleep 5; done```
+```timeout 180```
+-->
+
 - List PolicyReports:
   ```bash
   kubectl get policyreports

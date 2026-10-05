@@ -446,8 +446,8 @@ class: extra-details
 
 - Find the ClusterIP for the `kubernetes` service:
   ```bash
-  kubectl get svc kubernetes
-  API=$(kubectl get svc kubernetes -o json | jq -r .spec.clusterIP)
+  kubectl get svc kubernetes --namespace=default
+  API=$(kubectl get svc kubernetes --namespace=default -o json | jq -r .spec.clusterIP)
   ```
 
 - Connect without the token:

@@ -434,6 +434,19 @@ class Term:
     def key(self, key):
         self.tmux("send-keys", "-t", self.target, key)
 
+    def panes(self):
+        return len(self.tmux("list-panes", "-t", self.target, check=False).splitlines())
+
+    def wait_prompt(self, maximum=45.0):
+        """Wait until the last line of the screen is the student prompt ("$")."""
+        t0 = time.time()
+        while time.time() - t0 < maximum:
+            lines = [l.rstrip() for l in self.screen().split("\n") if l.strip()]
+            if len(lines) >= 2 and lines[-1] == "$" and PROMPT.match(lines[-2]):
+                return True
+            time.sleep(0.5)
+        return False
+
     def settle(self, quiet=1.0, maximum=10.0):
         last, stable_since, t0 = None, time.time(), time.time()
         while time.time() - t0 < maximum:
@@ -454,6 +467,8 @@ def clean(text):
 
 
 PROMPT = re.compile(r"^\[[\d.]+\] \(.*\) \S+@\S+")
+# Counts of zero, e.g. httping "0.00% failed" or helm lint "0 chart(s) failed".
+NOT_AN_ERROR = re.compile(r"\b0(\.0+)?%? (\w+\(s\) )?failed\b")
 ERRORISH = re.compile(r"(?i)(\berror\b|forbidden|not found|denied|refused|"
                       r"crashloopbackoff|imagepullbackoff|errimagepull|\bfailed\b|"
                       r"command not found|no such file)")
@@ -603,7 +618,7 @@ class Runner:
                 return dict(res, status="PASS", reason="failed as expected (exit code {})".format(
                     [r for r in rcs if r][-1]))
             return dict(res, status="FAIL", reason="expected a failure, but every exit code was 0")
-        m = ERRORISH.search(clean(out))
+        m = ERRORISH.search(NOT_AN_ERROR.sub("", clean(out)))
         return dict(res, status="PASS", reason="",
                     warn="output has {!r}".format(m.group(0)) if m else "")
 
@@ -620,8 +635,13 @@ class Runner:
                    command="{} {}".format(step["method"], step["data"]).strip(), mode=step["method"])
         method, data = step["method"], step["data"]
         if method == "key" or (method == "keys" and KEYISH.match(data)):
+            panes = self.term.panes()
             self.term.key(data)
             self.term.settle()
+            if data.strip() in ("^D", "C-d") and self.term.panes() == panes:
+                # ^D ended a nested shell (kubectl run -it --rm, ssh), not a pane. Wait
+                # for the node prompt: until then, that program still reads the keyboard.
+                self.term.wait_prompt()
         elif method == "keys":
             self.term.type(data, enter=False)
             self.term.settle()

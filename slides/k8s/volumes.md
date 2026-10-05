@@ -289,8 +289,8 @@ spec:
   ```
 
 <!--
-```bash kubectl wait pod/nginx-with-git --for condition=initialized```
-```bash IP=$(kubectl get pod nginx-with-git -o jsonpath={.status.podIP})```
+```hide kubectl wait pod/nginx-with-git --for=jsonpath='{.status.podIP}'```
+```hide IP=$(kubectl get pod nginx-with-git -o jsonpath={.status.podIP})```
 -->
 
 - As soon as we see its IP address, access it:
