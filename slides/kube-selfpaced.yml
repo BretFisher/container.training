@@ -12,6 +12,8 @@ slides: https://container.training/
 
 #slidenumberprefix: "#SomeHashTag &mdash; "
 
+toc: single
+
 exclude:
 - in-person
 
@@ -103,7 +105,7 @@ content:
   #- k8s/exercise-helm.md
   - k8s/gitlab.md
   - k8s/ytt.md
-  - k8s/harbor.md  
+  - k8s/harbor.md
 -
   - k8s/netpol.md
   - k8s/authn-authz.md

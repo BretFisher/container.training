@@ -115,40 +115,63 @@ div.remark-slide-number {
   .remark-help-button, .remark-theme-button, .remark-search-button, .remark-contents-button { display: none; }
 }
 
-/* Help screen ("?"): black text on white, instead of white on dark gray. */
-.remark-help-mode .remark-backdrop {
-  background: white;
-  opacity: 0.97 !important;
+/* Help screen ("?"): the same themed card as the search and contents
+   dialogs (.slide-search), on a dimmed backdrop over the whole window.
+   Remark scales .remark-help like a slide (inline width, height, and
+   transform), so "!important" replaces those inline styles. */
+.remark-container.remark-help-mode .remark-backdrop {
+  display: none;
 }
-.remark-help .remark-help-content,
-.remark-help .remark-help-content td {
-  color: black;
+.remark-container.remark-help-mode .remark-help {
+  position: fixed;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+.remark-help .remark-help-content {
+  position: static;
+  width: min(640px, calc(100vw - 48px));
+  height: auto;
+  max-height: calc(100dvh - 64px);
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid var(--box-border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 'Open Sans', sans-serif;
+  overflow: auto;
 }
 .remark-help .remark-help-content table {
+  width: 100%;
   border-collapse: collapse;
 }
-/* The global "td" rule above gives cells a gray background; use white. */
-.remark-help td {
-  background: white;
-  color: black;
-  border-bottom: 1px solid #ddd;
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-/* Remark sets only "top" on the "Esc: back to slideshow" line, so it sat
-   unstyled in the top-left corner. Keep it at the top, on the right. */
-.remark-help .dismiss {
-  position: absolute;
-  top: 5% !important;
-  right: 5%;
-  font-family: Helvetica, arial, freesans, clean, sans-serif;
-  font-size: 12pt;
+.remark-help .remark-help-content td {
+  background: none;
+  color: var(--fg);
+  font-size: 15px;
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--box-border);
 }
 .remark-help .remark-help-content .key {
-  background: #f3f3f3;
-  color: black;
-  border: 1px solid #aaa;
-  box-shadow: 0 1px 0 #aaa;
+  background: var(--pre-bg);
+  color: var(--fg);
+  border: 1px solid var(--box-border);
+  box-shadow: 0 1px 0 var(--box-border);
+  font: 13px/1.2 monospace;
+}
+/* Remark's own "Esc: back to slideshow" line; the card shows it as a hint. */
+.remark-help .dismiss {
+  display: none;
+}
+.remark-help-hint {
+  margin: 0 0 8px;
+  font-size: 13px;
 }
 
 .debug {

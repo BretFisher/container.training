@@ -450,7 +450,28 @@
       if (helpContent) {
         helpContent.querySelector('h1')?.remove();
         helpContent.setAttribute('role', 'dialog');
-        helpContent.setAttribute('aria-label', 'Keyboard shortcuts');
+        helpContent.setAttribute('aria-labelledby', 'remark-help-title');
+        // Same header (title and × button) as the search dialog.
+        const header = document.createElement('div');
+        header.className = 'slide-search-header';
+        header.innerHTML = `
+          <h2 id="remark-help-title">Keyboard shortcuts</h2>
+          <button type="button" class="slide-search-close" aria-label="Close keyboard shortcuts">×</button>`;
+        header.querySelector('button').addEventListener('click', event => {
+          event.stopPropagation();
+          slideshow.toggleHelp();
+        });
+        const hint = document.createElement('p');
+        hint.className = 'remark-help-hint';
+        hint.textContent = '? or Esc closes';
+        // Replace Remark's "<p><b>Keyboard shortcuts</b></p>" title.
+        const oldTitle = helpContent.querySelector(':scope > p');
+        if (oldTitle) oldTitle.remove();
+        helpContent.prepend(header, hint);
+        // A click on the dimmed backdrop (outside the card) closes the help.
+        helpContent.parentElement.addEventListener('click', event => {
+          if (event.target === event.currentTarget) slideshow.toggleHelp();
+        });
       }
       const helpTable = document.querySelector('.remark-help-content table');
       if (helpTable) {
