@@ -16,7 +16,7 @@ app = Flask(__name__)
 # manifests are usually represented as YAML, we might as well print them
 # as YAML when we need to view them.
 def debug(obj):
-    app.logger.debug(yaml.dump(obj))
+    print(yaml.dump(obj), flush=True)
 
 
 @app.route("/", methods=["POST"])

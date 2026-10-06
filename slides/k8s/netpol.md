@@ -158,17 +158,14 @@ The `curl` command should show us the "Welcome to nginx!" page.
 
 - Check if we can still access the server:
   ```bash
-  curl $IP
+  curl -m3 $IP
   ```
 
-<!--
-```wait curl```
-```key ^C```
--->
+<!-- ```expect-fail``` -->
 
 ]
 
-The `curl` command should now time out.
+The `curl` command should now time out after 3 seconds.
 
 ---
 
@@ -217,13 +214,15 @@ This is the second file that we applied:
 
 - Try to connect to testweb from a pod with the `run=testcurl` label:
   ```bash
-  kubectl run testcurl --rm -i --image=curlimages/curl -- curl -m3 $IP
+  kubectl run testcurl --rm -i --restart=Never --image=curlimages/curl -- curl -m3 $IP
   ```
 
 - Try to connect to testweb with a different label:
   ```bash
-  kubectl run testkurl --rm -i --image=curlimages/curl -- curl -m3 $IP
+  kubectl run testkurl --rm -i --restart=Never --image=curlimages/curl -- curl -m3 $IP
   ```
+
+<!-- ```expect-fail``` -->
 
 ]
 
@@ -380,6 +379,169 @@ troubleshoot easily, without having to poke holes in our firewall.
   kubectl delete networkpolicies --all
   ```
 
+]
+
+---
+
+## Default deny: a better starting point
+
+- The DockerCoins policies only filter *ingress* (inbound) traffic
+
+- Our pods can still connect to anything: other namespaces, the internet...
+
+  (e.g. a compromised pod can download tools, or send data out)
+
+- A common baseline is to deny *all* traffic, in both directions, in each namespace
+
+- Then, we add policies to allow each flow that we need
+
+- But careful: with "deny all egress", pods can't reach CoreDNS
+
+  (name resolution fails, and most apps break in confusing ways!)
+
+- So, the first egress policy that we need will allow DNS
+
+---
+
+## A default deny policy
+
+```yaml
+@@INCLUDE[k8s/netpol-default-deny.yaml]
+```
+
+- An empty `podSelector` selects all the pods in the Namespace
+
+- `policyTypes` is needed here, because the policy has no rules
+
+  (without it, a policy with no `egress` rules doesn't restrict egress)
+
+---
+
+## Allowing DNS
+
+.small[
+```yaml
+@@INCLUDE[k8s/netpol-allow-dns.yaml]
+```
+]
+
+- Kubernetes adds the label `kubernetes.io/metadata.name` to every Namespace (to select it by name)
+
+---
+
+## Selectors: AND vs. OR
+
+- In the previous policy, `namespaceSelector` and `podSelector` are in the *same* item:
+
+  "pods with label `k8s-app=kube-dns` **AND** in Namespace `kube-system`"
+
+- With a `-` before `podSelector`, they would be *two* items:
+
+  "pods in Namespace `kube-system` **OR** pods with label `k8s-app=kube-dns` (in our Namespace)"
+
+- One extra `-` can open much more traffic than we wanted!
+
+- Always check the result with `kubectl describe networkpolicy`
+
+  (it shows how Kubernetes understood the rules)
+
+---
+
+## Testing default deny and DNS
+
+.lab[
+
+- Create a Namespace and apply the default deny policy:
+  ```bash
+  kubectl create namespace egress-lab
+  kubectl apply -n egress-lab -f ~/container.training/k8s/netpol-default-deny.yaml
+  ```
+
+- Try to resolve a name (this should fail after a few seconds):
+  ```bash
+  kubectl run -n egress-lab dns1 --rm -i --restart=Never --image=busybox \
+          -- nslookup -type=a kubernetes.io.
+  ```
+
+<!-- ```expect-fail``` -->
+
+]
+
+---
+
+## Testing the DNS policy
+
+.lab[
+
+- Apply the DNS policy, then try again (this should work):
+  ```bash
+  kubectl apply -n egress-lab -f ~/container.training/k8s/netpol-allow-dns.yaml
+  kubectl run -n egress-lab dns2 --rm -i --restart=Never --image=busybox \
+          -- nslookup -type=a kubernetes.io.
+  ```
+
+- Try to connect to the website (this should still fail):
+  ```bash
+  kubectl run -n egress-lab web1 --rm -i --restart=Never --image=busybox \
+          -- wget -T3 -O- http://kubernetes.io
+  ```
+
+<!-- ```expect-fail``` -->
+
+- Clean up:
+  ```bash
+  kubectl delete namespace egress-lab
+  ```
+
+]
+
+---
+
+## Cluster-wide policies (what's coming)
+
+- NetworkPolicies are *namespaced*: the owner of a Namespace controls them
+
+- Platform teams also need rules that Namespace owners can't change
+
+- SIG Network is working on `ClusterNetworkPolicy` (`v1alpha2` in 2026)
+
+  - a cluster-scoped resource, managed by cluster admins
+
+  - `Admin` tier: evaluated *before* NetworkPolicies (can't be overridden)
+
+  - `Baseline` tier: evaluated *after* NetworkPolicies (default rules)
+
+  - actions: `Accept`, `Deny`, `Pass`
+
+- It's alpha: check that your network plugin supports it before using it
+
+---
+
+class: extra-details
+
+## `ClusterNetworkPolicy` example
+
+Monitoring can always connect to every Namespace (even if a NetworkPolicy denies it):
+
+.small[
+```yaml
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: allow-monitoring
+spec:
+  tier: Admin
+  priority: 10
+  subject:
+    namespaces: {}
+  ingress:
+  - name: allow-from-monitoring
+    action: Accept
+    from:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+```
 ]
 
 ---

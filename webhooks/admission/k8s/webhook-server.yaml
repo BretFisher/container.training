@@ -31,6 +31,10 @@ spec:
             --bind 0.0.0.0:443 --keyfile /tls/tls.key --certfile /tls/tls.crt \
             --access-logfile - \
             --chdir /app webhook:app
+        # Ready only when gunicorn listens (pip install takes a while).
+        readinessProbe:
+          tcpSocket:
+            port: 443
         volumeMounts:
         - name: tls
           mountPath: /tls

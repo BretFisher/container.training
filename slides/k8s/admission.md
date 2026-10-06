@@ -165,7 +165,7 @@
 
   - convenient for external webhooks (e.g. tamper-resistant audit trail)
 
-  - also great for initial development (e.g. with ngrok)
+  - also great for initial development (with a tunnel to a local machine)
 
   - requires outbound connectivity (duh) and can become a SPOF
 
@@ -183,224 +183,25 @@
 
 - We're going to register a custom webhook!
 
-- First, we'll just dump the `AdmissionRequest` object
-
-  (using a little Node app)
-
-- Then, we'll implement a strict policy on a specific label
+- It implements a strict policy on a specific label
 
   (using a little Flask app)
-
-- Development will happen in local containers, plumbed with ngrok
-
-- Then we will deploy to the cluster 🔥
-
----
-
-## Running the webhook locally
-
-- We prepared a Docker Compose file to start the whole stack
-
-  (the Node "echo" app, the Flask app, and one ngrok tunnel for each of them)
-
-- We will need an ngrok account for the tunnels
-
-  (a free account is fine)
-
----
-
-class: extra-details
-
-## What's ngrok?
-
-- Ngrok provides secure tunnels to access local services
-
-- Example: run `ngrok http 1234`
-
-- `ngrok` will display a publicly-available URL (e.g. https://xxxxyyyyzzzz.ngrok-free.dev)
-
-- Connections to https://xxxxyyyyzzzz.ngrok-free.dev will terminate at `localhost:1234`
-
-- Basic product is free; extra features (vanity domains, end-to-end TLS...) for $$$
-
-- Perfect to develop our webhook!
-
----
-
-class: extra-details
-
-## Ngrok in production
-
-- Ngrok was initially known for its local webhook development features
-
-- It now supports production scenarios as well
-
-  (load balancing, WAF, authentication, circuit-breaking...)
-
-- Including some that are very relevant to Kubernetes
-
-  (e.g. [ngrok Kubernetes Operator](https://github.com/ngrok/ngrok-operator))
-
----
-
-## Ngrok tokens
-
-- If you're attending a live training, you might have an ngrok token
-
-- Look in `~/ngrok.env` and if that file exists, copy it to the stack:
-
-.lab[
-
-```bash
-cp ~/ngrok.env ~/container.training/webhooks/admission/.env
-```
-
-]
-
----
-
-## Starting the whole stack
-
-.lab[
-
-- Go to the webhook directory:
-  ```bash
-  cd ~/container.training/webhooks/admission
-  ```
-
-- Start the webhook in Docker containers:
-  ```bash
-  docker compose up
-  ```
-
-]
-
-*Note the URL in `ngrok-echo-1` looking like `url=https://xxxx.ngrok-free.dev`.*
-
----
-
-## Update the webhook configuration
-
-- We have a webhook configuration in `k8s/webhook-configuration.yaml`
-
-- We need to update the configuration with the correct `url`
-
-.lab[
-
-- Edit the webhook configuration manifest:
-  ```bash
-  vim k8s/webhook-configuration.yaml
-  ```
-
-- **Uncomment** the `url:` line
-
-- **Update** the placeholder `.ngrok.io` URL with the URL shown by Compose
-
-- Save and quit
-
-]
-
----
-
-## Register the webhook configuration
-
-- Just after we register the webhook, it will be called for each matching request
-
-  (CREATE and UPDATE on Pods in all namespaces)
-
-- The `failurePolicy` is `Ignore`
-
-  (so if the webhook server is down, we can still create pods)
-
-.lab[
-
-- Register the webhook:
-  ```bash
-  kubectl apply -f k8s/webhook-configuration.yaml
-  ```
-
-]
-
-It is strongly recommended to tail the logs of the API server while doing that.
-
----
-
-## Create a pod
-
-- Let's create a pod and try to set a `color` label
-
-.lab[
-
-- Create a pod named `chroma`:
-  ```bash
-  kubectl run --restart=Never chroma --image=nginx
-  ```
-
-- Add a label `color` set to `pink`:
-  ```bash
-  kubectl label pod chroma color=pink
-  ```
-
-]
-
-We should see the `AdmissionReview` objects in the Compose logs.
-
-Note: the webhook doesn't do anything (other than printing the request payload).
-
----
-
-## Use the "real" admission webhook
-
-- We have a small Flask app implementing a particular policy on pod labels:
 
   - if a pod sets a label `color`, it must be `blue`, `green`, `red`
 
   - once that `color` label is set, it cannot be removed or changed
 
-- That Flask app was started when we did `docker compose up` earlier
+- It also logs each `AdmissionReview` that it receives
 
-- It is exposed through its own ngrok tunnel
+  (so we can see what the API server sends)
 
-- We are going to use that webhook instead of the other one
-
-  (by changing only the `url` field in the ValidatingWebhookConfiguration)
-
----
-
-## Update the webhook configuration
-
-.lab[
-
-- First, check the ngrok URL of the tunnel for the Flask app:
-  ```bash
-  docker compose logs ngrok-flask
-  ```
-
-- Then, edit the webhook configuration:
-  ```bash
-  kubectl edit validatingwebhookconfiguration admission.webhook.container.training
-  ```
-- Find the `url:` field with the ngrok URL and update it
-
-- Save and quit; the new configuration is applied immediately
-
-]
-
----
-
-## Verify the behavior of the webhook
-
-- Try to create a few pods and/or change labels on existing pods
-
-- What happens if we try to make changes to the earlier pod?
-
-  (the one that has `color=pink`)
+- We will run it on our cluster 🔥
 
 ---
 
 ## Deploying the webhook on the cluster
 
-- Let's see what's needed to self-host the webhook server!
+- Let's see what's needed to host the webhook server on the cluster!
 
 - The webhook needs to be reachable through a Service on our cluster
 
@@ -507,24 +308,21 @@ Note: the webhook doesn't do anything (other than printing the request payload).
 
 ---
 
-## Update the webhook configuration
+## Register the webhook configuration
 
-- Let's reconfigure the webhook to use our Service instead of ngrok
+- Our webhook configuration is in `k8s/webhook-configuration.yaml`
+
+- It sends CREATE and UPDATE on Pods (in all Namespaces) to our Service
+
+- Just after we register the webhook, it will be called for each matching request
+
+- The `failurePolicy` is `Ignore`
+
+  (so if the webhook server is down, we can still create pods)
 
 .lab[
 
-- Edit the webhook configuration manifest:
-  ```bash
-  vim k8s/webhook-configuration.yaml
-  ```
-
-- Comment out the `url:` line
-
-- Uncomment the `service:` section
-
-- Save, quit
-
-- Update the webhook configuration:
+- Register the webhook:
   ```bash
   kubectl apply -f k8s/webhook-configuration.yaml
   ```
@@ -574,15 +372,63 @@ Shell to the rescue!
 
 ## Try it out!
 
-- Keep an eye on the API server logs
+.lab[
 
-- Tail the logs of the pod running the webhook server
+- Wait until the webhook server is ready (it installs Flask when it starts):
+  ```bash
+  kubectl rollout status deployment admission
+  ```
 
-- Create a few pods; we should see requests in the webhook server logs
+<!-- ```timeout 300``` -->
 
-- Check that the label `color` is enforced correctly
+- Create a pod named `chroma`:
+  ```bash
+  kubectl run --restart=Never chroma --image=nginx
+  ```
 
-  (it should only allow values of `red`, `green`, `blue`)
+- Try to add a label `color` set to `pink`:
+  ```bash
+  kubectl label pod chroma color=pink
+  ```
+
+<!-- ```expect-fail``` -->
+
+- Add a label `color` set to `red`:
+  ```bash
+  kubectl label pod chroma color=red
+  ```
+
+- Try to change it to `blue`:
+  ```bash
+  kubectl label pod chroma color=blue --overwrite
+  ```
+
+<!-- ```expect-fail``` -->
+
+]
+
+---
+
+## What did the webhook receive?
+
+- The webhook logs each `AdmissionReview` (in YAML)
+
+- Each one is long (a few hundred lines), so let's look at its structure first
+
+.lab[
+
+- Show the top-level fields of the last `AdmissionReview`:
+  ```bash
+  kubectl logs deployment/admission | grep -E '^[a-zA-Z]|^  [a-zA-Z]' | tail -20
+  ```
+
+]
+
+- Find `operation: UPDATE`, `object:` and `oldObject:` in the request
+
+  (the webhook compares the labels of `oldObject` and `object`)
+
+- Use `kubectl logs deployment/admission | less` to see everything
 
 ---
 

@@ -1,0 +1,15 @@
+fullnameOverride: webui
+image:
+  repository: dockercoins/webui
+  tag: "v0.1"
+service:
+  type: ClusterIP
+  port: 80
+livenessProbe:
+  httpGet: null
+  tcpSocket:
+    port: http
+readinessProbe:
+  httpGet: null
+  tcpSocket:
+    port: http

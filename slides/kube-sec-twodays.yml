@@ -62,144 +62,145 @@ content:
 
 - title: Intro
   content:
-    - shared/title.md
-    - logistics-bret.md
-    #- shared/chat-room-im.md
-    #- shared/chat-room-slack.md
-    #- shared/chat-room-zoom-meeting.md
-    #- shared/chat-room-zoom-webinar.md
-    - shared/about-slides.md
-    #- k8s/prereqs-basic.md
-    - shared/handson.md
-    #- k8s/labs-live.md
-    #- shared/connecting.md
-    #- k8s/labs-async.md
-    - shared/toc.md
+    - shared/title.md # slides 2, labs 0
+    - logistics-bret.md # slides 2, labs 0
+    #- shared/chat-room-im.md # slides 1, labs 0
+    #- shared/chat-room-slack.md # slides 1, labs 0
+    #- shared/chat-room-zoom-meeting.md # slides 4, labs 0
+    #- shared/chat-room-zoom-webinar.md # slides 2, labs 0
+    - shared/about-slides.md # slides 3, labs 1
+    #- k8s/prereqs-basic.md # slides 1, labs 0
+    - shared/handson.md # slides 2, labs 1
+    #- k8s/labs-live.md # slides 4, labs 0
+    #- shared/connecting.md # slides 9, labs 1
+    #- k8s/labs-async.md # slides 15, labs 0
+    - shared/toc.md # slides 1, labs 0
 
 - title: Kubernetes Architecture
   content:
-    - k8s/concepts-k8s.md
-    - k8s/kubectlget.md
-    - k8s/kubectl-run.md
-    #- k8s/batch-jobs.md
-    - k8s/batch-jobs-mini.md
-    #- k8s/labels-annotations.md
-    - k8s/labels-annotations-mini.md
-    - k8s/namespaces.md # Dockercoins 2
-    - k8s/kubectl-logs.md
-    - k8s/logs-cli.md
-    - shared/declarative.md
-    - k8s/declarative.md
-    #- shared/yaml.md
-    - k8s/yamldeploy.md
-    - k8s/templating.md
-    - k8s/deploymentslideshow.md
-    - k8s/kubectlexpose.md
-    - k8s/service-types.md
-    - k8s/kubenet.md
+    - k8s/concepts-k8s.md # slides 33, labs 0
+    - k8s/kubectlget.md # slides 24, labs 10
+    - k8s/kubectl-run.md # slides 23, labs 10
+    #- k8s/batch-jobs.md # slides 8, labs 4
+    - k8s/batch-jobs-mini.md # slides 3, labs 0
+    #- k8s/labels-annotations.md # slides 11, labs 6
+    - k8s/labels-annotations-mini.md # slides 4, labs 0
+    - k8s/namespaces.md # slides 18, labs 2, dockercoins 2
+    - k8s/kubectl-logs.md # slides 5, labs 3
+    - k8s/logs-cli.md # slides 6, labs 3
+    - shared/declarative.md # slides 3, labs 0
+    - k8s/declarative.md # slides 2, labs 0
+    #- shared/yaml.md # slides 18, labs 0
+    - k8s/yamldeploy.md # slides 28, labs 11
+    - k8s/templating.md # slides 13, labs 0
+    - k8s/deploymentslideshow.md # slides 20, labs 0
+    - k8s/kubectlexpose.md # slides 19, labs 8
+    - k8s/service-types.md # slides 40, labs 1
+    - k8s/kubenet.md # slides 12, labs 0
     # TODO: copy a few Gateway API slides to aws-eks.md and make AWS ingress a topic in aws section
-    - k8s/gateway-api.md
+    - k8s/gateway-api.md # slides 25, labs 7
 
 - title: Deploying DockerCoins
   content:
-    - shared/sampleapp.md   # FIRST TIME with DockerCoins # Dockercoins 15
-    - shared/composedown.md
-    - k8s/shippingimages.md # Dockercoins 2
-    #- k8s/buildshiprun-selfhosted.md # Dockercoins 6
-    #- k8s/buildshiprun-dockerhub.md # Dockercoins 7
-    - k8s/ourapponkube.md # Dockercoins 5
-    - k8s/kubercoins.md # Dockercoins 20
-    - k8s/scalingdockercoins.md # Dockercoins 3
-    - shared/hastyconclusions.md
+    - shared/sampleapp.md # FIRST TIME with DockerCoins # slides 11, labs 4, dockercoins 8
+    - shared/composedown.md # slides 1, labs 1
+    - k8s/shippingimages.md # slides 6, labs 0, dockercoins 2
+    #- k8s/buildshiprun-selfhosted.md # slides 11, labs 7, dockercoins 6
+    #- k8s/buildshiprun-dockerhub.md # slides 1, labs 0, dockercoins 7
+    - k8s/ourapponkube.md # slides 7, labs 6, dockercoins 5
+    - k8s/kubercoins.md # slides 13, labs 5, dockercoins 20
+    - k8s/scalingdockercoins.md # slides 10, labs 5, dockercoins 3
+    - shared/hastyconclusions.md # slides 1, labs 0
     # Long way of creating a DaemonSet for DockerCoins
-    - k8s/daemonset.md # Dockercoins 2
+    - k8s/daemonset.md # slides 37, labs 11, dockercoins 2
     # KEEP: quote "Rolling updates"
-    - k8s/rollout.md # Dockercoins 4
+    - k8s/rollout.md # slides 22, labs 11, dockercoins 4
     # KEEP: Probe types and basics
-    - k8s/healthchecks.md
+    - k8s/healthchecks.md # slides 29, labs 0
     # Lab of failing probes in DockerCoins
-    - k8s/healthchecks-more.md # Dockercoins 10
+    - k8s/healthchecks-more.md # slides 17, labs 6, dockercoins 10
     # COMMENT OUT: how to use annotate change-cause
-    #- k8s/record.md # Dockercoins 2
+    #- k8s/record.md # slides 3, labs 1, dockercoins 2
 
 - title: Cluster setup
   content:
-    - k8s/setup-overview.md
-    #- k8s/setup-devel.md
-    #- k8s/setup-managed.md
-    #- k8s/setup-selfhosted.md
-    - k8s/aws-eks.md
+    - k8s/setup-overview.md # slides 19, labs 0
+    #- k8s/setup-devel.md # slides 13, labs 0
+    #- k8s/setup-managed.md # slides 23, labs 0
+    #- k8s/setup-selfhosted.md # slides 6, labs 0
+    - k8s/aws-eks.md # slides 13, labs 0
     # MAYBE IF TIME: (not in quote)
-    #- k8s/k9s.md
+    #- k8s/k9s.md # slides 11, labs 0
+    - k8s/headlamp.md # slides 15, labs 7
 
 - title: Cluster remote access (Optional)
   content:
     # KEEP: kubectl config and local kubeconfig
-    - k8s/localkubeconfig.md
+    - k8s/localkubeconfig.md # slides 10, labs 5
     # KEEP: kubectl proxy and kubectl port-forward basics
-    - k8s/accessinternal.md
+    - k8s/accessinternal.md # slides 6, labs 2
     # more kubectl proxy details and labs
-    #- k8s/kubectlproxy.md
+    #- k8s/kubectlproxy.md # slides 10, labs 2
 
     # LEFT OFF HERE-----------------------------------------------------------------
 
 - title: Helm, Kustomize, GitOps (Optional)
   content:
     # KEEP: quote "Helm and Kustomize"
-    - k8s/kustomize.md # Dockercoins 27
+    - k8s/kustomize.md # slides 33, labs 1, dockercoins 27
     # Core Helm: operations, chart format, compact DockerCoins lab,
     # values validation, and release-Secret security.
-    - k8s/helm-intro.md
-    - k8s/helm-chart-format.md
-    - k8s/helm-create-basic-chart.md # Dockercoins 13
-    #- k8s/helm-create-better-chart.md # optional chart-authoring lab # Dockercoins 4
-    #- k8s/helm-dependencies.md # optional dependency lab # Dockercoins 15
-    - k8s/helm-values-schema-validation.md
-    - k8s/helm-secrets.md
-    #- k8s/exercise-helm.md # Dockercoins 3
-    #- k8s/ytt.md # Dockercoins 5
-    - k8s/gitworkflows.md
-    #- k8s/flux.md             # potential after-hours lab # Dockercoins 12
-    #- k8s/argocd.md           # potential after-hours lab
-    #- k8s/argocd-advanced.md  # optional lecture for the Argo CD lab
+    - k8s/helm-intro.md # slides 11, labs 7
+    - k8s/helm-chart-format.md # slides 14, labs 3
+    - k8s/helm-create-basic-chart.md # slides 6, labs 4, dockercoins 13
+    #- k8s/helm-create-better-chart.md # optional chart-authoring lab # slides 8, labs 6, dockercoins 4
+    #- k8s/helm-dependencies.md # optional dependency lab # slides 8, labs 5, dockercoins 15
+    - k8s/helm-values-schema-validation.md # slides 6, labs 3
+    - k8s/helm-secrets.md # slides 7, labs 4
+    #- k8s/exercise-helm.md # slides 2, labs 0, dockercoins 3
+    #- k8s/ytt.md # slides 30, labs 0, dockercoins 5
+    - k8s/gitworkflows.md # slides 14, labs 0
+    #- k8s/flux.md # potential after-hours lab # slides 27, labs 8, dockercoins 12
+    #- k8s/argocd.md # potential after-hours lab # slides 34, labs 11
+    #- k8s/argocd-advanced.md # optional lecture for the Argo CD lab # slides 8, labs 0
 
 - title: Controlling resources and cluster policies
   content:
-    - k8s/resource-limits.md
+    - k8s/resource-limits.md # slides 56, labs 1
     # Checking Node and Pod resource usage
-    - k8s/metrics-server.md
+    - k8s/metrics-server.md # slides 12, labs 1
     # COMMENT IN: title is "Restricting Pod Permissions", exact match with
     # the quote.
-    - k8s/pod-security-intro.md
+    - k8s/pod-security-intro.md # slides 10, labs 4
     # COMMENT IN: quote "Pod Security Admission"
-    - k8s/pod-security-admission.md
+    - k8s/pod-security-admission.md # slides 18, labs 4
     # Dynamic Admission Control. mechanism behind Kyverno and PSA
-    - k8s/admission.md
-    - k8s/kyverno.md
+    - k8s/admission.md # slides 23, labs 8
+    - k8s/kyverno.md # slides 30, labs 1
     # Hands-on: immutable labels policy lab.
-    - k8s/kyverno-colors.md
+    - k8s/kyverno-colors.md # slides 14, labs 5
     # intro to network policies
-    - k8s/netpol.md # Dockercoins 4
+    - k8s/netpol.md # slides 32, labs 8, dockercoins 5
 
 - title: Using AI with Kubernetes
   content:
-    - k8s/AI.md
+    - k8s/AI.md # slides 24, labs 0
 
 - title: Authentication and authorization (Optional)
   content:
-    - k8s/authn-authz.md
-    #- k8s/control-plane-auth.md
-    #- k8s/user-cert.md
+    - k8s/authn-authz.md # slides 53, labs 8
+    #- k8s/control-plane-auth.md # slides 22, labs 0
+    #- k8s/user-cert.md # slides 14, labs 7
     # COMMENT IN: quote "The CSR API"
-    #- k8s/csr-api.md
+    #- k8s/csr-api.md # slides 23, labs 10
     # COMMENT IN: quote "OpenID Connect". Needs an OIDC provider for the demo.
-    #- k8s/openid-connect.md
+    #- k8s/openid-connect.md # slides 18, labs 10
 
 - title: ConfigMaps and Secrets (Optional)
   content:
     # configmaps
-    - k8s/configuration.md
-    - k8s/secrets.md
+    - k8s/configuration.md # slides 30, labs 7
+    - k8s/secrets.md # slides 9, labs 0
 
 - title: Storage concepts (Optional)
   content:
@@ -207,28 +208,28 @@ content:
     # PVC, StorageClass). No storage labs: the "storage-lab" slides are
     # excluded, and the Consul, OpenEBS, and failover chapters are out.
     # Students use EKS, and the EKS section covers EBS storage.
-    - k8s/volumes.md
-    - k8s/statefulsets.md
-    #- k8s/consul.md
-    - k8s/pv-pvc-sc.md
-    #- k8s/volume-claim-templates.md
-    #- k8s/portworx.md
-    #- k8s/openebs.md
-    #- k8s/stateful-failover.md
+    - k8s/volumes.md # slides 24, labs 5
+    - k8s/statefulsets.md # slides 11, labs 0
+    #- k8s/consul.md # slides 12, labs 2
+    - k8s/pv-pvc-sc.md # slides 11, labs 0
+    #- k8s/volume-claim-templates.md # slides 16, labs 7
+    #- k8s/portworx.md # slides 17, labs 3
+    #- k8s/openebs.md # slides 17, labs 10
+    #- k8s/stateful-failover.md # slides 23, labs 13
 
 - title: Extending the Kubernetes API (Optional)
   content:
-    - k8s/extending-api.md
-    - k8s/crd.md
-    - k8s/operators.md
-    - k8s/operators-design.md
-    - k8s/operators-example.md
+    - k8s/extending-api.md # slides 23, labs 0
+    - k8s/crd.md # slides 29, labs 9
+    - k8s/operators.md # slides 6, labs 0
+    - k8s/operators-design.md # slides 21, labs 0
+    - k8s/operators-example.md # slides 9, labs 0
 
 - title: Next steps and resources
   content:
-    - k8s/kubernetes-whats-new.md
-    #- k8s/whatsnext.md
-    #- k8s/lastwords.md
-    #- k8s/links.md
-    #- shared/thankyou.md
+    - k8s/kubernetes-whats-new.md # slides 30, labs 0
+    #- k8s/whatsnext.md # slides 15, labs 0
+    #- k8s/lastwords.md # slides 13, labs 0
+    #- k8s/links.md # slides 1, labs 0
+    #- shared/thankyou.md # slides 2, labs 0
     #- thankyou-bret.md TODO=============================================

@@ -11,11 +11,10 @@ webhooks:
     resources:   ["pods"]
     scope:       "Namespaced"
   clientConfig:
-    #service:
-    #  namespace: webhooks
-    #  name: admission
-    #caBundle: ""
-    #url: https://xxxxyyyyzzzz.ngrok.io
+    service:
+      namespace: webhooks
+      name: admission
+    caBundle: "" # We will patch it with our self-signed certificate.
   admissionReviewVersions: ["v1"]
   sideEffects: None
   timeoutSeconds: 5

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: dockercoins-deps
+description: DockerCoins with a local Redis dependency
+type: application
+version: 0.1.0
+appVersion: "v0.1"
+dependencies:
+  - name: redis
+    version: 0.1.0
+    repository: file://../redis
+    condition: redis.enabled

@@ -1,0 +1,15 @@
+fullnameOverride: redis
+image:
+  repository: redis
+  tag: "8.2.2"
+service:
+  type: ClusterIP
+  port: 6379
+livenessProbe:
+  httpGet: null
+  tcpSocket:
+    port: http
+readinessProbe:
+  httpGet: null
+  tcpSocket:
+    port: http

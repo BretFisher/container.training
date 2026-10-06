@@ -1,0 +1,5 @@
+replicaCount: 1
+image:
+  repository: redis
+  tag: "8.2.2"
+  pullPolicy: IfNotPresent

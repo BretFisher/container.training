@@ -1,0 +1,9 @@
+fullnameOverride: worker
+image:
+  repository: dockercoins/worker
+  tag: "v0.1"
+service:
+  type: ClusterIP
+  port: 80
+livenessProbe: null
+readinessProbe: null
