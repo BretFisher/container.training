@@ -139,6 +139,15 @@
         window.location.hash = '#' + initialHash[1] + initialHash[2];
       }
 
+      // Remark shows the first slide inside remark.create(), before the
+      // handlers below exist, so that first "afterShowSlide" event is lost.
+      // onSlideShown() registers a handler and also runs it once now, for
+      // the slide on screen (e.g. the buttons on the first slide).
+      function onSlideShown(handler) {
+        slideshow.on('afterShowSlide', handler);
+        handler(slideshow.getSlides()[slideshow.getCurrentSlideIndex()]);
+      }
+
       // "N + Enter" goes to step N in Remark. Track the digits, and after
       // Remark has moved, go to the first step of slide N instead.
       let typedNumber = '';
@@ -163,14 +172,14 @@
       }, true);
 
       if (window.origin === 'null') {
-        slideshow.on('afterShowSlide', function (slide) {
+        onSlideShown(function (slide) {
           remarkStep = slide.getSlideIndex() + 1;
         });
       }
 
       // Step counter under the slide number: "step/total" on slides with
       // more than one step. The "last" class marks the final step.
-      slideshow.on('afterShowSlide', function (slide) {
+      onSlideShown(function (slide) {
         const index = slide.getSlideIndex();
         const no = stepToSlide[index];
         const total = slideStepCount[no];
@@ -193,7 +202,7 @@
 
       // "?" button in the bottom-right corner of each slide. It opens the
       // same help screen as the "?" key, for people who don't know that key.
-      slideshow.on('afterShowSlide', function () {
+      onSlideShown(function () {
         const container = document.querySelector('.remark-visible .remark-slide-content');
         if (!container || container.querySelector('.remark-help-button')) return;
         const button = document.createElement('button');
@@ -496,8 +505,7 @@
         });
         container.appendChild(button);
       }
-      slideshow.on('afterShowSlide', addSearchButton);
-      addSearchButton();
+      onSlideShown(addSearchButton);
       function addContentsButton() {
         const container = document.querySelector('.remark-visible .remark-slide-content');
         if (!container || container.querySelector('.remark-contents-button')) return;
@@ -509,8 +517,7 @@
         button.addEventListener('click', event => { event.stopPropagation(); openContents(); });
         container.appendChild(button);
       }
-      slideshow.on('afterShowSlide', addContentsButton);
-      addContentsButton();
+      onSlideShown(addContentsButton);
 
       // 🎨 button above "?": cycle through color themes (workshop.css
       // defines the colors). Light themes first, then dark from lightest to
@@ -543,7 +550,7 @@
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => toast.classList.remove('visible'), 1500);
       }
-      slideshow.on('afterShowSlide', function () {
+      onSlideShown(function () {
         const container = document.querySelector('.remark-visible .remark-slide-content');
         if (!container || container.querySelector('.remark-theme-button')) return;
         const button = document.createElement('button');
@@ -575,7 +582,7 @@
           area.remove();
         }
       }
-      slideshow.on('afterShowSlide', function () {
+      onSlideShown(function () {
         const blocks = document.querySelectorAll(
           '.remark-visible pre > code.bash, .remark-visible pre > code.shell');
         blocks.forEach(function (code) {
@@ -622,7 +629,7 @@
       }
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: false });
-        slideshow.on('afterShowSlide', function (slide) {
+        onSlideShown(function (slide) {
           mermaid.run({
             nodes: document.querySelectorAll('div.remark-visible pre.mermaid'),
           });
