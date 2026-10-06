@@ -5,6 +5,7 @@ import requests
 import time
 
 DEBUG = os.environ.get("DEBUG", "").lower().startswith("y")
+WORKER_SLEEP = float(os.environ.get("WORKER_SLEEP", "0.1"))
 
 log = logging.getLogger(__name__)
 if DEBUG:
@@ -46,7 +47,7 @@ def work_loop(interval=1):
 
 def work_once():
     log.debug("Doing one unit of work")
-    time.sleep(0.1)
+    time.sleep(WORKER_SLEEP)
     random_bytes = get_random_bytes()
     hex_hash = hash_bytes(random_bytes)
     if not hex_hash.startswith('0'):

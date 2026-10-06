@@ -1,0 +1,7 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # reusable workflows in repos Bret controls are called by branch or tag
+        "bretfisher/*": ref-pin
+        "*": hash-pin
