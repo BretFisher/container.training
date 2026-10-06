@@ -3,7 +3,11 @@
 
 - We can now deploy our code (as well as a redis instance)
 
+- We already built the DockerCoins images and pushed them to a registry (`ghcr.io/bretfisher/dockercoins/*:v0.1`)
+
 .lab[
+
+.small[
 
 - Deploy `redis`:
   ```bash
@@ -12,11 +16,13 @@
 
 - Deploy everything else:
   ```bash
-  kubectl create deployment hasher --image=dockercoins/hasher:v0.1
-  kubectl create deployment rng --image=dockercoins/rng:v0.1
-  kubectl create deployment webui --image=dockercoins/webui:v0.1
-  kubectl create deployment worker --image=dockercoins/worker:v0.1
+  kubectl create deployment hasher --image=ghcr.io/bretfisher/dockercoins/hasher:v0.1
+  kubectl create deployment rng --image=ghcr.io/bretfisher/dockercoins/rng:v0.1
+  kubectl create deployment webui --image=ghcr.io/bretfisher/dockercoins/webui:v0.1
+  kubectl create deployment worker --image=ghcr.io/bretfisher/dockercoins/worker:v0.1
   ```
+
+]
 
 ]
 

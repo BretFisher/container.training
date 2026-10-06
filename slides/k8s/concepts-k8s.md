@@ -1,9 +1,23 @@
 <!-- verified: 2026-10-05 -->
 # Kubernetes concepts
 
-- Kubernetes is a container management system
+- Kubernetes is a container management system (aka container orchestrator)
 
-- It runs and manages containerized applications on a cluster
+- It runs and manages containerized applications on a cluster (one or more servers)
+
+--
+
+- Kubernetes did to a group of servers what Docker did to a single server:
+
+  - Manage the livecycle of multile isolated workloads, including:
+
+    - their resources
+
+    - their configuration
+
+    - their security
+
+    - their networking 
 
 --
 
@@ -164,7 +178,32 @@ They aren't exhaustive either (we didn't mention e.g. observability and alerting
 
 ---
 
+## Brief history of Kubernetes
+
+- Docker launched in 2013, but only knew about the machine it was on
+
+- Kubernetes launched in 2015, also known as k8s (8 letters between k and s)
+
+- K8s ran Docker on a bunch of servers, and managed them like a single server
+
+- CNCF was founded in 2015 as part of the Linux Foundation to provide a neutral home for K8s and other cloud-native projects
+
+- Then K8s and CNCF turned it up to eleven and created a giant open-source ecosystem
+
+---
+
+## The significance of Kubernetes and the CNCF
+
+Over 300,000 contributors to 250+ CNCF-hosted projects like K8s, Prometheus, OpenTelemetry, Istio, etcd, Helm, fluentd, and containerd.
+
+.big-image[![CNCF Projects](images/cncf-projects-2026.png)]
+
+---
+
+
 ## Kubernetes architecture
+
+- So what does a K8s cluster look like?
 
 ---
 
@@ -366,6 +405,16 @@ class: extra-details
   - designed specifically as a minimal runtime for Kubernetes
 
 - [And more](https://kubernetes.io/docs/setup/production-environment/container-runtimes/)
+
+.footnote[Review #2: the next diagram may replace this text after review.]
+
+---
+
+name: visual-proposal-02-review
+class: pic
+
+<!-- Diagram proposal #2; adjacent text retained for review. -->
+![CRI runs containers; image building is a separate path](images/k8s-cri-image-path-2026.svg)
 
 ---
 

@@ -58,12 +58,12 @@
 
 - Then, with a YAML snippet:
   ```bash
-  kubectl apply -f- <<EOF
-  apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: green
-  EOF
+    kubectl apply -f- <<EOF
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: green
+    EOF
   ```
 
 ]
@@ -88,6 +88,14 @@
   ```
 
 ]
+
+---
+
+name: visual-namespace-resource-scope-review
+class: pic
+
+<!-- Diagram #12 approved; keep the text slide and diagram slide. -->
+![The same Service and Deployment names in separate namespaces, with cluster-scoped resources outside.](images/k8s-namespace-resource-scope-2026.svg)
 
 ---
 
@@ -205,6 +213,14 @@ class: extra-details
 
 ---
 
+name: visual-context-access-review
+class: pic
+
+<!-- Diagram #13 approved; keep the text slide and diagram slide. -->
+![A kubeconfig context selects cluster, authentication settings, and default namespace.](images/k8s-context-access-2026.svg)
+
+---
+
 ## Namespaces, Services, and DNS
 
 - When a Service is created, a record is added to the Kubernetes DNS
@@ -303,7 +319,11 @@ instead of a Kubernetes Namespace).
 
 - Highly recommended if you work across multiple contexts or namespaces!
 
+- Even better, use Starship 🚀 [starship.rs](https://starship.rs/)
+
 ---
+
+class: extra-details
 
 ## Installing `kube-ps1`
 

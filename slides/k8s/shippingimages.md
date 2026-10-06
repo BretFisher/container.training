@@ -93,6 +93,8 @@
 
 ---
 
+class: bret-skip
+
 ## Building on the fly
 
 - Conceptually, it is possible to build images on the fly from a repository

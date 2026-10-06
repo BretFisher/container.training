@@ -87,6 +87,14 @@ class: extra-details
 
 ---
 
+name: visual-proposal-03-review
+class: pic
+
+<!-- Diagram #3 approved; keep the text slide and diagram slide. -->
+![kubectl reads cluster objects through the API](images/k8s-kubectl-read-path-2026.svg)
+
+---
+
 ## Obtaining machine-readable output
 
 - `kubectl get` can output JSON, YAML, or be directly formatted
@@ -198,6 +206,14 @@ class: extra-details
   - difficult to read for a human operator
 
 - For a comprehensive overview, we can use `kubectl describe` instead
+
+---
+
+name: visual-proposal-04-review
+class: pic
+
+<!-- Diagram #4 approved; keep the text slide and diagram slide. -->
+![One Kubernetes Resource, three ways to view](images/k8s-object-views-2026.svg)
 
 ---
 

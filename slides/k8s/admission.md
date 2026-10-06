@@ -95,6 +95,16 @@
 
 (See [the documentation](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#request) for a detailed example showing more fields.)
 
+.footnote[Review #104: the next diagram may replace this text after review.]
+
+---
+
+name: visual-admissionreview-exchange-review
+class: pic
+
+<!-- Diagram proposal #104; adjacent text retained for review. -->
+![AdmissionReview exchange](images/k8s-admissionreview-exchange-2026.svg)
+
 ---
 
 ## How should the webhook respond?

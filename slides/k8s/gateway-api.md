@@ -191,15 +191,15 @@ class: pic
 
 - Send all requests to `blue`:
   ```bash
-  kubectl apply -f- <<EOF
-  apiVersion: gateway.networking.k8s.io/v1
-  kind: HTTPRoute
-  metadata:
-    name: blue
-  spec:
-    parentRefs: [ { name: eg, namespace: envoy-gateway-system } ]
-    rules: [ { backendRefs: [ { name: blue, port: 80 } ] } ]
-  EOF
+    kubectl apply -f- <<EOF
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: blue
+    spec:
+      parentRefs: [ { name: eg, namespace: envoy-gateway-system } ]
+      rules: [ { backendRefs: [ { name: blue, port: 80 } ] } ]
+    EOF
   ```
 
 ]

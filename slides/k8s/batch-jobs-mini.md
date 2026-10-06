@@ -62,7 +62,16 @@
           --image=alpine -- sleep 10
   ```
 
+
 ???
 
 :EN:- Running batch and cron jobs (short version)
 :FR:- Tâches périodiques *(cron)* et traitement par lots *(batch)* (version courte)
+
+---
+
+name: visual-proposal-10-review
+class: pic
+
+<!-- Diagram #10 approved; keep the text slide and diagram slide. -->
+![CronJobs schedule Jobs; Jobs finish their work](images/k8s-cronjob-timeline-2026.svg)

@@ -83,30 +83,29 @@ content:
     - k8s/batch-jobs-mini.md # slides 3, labs 0
     #- k8s/labels-annotations.md # slides 11, labs 6
     - k8s/labels-annotations-mini.md # slides 4, labs 0
-    - k8s/namespaces.md # slides 18, labs 2, dockercoins 2
     - k8s/kubectl-logs.md # slides 5, labs 3
     - k8s/logs-cli.md # slides 6, labs 3
     - shared/declarative.md # slides 3, labs 0
     - k8s/declarative.md # slides 2, labs 0
-    #- shared/yaml.md # slides 18, labs 0
-    - k8s/yamldeploy.md # slides 28, labs 11
-    - k8s/templating.md # slides 13, labs 0
     - k8s/deploymentslideshow.md # slides 20, labs 0
     - k8s/kubectlexpose.md # slides 19, labs 8
     - k8s/service-types.md # slides 40, labs 1
     - k8s/kubenet.md # slides 12, labs 0
-    # TODO: copy a few Gateway API slides to aws-eks.md and make AWS ingress a topic in aws section
-    - k8s/gateway-api.md # slides 25, labs 7
+    - k8s/namespaces.md # slides 18, labs 2, dockercoins 2
+    #- k8s/gateway-api.md # slides 25, labs 7
+    # Short version (no labs): what the Gateway API is and what routes can do
+    - k8s/gateway-api-mini.md # slides 5, labs 0
 
 - title: Deploying DockerCoins
   content:
     - shared/sampleapp.md # FIRST TIME with DockerCoins # slides 11, labs 4, dockercoins 8
     - shared/composedown.md # slides 1, labs 1
     - k8s/shippingimages.md # slides 6, labs 0, dockercoins 2
-    #- k8s/buildshiprun-selfhosted.md # slides 11, labs 7, dockercoins 6
-    #- k8s/buildshiprun-dockerhub.md # slides 1, labs 0, dockercoins 7
     - k8s/ourapponkube.md # slides 7, labs 6, dockercoins 5
-    - k8s/kubercoins.md # slides 13, labs 5, dockercoins 20
+    - k8s/yamldeploy.md # slides 28, labs 11
+    # Replaced by dockercoins-yaml.md: remove the kubectl-created app, then apply dockercoins.yaml
+    #- k8s/kubercoins.md # slides 13, labs 5, dockercoins 20
+    - k8s/dockercoins-yaml.md # slides 5, labs 3, dockercoins 4
     - k8s/scalingdockercoins.md # slides 10, labs 5, dockercoins 3
     - shared/hastyconclusions.md # slides 1, labs 0
     # Long way of creating a DaemonSet for DockerCoins
@@ -117,8 +116,6 @@ content:
     - k8s/healthchecks.md # slides 29, labs 0
     # Lab of failing probes in DockerCoins
     - k8s/healthchecks-more.md # slides 17, labs 6, dockercoins 10
-    # COMMENT OUT: how to use annotate change-cause
-    #- k8s/record.md # slides 3, labs 1, dockercoins 2
 
 - title: Cluster setup
   content:
@@ -126,7 +123,7 @@ content:
     #- k8s/setup-devel.md # slides 13, labs 0
     #- k8s/setup-managed.md # slides 23, labs 0
     #- k8s/setup-selfhosted.md # slides 6, labs 0
-    - k8s/aws-eks.md # slides 13, labs 0
+    - k8s/aws-eks.md # slides 15, labs 0
     # MAYBE IF TIME: (not in quote)
     #- k8s/k9s.md # slides 11, labs 0
     - k8s/headlamp.md # slides 15, labs 7
@@ -144,6 +141,7 @@ content:
 
 - title: Helm, Kustomize, GitOps (Optional)
   content:
+    - k8s/templating.md # slides 13, labs 0
     # KEEP: quote "Helm and Kustomize"
     - k8s/kustomize.md # slides 33, labs 1, dockercoins 27
     # Core Helm: operations, chart format, compact DockerCoins lab,

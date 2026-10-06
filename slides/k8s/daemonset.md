@@ -47,6 +47,16 @@
 
 - They can also be restricted to run [only on some nodes](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#running-pods-on-select-nodes)
 
+.footnote[Review #43: the next diagram may replace this text after review.]
+
+---
+
+name: visual-deployment-daemonset-placement-review
+class: pic
+
+<!-- Diagram proposal #43; adjacent text retained for review. -->
+![Deployment and DaemonSet placement](images/k8s-deployment-daemonset-placement-2026.svg)
+
 ---
 
 ## Creating a DaemonSet
@@ -98,13 +108,13 @@
 
 - Generate the YAML for a Deployment:
   ```bash
-    kubectl create deployment rng --image=dockercoins/rng:v0.1 \
+    kubectl create deployment rng --image=ghcr.io/bretfisher/dockercoins/rng:v0.1 \
             -o yaml --dry-run=client
   ```
   
 - Save it to a file:
   ```bash
-    kubectl create deployment rng --image=dockercoins/rng:v0.1 \
+    kubectl create deployment rng --image=ghcr.io/bretfisher/dockercoins/rng:v0.1 \
             -o yaml --dry-run=client \
             > rng.yaml
   ```

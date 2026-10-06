@@ -106,6 +106,14 @@
 
 ---
 
+name: visual-manifest-transformation-review
+class: pic
+
+<!-- Diagram #24 approved; keep the text slide and diagram slide. -->
+![Standard UNIX tools - `envsubst`: visual explanation](images/k8s-manifest-transformation-2026.svg)
+
+---
+
 ## Text templating tools
 
 - These are very rarely used
@@ -197,6 +205,14 @@
   - easy to get started
   - doesn't require to rewrite YAML manifests
   - can apply (almost) arbitrary patches to resources
+
+---
+
+name: visual-helm-kustomize-inputs-review
+class: pic
+
+<!-- Diagram #25 approved; keep the text slide and diagram slide. -->
+![Helm vs Kustomize: visual explanation](images/k8s-helm-kustomize-inputs-2026.svg)
 
 ---
 

@@ -85,6 +85,16 @@
 
    (so we can e.g. change a password or SSH key without having to reset access rights)
 
+.footnote[Review #127: the next diagram may replace this text after review.]
+
+---
+
+name: visual-api-security-sequence-review
+class: pic
+
+<!-- Diagram proposal #127; adjacent text retained for review. -->
+![API security sequence](images/k8s-api-security-sequence-2026.svg)
+
 ---
 
 ## Authentication in Kubernetes

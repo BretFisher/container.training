@@ -70,7 +70,7 @@
 
 - We will run DockerCoins in a new, separate namespace
 
-- We will use a set of YAML manifests and pre-built images
+- We will use the same DockerCoins manifest as before
 
 - We will add our new liveness probe to the YAML of the `rng` Deployment
 
@@ -98,23 +98,18 @@
 
 ---
 
-## Retrieving DockerCoins manifests
+## Copying the DockerCoins manifest
 
-- All the manifests that we need are on a convenient repository:
+- The manifest is in the repository that we cloned: `~/container.training/k8s/dockercoins.yaml`
 
-  https://github.com/jpetazzo/kubercoins
+- We will change it, so let's work on a copy (and keep the original as is)
 
 .lab[
 
-- Clone that repository:
+- Copy the manifest to our home directory:
   ```bash
   cd ~
-  git clone https://github.com/jpetazzo/kubercoins
-  ```
-
-- Change directory to the repository:
-  ```bash
-  cd kubercoins
+  cp ~/container.training/k8s/dockercoins.yaml dockercoins-yellow.yaml
   ```
 
 ]
@@ -155,16 +150,16 @@ It will use the default success threshold (1 successful attempt = alive).
 
 .lab[
 
-- Edit `rng-deployment.yaml` and add the liveness probe
+- Edit `dockercoins-yellow.yaml` and add the liveness probe to the `rng` Deployment
   ```bash
-  vim rng-deployment.yaml
+  vim dockercoins-yellow.yaml
   ```
 
 <!-- ```skip students edit the file by hand``` -->
 
-- Load the YAML for all the resources of DockerCoins:
+- Deploy DockerCoins in the `yellow` Namespace:
   ```bash
-  kubectl apply -f .
+  kubectl apply -f dockercoins-yellow.yaml
   ```
 
 <!--
@@ -366,6 +361,26 @@ class: extra-details
   (and have the `pause` container take care of the reaping)
 
 - Discussion of this in [Video - 10 Ways to Shoot Yourself in the Foot with Kubernetes, #9 Will Surprise You](https://www.youtube.com/watch?v=QKI-JRs2RIE)
+
+---
+
+## Cleaning up
+
+- Let's remove this second copy of DockerCoins
+
+.lab[
+
+- Switch back to the `default` Namespace:
+  ```bash
+  kns default
+  ```
+
+- Delete the `yellow` Namespace (and everything in it):
+  ```bash
+  kubectl delete namespace yellow
+  ```
+
+]
 
 ???
 

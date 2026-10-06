@@ -80,6 +80,16 @@ class: extra-details
   (but without permission to do so in namespace B)
   from adding network policies giving them access to namespace B
 
+.footnote[Review #116: the next diagram may replace this text after review.]
+
+---
+
+name: visual-network-policy-two-sides-review
+class: pic
+
+<!-- Diagram proposal #116; adjacent text retained for review. -->
+![NetworkPolicy checks at both ends](images/k8s-network-policy-two-sides-2026.svg)
+
 ---
 
 ## The rationale for network policies

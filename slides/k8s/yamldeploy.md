@@ -59,6 +59,14 @@
 
 ---
 
+name: visual-yaml-to-workloads-review
+class: pic
+
+<!-- Diagram #19 approved; keep the text slide and diagram slide. -->
+![Why use YAML? (3/3): visual explanation](images/k8s-yaml-to-workloads-2026.svg)
+
+---
+
 class: extra-details
 
 ## Overrides and `kubectl set`
@@ -182,6 +190,14 @@ class: extra-details
   ```
 
 ]
+
+---
+
+name: visual-deployment-manifest-map-review
+class: pic
+
+<!-- Diagram #20 approved; keep the text slide and diagram slide. -->
+![Generating a Deployment manifest: visual explanation](images/k8s-deployment-manifest-map-2026.svg)
 
 ---
 
@@ -322,6 +338,14 @@ class: extra-details
 
 ---
 
+name: visual-create-apply-outcomes-review
+class: pic
+
+<!-- Diagram #21 approved; keep the text slide and diagram slide. -->
+![`create` → `apply`: visual explanation](images/k8s-create-apply-outcomes-2026.svg)
+
+---
+
 ## Adding a Service
 
 - Let's generate the YAML for a Service exposing our Deployment
@@ -401,6 +425,14 @@ class: extra-details
     (and eventually succeed)
 
 - One exception: Namespaces should be created *before* resources in them!
+
+---
+
+name: visual-resource-dependencies-review
+class: pic
+
+<!-- Diagram #22 approved; keep the text slide and diagram slide. -->
+![Resource ordering: visual explanation](images/k8s-resource-dependencies-2026.svg)
 
 ---
 
@@ -495,6 +527,14 @@ full automated (as opposed to manually running commands like `kubectl apply`
 or more complex scripts or tools).*
 
 Your instructor may or may not have an opinion on the matter! 😁
+
+---
+
+name: visual-gitops-reconciliation-review
+class: pic
+
+<!-- Diagram #23 approved; keep the text slide and diagram slide. -->
+![Actually GitOps?: visual explanation](images/k8s-gitops-reconciliation-2026.svg)
 
 ---
 

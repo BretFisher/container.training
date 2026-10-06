@@ -63,6 +63,16 @@ metadata:
 
   (`get`, `delete`, `logs`, `label`, ...)
 
+.footnote[Review #11: the next diagram may replace this text after review.]
+
+---
+
+name: visual-proposal-11-review
+class: pic
+
+<!-- Diagram proposal #11; adjacent text retained for review. -->
+![Selectors match labels on each Pod](images/k8s-label-selector-match-2026.svg)
+
 ---
 
 ## Selectors connect Kubernetes resources

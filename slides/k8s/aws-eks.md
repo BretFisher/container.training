@@ -226,6 +226,57 @@ class: pic
 
 ---
 
+## Traffic into the cluster: kubeadm vs EKS
+
+.column-half[
+### kubeadm+kubectl (vanilla K8s)
+
+- No cloud load balancer: we install a Gateway controller (e.g. Envoy Gateway)
+
+- The proxy runs in the cluster (hostPort, NodePort, or our own load balancer)
+
+- We manage TLS certificates (e.g. cert-manager)
+]
+
+.column-half[
+### EKS + [AWS Load Balancer Controller][lbc-gateway]
+
+- A `Gateway` creates a managed AWS load balancer; no proxy in the cluster
+
+- `gateway.k8s.aws/alb`: ALB for `HTTPRoute` and `GRPCRoute`
+
+- `gateway.k8s.aws/nlb`: NLB for `TCPRoute`, `UDPRoute`, and `TLSRoute`
+
+- TLS certificates come from ACM (found by hostname)
+]
+
+- Either way, developers write the same `HTTPRoute` resources
+
+[lbc-gateway]: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/gateway/gateway/
+
+---
+
+## Securing the edge on EKS
+
+- Platform team: `GatewayClass`, `Gateway`, and `LoadBalancerConfiguration`
+
+  (internal or internet-facing, subnets, security groups, access logs)
+
+- App teams: only `HTTPRoute`s, in their own Namespaces (RBAC + `allowedRoutes`)
+
+- `ListenerRuleConfiguration` can require login with Amazon Cognito or OIDC
+
+- AWS WAF and Shield Advanced protect ALBs from attacks
+
+- EKS Auto Mode's built-in load balancing handles `Ingress` and `Service`;
+  for Gateway API, install the AWS Load Balancer Controller
+
+- East-west traffic between clusters: the [VPC Lattice Gateway API Controller][lattice-gateway]
+
+[lattice-gateway]: https://www.gateway-api-controller.eks.aws.dev/latest/
+
+---
+
 ## Operations and upgrades
 
 - EKS versions receive 14 months of standard support, then 12 months extended

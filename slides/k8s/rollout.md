@@ -108,7 +108,8 @@ kubectl get deployments
 
 - Update `worker` either with `kubectl edit`, or by running:
   ```bash
-  kubectl set image deploy worker worker=dockercoins/worker:v0.2
+  kubectl set image deploy worker \
+          worker=ghcr.io/bretfisher/dockercoins/worker:v0.2
   ```
 
 ]
@@ -149,7 +150,8 @@ That rollout should be pretty quick. What shows in the web UI?
 
 - Update `worker` by specifying a non-existent image:
   ```bash
-  kubectl set image deploy worker worker=dockercoins/worker:v0.3
+  kubectl set image deploy worker \
+          worker=ghcr.io/bretfisher/dockercoins/worker:v0.3
   ```
 
 - Check what's going on:
@@ -401,7 +403,7 @@ spec:
     spec:
       containers:
       - name: worker
-        image: dockercoins/worker:v0.1
+        image: ghcr.io/bretfisher/dockercoins/worker:v0.1
   strategy:
     rollingUpdate:
       maxUnavailable: 0
@@ -432,7 +434,7 @@ class: extra-details
         spec:
           containers:
           - name: worker
-            image: dockercoins/worker:v0.1
+            image: ghcr.io/bretfisher/dockercoins/worker:v0.1
       strategy:
         rollingUpdate:
           maxUnavailable: 0

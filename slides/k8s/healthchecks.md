@@ -89,6 +89,16 @@
 
 - As soon as the readiness probe succeeds again, everything goes back to normal
 
+.footnote[Review #54: the next diagram may replace this text after review.]
+
+---
+
+name: visual-probe-lifecycle-review
+class: pic
+
+<!-- Diagram proposal #54; adjacent text retained for review. -->
+![Probe lifecycle](images/k8s-probe-lifecycle-2026.svg)
+
 ---
 
 ## When to use a readiness probe

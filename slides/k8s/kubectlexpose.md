@@ -179,6 +179,14 @@ You should see a response from the Pod.
 
 ---
 
+name: visual-service-stable-endpoint-review
+class: pic
+
+<!-- Diagram #27 approved; keep the text slide and diagram slide. -->
+![The Service keeps its name and IP as a failed Pod is replaced](images/k8s-service-stable-endpoint-2026.svg)
+
+---
+
 ## Exposing our deployment
 
 - Let's create a Service for our Deployment
@@ -316,7 +324,7 @@ class: extra-details
   kubectl run --rm -it --image=archlinux test-dns-integration
   ```
 
-<!-- ```longwait ]#``` -->
+<!-- ```longwait root@test-dns-integration``` -->
 
 - Try to resolve the `blue` Service from the Pod:
   ```bash

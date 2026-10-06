@@ -51,6 +51,16 @@
 
 - On a given node, the sum of all limits **can** be higher than the node size
 
+.footnote[Review #87: the next diagram may replace this text after review.]
+
+---
+
+name: visual-requests-limits-review
+class: pic
+
+<!-- Diagram proposal #87; adjacent text retained for review. -->
+![Scheduling and enforcement](images/k8s-requests-limits-2026.svg)
+
 ---
 
 ## Compressible vs incompressible resources

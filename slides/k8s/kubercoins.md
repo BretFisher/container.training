@@ -66,6 +66,8 @@ Without further ado, let's start this application!
 
 ---
 
+class: bret-skip
+
 ## What's this application?
 
 --
@@ -96,6 +98,8 @@ Without further ado, let's start this application!
 
 ---
 
+class: bret-skip
+
 ## DockerCoins in the microservices era
 
 - DockerCoins is made of 5 services:
@@ -116,6 +120,8 @@ Without further ado, let's start this application!
 
 ---
 
+class: bret-skip
+
 ## How DockerCoins works
 
 - `worker` invokes web service `rng` to generate random bytes
@@ -132,11 +138,13 @@ Without further ado, let's start this application!
 
 ---
 
-class: pic
+class: pic, bret-skip
 
 ![Diagram showing the 5 containers of the applications](images/dockercoins-diagram-2026.svg)
 
 ---
+
+class: bret-skip
 
 ## Service discovery in container-land
 
@@ -153,6 +161,8 @@ How does each service find out the address of the other ones?
   (And by container-magic, we mean "a crafty, dynamic, embedded DNS server")
 
 ---
+
+class: bret-skip
 
 ## Example in `worker/worker.py`
 
@@ -176,6 +186,8 @@ def hash_bytes(data):
 [dockercoins-worker-code]: https://@@GITREPO@@/blob/8279a3bce9398f7c1a53bdd95187c53eda4e6435/dockercoins/worker/worker.py#L17
 
 ---
+
+class: bret-skip
 
 ## Show me the code!
 
