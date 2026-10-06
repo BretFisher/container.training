@@ -519,6 +519,70 @@
       }
       onSlideShown(addContentsButton);
 
+      // 💬 "Ask AI" button (body class "ask-ai", from "askai: true" in the
+      // deck manifest), on text slides only. It opens a small menu with
+      // Claude and ChatGPT links. Both get the same generic prompt, with the
+      // slide title and the public URL of the chapter's Markdown file
+      // (markmaker writes each chapter to fragments/<path>), so the assistant
+      // can read the slide. The URL is public, so the assistant can open it.
+      const slidesURL = tmpl('@@SLIDESURL@@', '"@@SLIDESURL@@"', '') || location.href;
+      const askAIPrompt = (title, url) =>
+        `I'm a student in a hands-on class: "${tmplTITLE.trim()}".\n` +
+        `Read the slide titled "${title}" in this chapter of our course:\n${url}\n` +
+        'Then tell me more about its topic: the related Kubernetes features and tools, ' +
+        'why it matters in production (including security), and a short example. ' +
+        'Keep it under 300 words, and suggest 3 follow-up questions I could ask.';
+      const askAIServices = [
+        { name: 'Ask Claude', url: q => 'https://claude.ai/new?q=' + encodeURIComponent(q) },
+        { name: 'Ask ChatGPT', url: q => 'https://chatgpt.com/?q=' + encodeURIComponent(q) },
+      ];
+      function addAskAIButton() {
+        if (!document.body.classList.contains('ask-ai')) return;
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container || container.querySelector('.remark-askai-button')) return;
+        // Text slides only: skip picture, title, and interstitial slides.
+        if (container.matches('.pic, .title')) return;
+        const heading = container.querySelector('h1, h2');
+        // The footer has the source file: "k8s/netpol.md" (production) or
+        // "k8s/netpol.md · #anchor" (dev mode). Generated slides have none.
+        const file = /[\w./-]+\.md\b/.exec(container.querySelector('.debug')?.textContent || '')?.[0];
+        if (!heading || !file || file === 'toc.md') return;
+        const prompt = askAIPrompt(heading.textContent.trim(),
+          new URL('fragments/' + file, slidesURL).href);
+        const button = document.createElement('button');
+        button.className = 'remark-askai-button';
+        button.textContent = '💬';
+        button.title = 'Ask an AI assistant about this slide';
+        button.setAttribute('aria-label', button.title);
+        button.setAttribute('aria-expanded', 'false');
+        const menu = document.createElement('div');
+        menu.className = 'askai-menu';
+        menu.hidden = true;
+        for (const service of askAIServices) {
+          const link = document.createElement('a');
+          link.textContent = service.name;
+          link.href = service.url(prompt);
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.addEventListener('click', () => { menu.hidden = true; });
+          menu.appendChild(link);
+        }
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          menu.hidden = !menu.hidden;
+          button.setAttribute('aria-expanded', String(!menu.hidden));
+          // Drop focus, so Space/Enter go to Remark, not to this button.
+          button.blur();
+        });
+        container.append(button, menu);
+      }
+      onSlideShown(addAskAIButton);
+      // A click anywhere else closes the menu.
+      document.addEventListener('click', event => {
+        if (event.target.closest('.askai-menu, .remark-askai-button')) return;
+        document.querySelectorAll('.askai-menu').forEach(menu => { menu.hidden = true; });
+      });
+
       // 🎨 button above "?": cycle through color themes (workshop.css
       // defines the colors). Light themes first, then dark from lightest to
       // darkest. The choice is saved in this browser only.
@@ -627,6 +691,18 @@
           label.classList.add('visible');
         });
       }
+      // Links that leave this deck (other sites, or other pages on this
+      // site) open in a new tab, so students keep their place in the slides.
+      // Links inside the deck (e.g. #toc) stay in the same tab. One listener
+      // for the whole page covers every slide and the dialogs.
+      document.addEventListener('click', function (event) {
+        const link = event.target.closest('a[href]');
+        if (!link) return;
+        const url = new URL(link.href, location.href);
+        if (url.origin === location.origin && url.pathname === location.pathname) return;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      }, true);
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: false });
         onSlideShown(function (slide) {

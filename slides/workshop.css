@@ -83,7 +83,8 @@ div.remark-slide-number {
 .remark-help-button,
 .remark-theme-button,
 .remark-search-button,
-.remark-contents-button {
+.remark-contents-button,
+.remark-askai-button {
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -101,18 +102,18 @@ div.remark-slide-number {
   cursor: pointer;
   opacity: 0.6;
 }
-.remark-help-button:hover, .remark-theme-button:hover, .remark-search-button:hover, .remark-contents-button:hover,
-.remark-help-button:focus-visible, .remark-theme-button:focus-visible, .remark-search-button:focus-visible, .remark-contents-button:focus-visible {
+.remark-help-button:hover, .remark-theme-button:hover, .remark-search-button:hover, .remark-contents-button:hover, .remark-askai-button:hover,
+.remark-help-button:focus-visible, .remark-theme-button:focus-visible, .remark-search-button:focus-visible, .remark-contents-button:focus-visible, .remark-askai-button:focus-visible {
   opacity: 1;
   color: black;
   border-color: black;
 }
-.remark-help-button:focus-visible, .remark-theme-button:focus-visible, .remark-search-button:focus-visible, .remark-contents-button:focus-visible {
+.remark-help-button:focus-visible, .remark-theme-button:focus-visible, .remark-search-button:focus-visible, .remark-contents-button:focus-visible, .remark-askai-button:focus-visible {
   outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 @media print {
-  .remark-help-button, .remark-theme-button, .remark-search-button, .remark-contents-button { display: none; }
+  .remark-help-button, .remark-theme-button, .remark-search-button, .remark-contents-button, .remark-askai-button, .askai-menu { display: none; }
 }
 
 /* Help screen ("?"): the same themed card as the search and contents
@@ -606,6 +607,33 @@ pre:has(> .copy-button) {
 @media print { .slide-search { display: none; } }
 
 .remark-contents-button { bottom: 140px; }
+
+/* 💬 "Ask AI" button above the contents button, and its menu to the left
+   (added by workshop.html when the manifest has "askai: true"). */
+.remark-askai-button { bottom: 184px; font: 18px/1 sans-serif; }
+.askai-menu {
+  position: absolute;
+  bottom: 184px;
+  right: 52px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid var(--box-border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font: 16px/1.5 'Open Sans', sans-serif;
+  z-index: 10;
+}
+.askai-menu[hidden] { display: none; }
+.askai-menu a {
+  padding: 6px 14px;
+  border-radius: 4px;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.askai-menu a:hover, .askai-menu a:focus-visible { background: var(--box-bg); color: var(--link); }
 /* Scale each original TOC canvas; keep its columns and slide text styles. */
 .slide-contents { width: calc(100vw - 16px); max-width: none; max-height: calc(100dvh - 16px); padding: 8px; }
 .slide-contents-close { position: absolute; top: 8px; right: 8px; z-index: 1; }

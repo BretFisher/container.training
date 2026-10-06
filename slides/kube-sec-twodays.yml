@@ -46,6 +46,9 @@ toc: single
 # Show the image path when the mouse is on an image (always on in dev mode).
 imagelabels: true
 
+# "Ask AI" button on text slides: opens Claude or ChatGPT with a prompt about the slide.
+askai: true
+
 exclude:
 # Upstream class: content for self-paced learners only.
 - self-paced
@@ -178,9 +181,10 @@ content:
     # intro to network policies
     - k8s/netpol.md # slides 32, labs 8, dockercoins 5
 
-- title: Using AI with Kubernetes
-  content:
-    - k8s/AI.md # slides 24, labs 0
+# Hidden until Bret reviews AI.md; uncomment all 3 lines to bring the section back
+#- title: Using AI with Kubernetes
+#  content:
+#    - k8s/AI.md # slides 24, labs 0
 
 - title: Authentication and authorization (Optional)
   content:

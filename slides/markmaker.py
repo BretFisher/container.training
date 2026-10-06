@@ -155,6 +155,11 @@ def generatefromyaml(manifest, filename):
     # when the manifest has "imagelabels: true".
     if dev or manifest.get("imagelabels"):
         bodyclass.append("image-labels")
+    # "Ask AI" button (Claude, ChatGPT) on text slides: "askai: true" in the
+    # manifest. It links to the public chapter file, under the "slides" URL.
+    if manifest.get("askai"):
+        bodyclass.append("ask-ai")
+    html = html.replace("@@SLIDESURL@@", manifest.get("slides", ""))
     html = html.replace("@@BODYCLASS@@", " ".join(bodyclass))
     return html
 
@@ -494,7 +499,9 @@ def devfooter(slide, filename):
     # and anchor in one line), so don't add a second one that would overlap.
     if "@@TOC@@" in slide:
         return ""
-    text = os.path.basename(filename)
+    # The path (e.g. k8s/netpol.md), not only the name: the "Ask AI" button
+    # in workshop.html reads it to find the chapter file (as in production).
+    text = filename
     for line in slide.lstrip("\n").split("\n"):
         match = re.match(r"^(\w+):\s*(.*)$", line)
         if not match:
