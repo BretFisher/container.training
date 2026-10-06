@@ -16,7 +16,7 @@ spec:
         app: hasher
     spec:
       containers:
-      - image: dockercoins/hasher:v0.1
+      - image: ghcr.io/bretfisher/dockercoins/hasher:v0.1
         name: hasher
 ---
 apiVersion: v1
@@ -86,7 +86,7 @@ spec:
         app: rng
     spec:
       containers:
-      - image: dockercoins/rng:v0.1
+      - image: ghcr.io/bretfisher/dockercoins/rng:v0.1
         name: rng
 ---
 apiVersion: v1
@@ -121,7 +121,7 @@ spec:
         app: webui
     spec:
       containers:
-      - image: dockercoins/webui:v0.1
+      - image: ghcr.io/bretfisher/dockercoins/webui:v0.1
         name: webui
 ---
 apiVersion: v1
@@ -156,5 +156,5 @@ spec:
         app: worker
     spec:
       containers:
-      - image: dockercoins/worker:v0.1
+      - image: ghcr.io/bretfisher/dockercoins/worker:v0.1
         name: worker
