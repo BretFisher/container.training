@@ -126,7 +126,11 @@ def parse_markdown(relpath, exclude, meta):
     for n, line in enumerate(lines, 1):
         if block is not None:
             if re.match(r"^```\s*(-->)?$", line.strip()):  # Also "``` -->" (hidden block)
-                body = "\n".join(l[block["indent"]:] if l[:block["indent"]].strip() == "" else l.lstrip()
+                # Remove indentation like Remark does, so the test runs what
+                # students see and copy: up to 2 x the fence indentation
+                # from each line (fence at 2 spaces: up to 4; at 4: up to 8).
+                strip = 2 * block["indent"]
+                body = "\n".join(l[min(strip, len(l) - len(l.lstrip(" "))):]
                                  for l in block["lines"])
                 snippets.append(dict(block, data=body.strip("\n")))
                 block = None

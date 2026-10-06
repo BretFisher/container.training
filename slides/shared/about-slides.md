@@ -53,9 +53,11 @@
 
   (then open the file `@@HTML@@`)
 
-- You can also generate a PDF of the slides
+- You can also print to PDF, but be patient with your browser!
 
-  (by printing them to a file; but be patient with your browser!)
+- BONUS: Wish there was a K8s topic in this workshop but don't see it in ToC?
+
+  - Check the full self-paced workshop deck! @@SLIDES@@kube-selfpaced.yml.html
 
 ---
 

@@ -42,7 +42,7 @@ class: bret-skip
 
 - Don't follow along passively; try to reproduce the demos and examples!
 
-- Each time you see a gray rectangle like this, it indicates a demo or example
+- Each time you see a ⌨️ icon in a gray rectangle like this, it indicates a student lab
 
 .lab[
 

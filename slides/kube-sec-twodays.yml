@@ -49,6 +49,8 @@ imagelabels: true
 exclude:
 # Upstream class: content for self-paced learners only.
 - self-paced
+# hide the nerdy extra details for a jam-packed workshop.
+- extra-details
 # Bret's class: slides Bret hides in his live class. It is a separate class,
 # so we know which slides Bret hid and which upstream hid.
 - bret-skip
@@ -64,10 +66,6 @@ content:
   content:
     - shared/title.md # slides 2, labs 0
     - logistics-bret.md # slides 2, labs 0
-    #- shared/chat-room-im.md # slides 1, labs 0
-    #- shared/chat-room-slack.md # slides 1, labs 0
-    #- shared/chat-room-zoom-meeting.md # slides 4, labs 0
-    #- shared/chat-room-zoom-webinar.md # slides 2, labs 0
     - shared/about-slides.md # slides 3, labs 1
     #- k8s/prereqs-basic.md # slides 1, labs 0
     - shared/handson.md # slides 2, labs 1

@@ -1580,6 +1580,23 @@ _cmd_tools() {
     sudo sed -i 's/^telemetry = true/telemetry = false/' /etc/et.cfg
     sudo systemctl restart et.service
     "
+
+    # herdr (https://herdr.dev/) keeps terminal sessions (e.g. coding agents)
+    # running after we disconnect. Its install script puts it in the home of
+    # one user, so we install the release binary for all users instead.
+    # The binaries use the "uname -m" names (x86_64, aarch64).
+    ##VERSION## https://github.com/herdrdev/herdr/releases
+    HERDR_VERSION=0.9.3
+    pssh "
+    set -e
+    if ! [ -x /usr/local/bin/herdr ]; then
+        sudo curl -fsSL -o /usr/local/bin/herdr \
+            \$GITHUB/herdrdev/herdr/releases/download/v$HERDR_VERSION/herdr-linux-\$(uname -m)
+        sudo chmod +x /usr/local/bin/herdr
+        herdr completion bash | sudo tee /etc/bash_completion.d/herdr >/dev/null
+        herdr --version
+    fi
+    "
 }
 
 _cmd pssh "Run an arbitrary command on all nodes"

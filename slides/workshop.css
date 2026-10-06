@@ -314,6 +314,16 @@ div img {
   max-width: 1210px;
   max-height: 250px;
 }
+/* A larger, centered image on a normal slide, e.g. under a bullet:
+   .big-image[![Alt text](images/example.png)]
+   400px fits under a title and two lines of text. */
+.big-image {
+  display: block;
+  text-align: center;
+}
+.big-image img {
+  max-height: 400px;
+}
 
 .nav {
   text-align: center;
