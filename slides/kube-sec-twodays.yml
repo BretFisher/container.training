@@ -105,16 +105,17 @@ content:
     - shared/composedown.md # slides 1, labs 1
     - k8s/shippingimages.md # slides 6, labs 0, dockercoins 2
     - k8s/ourapponkube.md # slides 7, labs 6, dockercoins 5
-    - k8s/yamldeploy.md # slides 28, labs 11
-    # Replaced by dockercoins-yaml.md: remove the kubectl-created app, then apply dockercoins.yaml
-    #- k8s/kubercoins.md # slides 13, labs 5, dockercoins 20
-    - k8s/dockercoins-yaml.md # slides 5, labs 3, dockercoins 4
     - k8s/scalingdockercoins.md # slides 10, labs 5, dockercoins 3
     - shared/hastyconclusions.md # slides 1, labs 0
+    # YAML and kubectl apply (purple/yellow demo app), needed by the DaemonSet chapter
+    - k8s/yamldeploy.md # slides 28, labs 11
     # Long way of creating a DaemonSet for DockerCoins
     - k8s/daemonset.md # slides 37, labs 11, dockercoins 2
     # KEEP: quote "Rolling updates"
     - k8s/rollout.md # slides 22, labs 11, dockercoins 4
+    # Replaced by dockercoins-yaml.md: remove the kubectl-created app, then apply dockercoins.yaml
+    #- k8s/kubercoins.md # slides 13, labs 5, dockercoins 20
+    - k8s/dockercoins-yaml.md # slides 5, labs 3, dockercoins 4
     # KEEP: Probe types and basics
     - k8s/healthchecks.md # slides 29, labs 0
     # Lab of failing probes in DockerCoins
@@ -139,8 +140,6 @@ content:
     - k8s/accessinternal.md # slides 6, labs 2
     # more kubectl proxy details and labs
     #- k8s/kubectlproxy.md # slides 10, labs 2
-
-    # LEFT OFF HERE-----------------------------------------------------------------
 
 - title: Helm, Kustomize, GitOps (Optional)
   content:
@@ -181,10 +180,21 @@ content:
     # intro to network policies
     - k8s/netpol.md # slides 32, labs 8, dockercoins 5
 
-# Hidden until Bret reviews AI.md; uncomment all 3 lines to bring the section back
-#- title: Using AI with Kubernetes
-#  content:
-#    - k8s/AI.md # slides 24, labs 0
+- title: Kubernetes in the age of AI
+  content:
+    #- k8s/AI.md # slides 24, labs 0
+    # TODO: create lecture on my podspec repo https://github.com/BretFisher/podspec
+    #- k8s/podspec-hardening.md
+    # TODO: add the k8s docs user namespace demo as a lecture https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/#create-pod
+    #- k8s/user-namespace.md
+    # TODO: create lecture on my k8s skill in skills repo https://github.com/BretFisher/skills
+    #- k8s/catch-up-skill.md
+    # Sandbox runtimes: gVisor lab on node2, Kata/Firecracker concepts. labtest 20/20 on 2026-10-07.
+    - k8s/sandbox.md # slides 20, labs 7
+    # TODO: linters and scanners for kubernetes clusters, manifest, chart, and kustomize linting/scanning.
+    - k8s/linting-scanning.md # slides 14, labs 6
+    # Falco + Talon features and complete ordered lab commands are in k8s/falco.md.
+    - k8s/falco.md
 
 - title: Authentication and authorization (Optional)
   content:
@@ -232,4 +242,7 @@ content:
     #- k8s/lastwords.md # slides 13, labs 0
     #- k8s/links.md # slides 1, labs 0
     #- shared/thankyou.md # slides 2, labs 0
+    # TODO: create lecture on how they can do this lab later. give a short step-by-step using /prepare-labs/labctl for AWS or hosted labs on https://labs.iximiuz.com/playgrounds?category=kubernetes&filter=all or https://killercoda.com/playgrounds/scenario/kubernetes or https://kodekloud.com/public-playgrounds
+    # TODO add to resources: my github actions workshop, my 2025 workshop on silent updates
+    #- resources-bret.md
     #- thankyou-bret.md TODO=============================================

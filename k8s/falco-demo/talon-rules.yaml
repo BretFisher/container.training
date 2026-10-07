@@ -1,0 +1,16 @@
+# Match only the workshop alert in the demo namespace.
+- rule: Workshop command response
+  match:
+    rules:
+      - Workshop forbidden command
+    output_fields:
+      - k8s.ns.name=falco-demo
+  dry_run: "true"
+  actions:
+    - action: Delete the demo pod
+      actionner: kubernetes:terminate
+      parameters:
+        grace_period_seconds: 0
+        ignore_daemonsets: true
+        ignore_statefulsets: true
+        ignore_standalone_pods: false

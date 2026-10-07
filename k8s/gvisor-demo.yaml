@@ -1,0 +1,34 @@
+# Used in slides/k8s/sandbox.md.
+# The RuntimeClass sends "gvisor" pods to nodes with the label sandbox/gvisor=true.
+# The two pods run on the same node: one with runc (the default), one with gVisor.
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+scheduling:
+  nodeSelector:
+    sandbox/gvisor: "true"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: normal
+spec:
+  nodeSelector:
+    sandbox/gvisor: "true"
+  containers:
+  - name: alpine
+    image: alpine
+    command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sandboxed
+spec:
+  runtimeClassName: gvisor
+  containers:
+  - name: alpine
+    image: alpine
+    command: ["sleep", "infinity"]

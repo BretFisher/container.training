@@ -121,6 +121,15 @@ it will compile each `foo.yml` file into `foo.yml.html`.
 It needs Python 3 with the packages in `requirements.txt`.
 It exits non-zero if any deck fails to build.
 
+Each build also writes a reference deck, `foo.reference.yml.html`, with
+the diagrams to refer back to. To put a slide in it, add the `reference`
+class, for example `class: pic, reference`. The reference deck starts with
+a TOC: the image titles (`![title](images/file.svg)`, or the file name if
+the title is empty), grouped by chapter. Each link opens the copy of that
+slide in the same file. Slides keep their footers, which show the source
+file. Excluded slides are not copied. Open it, for example, at
+`http://localhost:8080/kube-sec-twodays.reference.yml.html`.
+
 For a live dev server that rebuilds on every save, run `make serve` in this
 directory. It runs `docker compose up --build --watch` in the foreground.
 Build and watch output stays in that terminal. The slide image supplies

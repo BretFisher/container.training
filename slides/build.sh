@@ -36,7 +36,7 @@ fi
 if [ -n "$selected" ]; then
   echo "Building deck: $selected"
   set -- "$selected"
-  rm -f "$selected.html.tmp"
+  rm -f "$selected.html.tmp" "${selected%.yml}.reference.yml.html.tmp"
 else
   echo "Building all decks."
   set -- *.yml
@@ -47,8 +47,12 @@ fi
 for YAML do
   # Write to a temp file, then rename, so the web server never serves a
   # half-written deck and a failed build leaves the previous HTML in place.
-  ./markmaker.py "$YAML" > "$YAML.html.tmp"
+  # --reference also writes the reference deck (slides with class "reference"):
+  # foo.yml -> foo.reference.yml.html, so the "*.yml.html" ignore rules match it.
+  REFERENCE="${YAML%.yml}.reference.yml.html"
+  ./markmaker.py --reference "$REFERENCE.tmp" "$YAML" > "$YAML.html.tmp"
   mv "$YAML.html.tmp" "$YAML.html"
+  mv "$REFERENCE.tmp" "$REFERENCE"
 done
 
 if [ "${SLIDES_ZIP:-}" = 1 ]; then

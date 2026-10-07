@@ -23,7 +23,8 @@ class BuildSelectionTest(unittest.TestCase):
         for name in ("a.yml", "b.yml"):
             (self.work / name).write_text("fixture\n")
         self.executable("index.py", 'echo index >> trace; echo catalog > index.html')
-        self.executable("markmaker.py", 'printf "compile %s\\n" "$1" >> trace; echo "HTML for $1"')
+        self.executable("markmaker.py", 'if [ "$1" = --reference ]; then echo "reference" > "$2"; shift 2; fi; '
+                        'printf "compile %s\\n" "$1" >> trace; echo "HTML for $1"')
         (self.work / "bin").mkdir()
         self.executable("bin/zip", 'echo zip >> trace; touch slides.zip')
 
@@ -48,6 +49,7 @@ class BuildSelectionTest(unittest.TestCase):
         self.assertIn("Building all decks.", result.stdout)
         self.assertEqual(self.trace(), ["index", "compile a.yml", "compile b.yml"])
         self.assertTrue((self.work / "b.yml.html").exists())
+        self.assertTrue((self.work / "b.reference.yml.html").exists())
 
     def test_selected_build_leaves_catalog_and_other_decks_unchanged(self):
         (self.work / "index.html").write_text("old catalog")

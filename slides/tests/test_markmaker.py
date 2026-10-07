@@ -315,3 +315,33 @@ with patch('subprocess.check_output', side_effect=lambda command, **kw: values[t
                 (self.work / "collision.md").write_text("name: " + target + "\n\n## Collision\n")
                 self.assertIn("exactly one retained slide", self.build([["collision.md", "first.md"]],
                               single, success=False))
+
+    def test_reference_deck_has_toc_and_reference_slides(self):
+        (self.work / "pics.md").write_text(
+            "# Pictures chapter\n\n---\n\nclass: pic, reference\n\n![Network map](images/net.svg)\n\n"
+            "---\n\nname: arch\nclass: pic, reference\n\n![](images/control-planes/arch.svg)\n\n"
+            "---\n\nclass: pic, reference, hidden\n\n![Excluded](images/x.svg)\n\n"
+            "---\n\nclass: pic\n\n![Not a reference](images/y.svg)\n\n"
+            "---\n\n## Text slide\n\n```bash\n# not a chapter\n```\n")
+        manifest = {"title": "Test deck", "exclude": ["hidden"],
+                    "content": ["toc.md", ["first.md", "pics.md"]]}
+        (self.work / "deck.yml").write_text(yaml.safe_dump(manifest, sort_keys=False))
+        result = subprocess.run([sys.executable, str(SLIDES / "markmaker.py"),
+                                 "--reference", "deck.reference.yml.html", "deck.yml"],
+                                cwd=self.work, env=dict(os.environ, SLIDES_DEV="0"),
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        # The main deck is not changed: no generated anchors.
+        self.assertNotIn("name: ref-", result.stdout)
+        html = (self.work / "deck.reference.yml.html").read_text()
+        source = re.search(r'<textarea id="source"[^>]*>(.*)</textarea>', html, re.S).group(1)
+        slides = source.split("\n---\n")
+        self.assertTrue(slides[0].startswith("name: toc-section-1\n"))
+        self.assertIn("**Pictures chapter**", slides[0])
+        # TOC links point to slides in the same file; a slide keeps its name.
+        self.assertEqual(re.findall(r"^- \[([^]]+)\]\(([^)]+)\)$", slides[0], re.M),
+                         [("Network map", "#ref-1"), ("arch.svg", "#arch")])
+        self.assertEqual(len(slides), 3)
+        self.assertRegex(slides[1], r"^\n?name: ref-1\nclass: pic, reference\n")
+        self.assertIn("name: arch\nclass: pic, reference", slides[2])
+        self.assertIn("\"Test deck (reference)\"", html)

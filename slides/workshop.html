@@ -226,8 +226,10 @@
       function studentText(node) {
         if (node.nodeType === Node.TEXT_NODE) return node.textContent;
         if (node.nodeType !== Node.ELEMENT_NODE) return '';
-        if (node.matches('script, style, .footer, .debug, .remark-slide-number, button, [hidden]') ||
+        if (node.matches('script, style, .footer, .debug, .remark-slide-number, button, [hidden], .interstitial') ||
             getComputedStyle(node).display === 'none') return '';
+        // An image has no text: search its title ("![title](file)").
+        if (node.matches('img')) return (node.getAttribute('alt') || '') + ' ';
         const text = [...node.childNodes].map(studentText).join('');
         // Preserve spaces inside inline text; separate paragraphs and code lines.
         return text + (getComputedStyle(node).display === 'inline' ? '' : ' ');
@@ -240,7 +242,10 @@
           searchSlides.push(entry);
         }
         const heading = content.querySelector('h1, h2, h3, h4, h5, h6');
+        // A slide without a heading uses its first image title.
+        const image = [...content.querySelectorAll('img[alt]:not(.interstitial img)')].find(img => img.alt.trim());
         if (!entry.title && heading) entry.title = studentText(heading).trim();
+        else if (!entry.title && image) entry.title = image.alt.trim();
         entry.steps.push({ step: i + 1, text: normalizeSearch(studentText(content)) });
       });
       searchDialog.className = 'slide-search';

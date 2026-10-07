@@ -25,9 +25,9 @@
 
 ---
 
-class: pic
+class: pic, reference
 
-![EKS compute comparison: node ownership, scaling, workload fit, and constraints for self-managed nodes, managed node groups, Auto Mode, and Fargate, with Karpenter roles](images/aws-eks-compute-2026.svg)
+![EKS compute comparison](images/aws-eks-compute-2026.svg)
 
 ---
 
@@ -191,9 +191,9 @@ Both provide AWS IAM role credentials to Kubernetes Pods via the [AWS SDK][irsa-
 
 ---
 
-class: pic
+class: pic, reference
 
-![EKS workload access: Pod Identity and IRSA provide AWS credentials; ASCP uses either to deliver secrets](images/aws-eks-workload-access-2026.svg)
+![EKS workload access: Pod Identity, IRSA, and ASCP](images/aws-eks-workload-access-2026.svg)
 
 ---
 

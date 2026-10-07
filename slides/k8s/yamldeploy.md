@@ -598,6 +598,28 @@ class: extra-details
 
   - example: applications (production, staging, feature branches ...)
 
+---
+
+## Clean up
+
+- The `purple` and `yellow` Pods are still running
+
+- We don't need them anymore (and we don't want them in our next labs)
+
+.lab[
+
+- Delete the Pods that we created in this chapter:
+  ```bash
+  kubectl delete pod purple yellow
+  ```
+
+- Check that only DockerCoins is left:
+  ```bash
+  kubectl get pods
+  ```
+
+]
+
 ???
 
 :EN:- Deploying with YAML manifests

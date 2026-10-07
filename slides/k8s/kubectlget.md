@@ -88,7 +88,7 @@ class: extra-details
 ---
 
 name: visual-proposal-03-review
-class: pic
+class: pic, reference
 
 <!-- Diagram #3 approved; keep the text slide and diagram slide. -->
 ![kubectl reads cluster objects through the API](images/k8s-kubectl-read-path-2026.svg)
@@ -210,7 +210,7 @@ class: extra-details
 ---
 
 name: visual-proposal-04-review
-class: pic
+class: pic, reference
 
 <!-- Diagram #4 approved; keep the text slide and diagram slide. -->
 ![One Kubernetes Resource, three ways to view](images/k8s-object-views-2026.svg)
@@ -597,6 +597,6 @@ $ curl -k https://10.96.0.1
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Kubernetes IP Subnets](images/k8s-arch5-2026.svg)

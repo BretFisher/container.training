@@ -335,13 +335,13 @@ class: extra-details
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Kubernetes Deployment](images/k8s-deployment-2026.svg)
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Kubernetes Deployment](images/k8s-deployment-update-2026.svg)
 

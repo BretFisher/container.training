@@ -1,0 +1,33 @@
+# Observe command execution and send matching alerts to Talon.
+driver:
+  kind: modern_ebpf
+collectors:
+  containerEngine:
+    enabled: true
+  kubernetes:
+    enabled: false
+falco:
+  json_output: true
+  json_include_output_fields_property: true
+  stdout_output:
+    enabled: true
+  http_output:
+    enabled: true
+    url: http://falco-talon.falco.svc.cluster.local:2803/
+  # Evaluate every matching rule, including this rule after default rules.
+  rule_matching: all
+customRules:
+  workshop-commands.yaml: |-
+    - rule: Workshop forbidden command
+      desc: Detect selected command executions in the workshop namespace
+      condition: >
+        evt.type in (execve, execveat) and evt.rawres=0
+        and container.id != host
+        and k8s.ns.name = falco-demo
+        and proc.name in (sudo, apt, apt-get, curl)
+      output: >
+        Workshop forbidden command
+        (command=%proc.cmdline process=%proc.name uid=%user.uid
+        pod=%k8s.pod.name namespace=%k8s.ns.name container=%container.id)
+      priority: WARNING
+      tags: [workshop, process]

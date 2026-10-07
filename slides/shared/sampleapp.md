@@ -121,7 +121,7 @@ and displays aggregated logs.
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Diagram showing the 5 containers of the applications](images/dockercoins-diagram-2026.svg)
 

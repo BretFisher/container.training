@@ -132,31 +132,31 @@
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Overview of the three Kubernetes network layers](images/k8s-net-0-overview.svg)
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Pod-to-pod network](images/k8s-net-1-pod-to-pod.svg)
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Pod-to-service network](images/k8s-net-2-pod-to-svc.svg)
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Network policies](images/k8s-net-3-netpol.svg)
 
 ---
 
-class: pic
+class: pic, reference
 
 ![View with all the layers again](images/k8s-net-4-overview.svg)
 

@@ -207,7 +207,7 @@ Over 300,000 contributors to 250+ CNCF-hosted projects like K8s, Prometheus, Ope
 
 ---
 
-class: pic
+class: pic, reference
 
 ![haha only kidding](images/k8s-arch1.png)
 
@@ -221,7 +221,7 @@ class: pic
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Kubernetes control plane and worker nodes connected by a physical network](images/k8s-arch2-2026.svg)
 
@@ -264,7 +264,7 @@ class: bret-skip
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Kubernetes architecture with control-plane components, worker nodes, and interfaces](images/k8s-arch4-2026.svg)
 
@@ -307,37 +307,37 @@ class: extra-details
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/single-node-dev.svg)
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/managed-kubernetes.svg)
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/single-control-and-workers.svg)
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/stacked-control-plane.svg)
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/non-dedicated-stacked-nodes.svg)
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/advanced-control-plane.svg)
 
 ---
 
-class: pic
+class: pic, reference
 ![](images/control-planes/advanced-control-plane-split-events.svg)
 
 ---
@@ -411,7 +411,7 @@ class: extra-details
 ---
 
 name: visual-proposal-02-review
-class: pic
+class: pic, reference
 
 <!-- Diagram proposal #2; adjacent text retained for review. -->
 ![CRI runs containers; image building is a separate path](images/k8s-cri-image-path-2026.svg)
@@ -470,7 +470,7 @@ class: extra-details
 
 ---
 
-class: pic
+class: pic, reference
 
 ![Two containers in a Pod with shared resources](images/k8s-arch3-2026.svg)
 

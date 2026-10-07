@@ -431,7 +431,7 @@ class Term:
         lines = text.split("\n")
         for i, line in enumerate(lines):
             if line:
-                self.tmux("send-keys", "-t", self.target, "-l", line)
+                self.tmux("send-keys", "-t", self.target, "-l", "--", line)  # "--": a line can start with "-"
             if enter or i < len(lines) - 1:
                 self.tmux("send-keys", "-t", self.target, "Enter")
 
@@ -716,9 +716,15 @@ class Runner:
         self.term.start()
         archive = self.plan.get("local_repo")
         repo_dir = os.path.expanduser("~/container.training")
-        if archive and os.path.isdir(repo_dir):
+        if archive:
             # A re-test (ONLY=...) on a lab that has the repo already: update it.
+            # A selection without the clone step (shared/sampleapp.md): create it.
+            os.makedirs(repo_dir, exist_ok=True)
             subprocess.run(["tar", "-xzf", archive, "-C", repo_dir], check=True)
+        elif not os.path.isdir(repo_dir) and self.plan.get("gitrepo"):
+            # Same clone as the students do in shared/sampleapp.md.
+            subprocess.run(["git", "clone", "-q", "https://" + self.plan["gitrepo"], repo_dir],
+                           check=True)
         self.progress.write("START {} steps{}\n".format(
             len(self.plan["steps"]), " (local repo)" if archive else ""))
         for step in self.plan["steps"]:

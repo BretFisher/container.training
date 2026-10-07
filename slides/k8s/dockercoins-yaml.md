@@ -26,9 +26,9 @@
 
   (`--cascade=foreground` waits until the Pods are gone, too)
 
-- Delete the Pods from the previous chapter, too:
+- Delete the `rng` DaemonSet from the DaemonSets chapter, too:
   ```bash
-  kubectl delete pod purple yellow --ignore-not-found
+  kubectl delete daemonset rng --cascade=foreground
   ```
 
 - Check that only the `kubernetes` Service is left:
@@ -101,6 +101,14 @@ kubectl wait deploy --all --for condition=available --timeout=120s
 -->
 
 ]
+
+---
+
+name: visual-k8s-dockercoins-manifest-map-2026-review-40
+class: pic
+
+<!-- Diagram proposal #40; adjacent text retained for review. -->
+![One manifest defines the whole application](images/k8s-dockercoins-manifest-map-2026.svg)
 
 ---
 

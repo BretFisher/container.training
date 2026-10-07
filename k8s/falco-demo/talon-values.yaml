@@ -1,0 +1,39 @@
+# Static rendering checked with Talon chart 0.5.0; live lab test pending.
+# Empty verb lists produce a ClusterRole with no grants.
+replicaCount: 1
+rbac:
+  serviceAccount:
+    create: true
+    name: falco-talon
+  namespaces: []
+  pods: []
+  podsEphemeralcontainers: []
+  nodes: []
+  podsLog: []
+  podsExec: []
+  podsEviction: []
+  events: []
+  daemonsets: []
+  deployments: []
+  replicasets: []
+  statefulsets: []
+  networkpolicies: []
+  caliconetworkpolicies: []
+  ciliumnetworkpolicies: []
+  roles: []
+  clusterroles: []
+  configmaps: []
+  secrets: []
+  leases: []
+extraEnv:
+  - name: LOG_LEVEL
+    value: info
+config:
+  defaultNotifiers: []
+  watchRules: true
+  printAllEvents: true
+  deduplication:
+    # A string bypasses the chart's `default true` treatment of boolean false.
+    leaderElection: "false"
+  # The full response rule is passed with --set-file config.rulesOverride.
+  rulesOverride: ""

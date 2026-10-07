@@ -1,0 +1,29 @@
+# Used in slides/k8s/sandbox.md.
+# Two privileged pods on the same node: one with runc, one with gVisor.
+# We try to mount the disk of the node from inside each pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: escape-runc
+spec:
+  nodeSelector:
+    sandbox/gvisor: "true"
+  containers:
+  - name: alpine
+    image: alpine
+    command: ["sleep", "infinity"]
+    securityContext:
+      privileged: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: escape-gvisor
+spec:
+  runtimeClassName: gvisor
+  containers:
+  - name: alpine
+    image: alpine
+    command: ["sleep", "infinity"]
+    securityContext:
+      privileged: true

@@ -168,9 +168,9 @@
 ---
 
 name: kubernetes-operations-lifecycle
-class: pic
+class: pic, reference
 
-![Kubernetes operations: Day 0 plans ownership, topology, capacity, security, recovery, and delivery; Day 1 deploys the cluster, add-ons, policies, observability, backups, and workloads; Day 2 monitors, restores, upgrades, reviews access, rotates credentials, and responds to incidents.](images/k8s-operations-lifecycle-2026.svg)
+![Kubernetes operations: Day 0 vs 1 vs 2](images/k8s-operations-lifecycle-2026.svg)
 
 ???
 

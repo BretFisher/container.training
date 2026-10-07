@@ -1,0 +1,19 @@
+# Used in slides/k8s/linting-scanning.md (kyverno apply, no cluster needed).
+# Our own rule: Deployments use images from our registry only.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: trusted-registry
+spec:
+  validationActions: [ Deny ]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [ apps ]
+      apiVersions: [ v1 ]
+      operations: [ CREATE, UPDATE ]
+      resources: [ deployments ]
+  validations:
+  - expression: >-
+      object.spec.template.spec.containers.all(c,
+        c.image.startsWith('ghcr.io/bretfisher/'))
+    message: "Images must come from ghcr.io/bretfisher/."

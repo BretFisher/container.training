@@ -57,7 +57,10 @@ the lab has the pushed branch. With `LOCAL=1`, the test copies this working
 tree to the lab instead: the tracked files and the untracked files that
 `.gitignore` does not exclude, but not `slides/` and `prepare-*/`. The step
 `git clone https://<gitrepo>` extracts that copy, and an existing
-`~/container.training` gets the copy over it. Before you teach, test once
+`~/container.training` gets the copy over it. If `~/container.training`
+does not exist (for example with `ONLY=` on a fresh lab), the test creates
+it at the start: from this working tree with `LOCAL=1`, else with
+`git clone`, as students do. Before you teach, test once
 without `LOCAL=1`, to test what students get.
 
 ```bash

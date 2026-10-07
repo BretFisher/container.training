@@ -1,0 +1,87 @@
+# Prepare before loading the custom Falco rule. Live lab test pending.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-sudo
+  namespace: falco-demo
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  containers:
+    - name: workload
+      image: ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+      command: [sh, -ec]
+      args:
+        - |
+          apt-get update
+          apt-get install -y --no-install-recommends sudo curl
+          touch /tmp/demo-ready
+          exec sleep infinity
+      readinessProbe:
+        exec:
+          command: [test, -f, /tmp/demo-ready]
+        periodSeconds: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-apt
+  namespace: falco-demo
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  containers:
+    - name: workload
+      image: ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+      command: [sh, -ec]
+      args:
+        - |
+          apt-get update
+          apt-get install -y --no-install-recommends sudo curl
+          touch /tmp/demo-ready
+          exec sleep infinity
+      readinessProbe:
+        exec:
+          command: [test, -f, /tmp/demo-ready]
+        periodSeconds: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-curl
+  namespace: falco-demo
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  containers:
+    - name: workload
+      image: ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+      command: [sh, -ec]
+      args:
+        - |
+          apt-get update
+          apt-get install -y --no-install-recommends sudo curl
+          touch /tmp/demo-ready
+          exec sleep infinity
+      readinessProbe:
+        exec:
+          command: [test, -f, /tmp/demo-ready]
+        periodSeconds: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi

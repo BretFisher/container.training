@@ -125,6 +125,7 @@ def generatefromyaml(manifest, filename):
     if not exclude:
         logging.warning("'exclude' is empty.")
     markdown = removeexcluded(markdown, exclude)
+    refs = findreference(markdown)
     markdown = removetitleonly(markdown)
     # Validate against retained source slides and generated TOC/title anchors.
     names = Counter(slideproperties(s).get("name") for s in markdown.split("\n---\n"))
@@ -142,8 +143,16 @@ def generatefromyaml(manifest, filename):
             ".debug[\n```\n{}\n```\n\nThese slides have been built from commit: {}\n\n".format(dirtyfiles, commit),
             1)
 
+    if referencefile:
+        with open(referencefile, "w") as f:
+            f.write(renderhtml(manifest, genreference(refs), exclude,
+                               manifest["title"].replace("\n", " ") + " (reference)"))
+    return renderhtml(manifest, markdown, exclude, manifest["title"].replace("\n", " "))
+
+
+def renderhtml(manifest, markdown, exclude, title):
     html = open("workshop.html").read()
-    html = html.replace("@@TITLE@@", manifest["title"].replace("\n", " "))
+    html = html.replace("@@TITLE@@", title)
     html = html.replace("@@MARKDOWN@@", markdown)
     html = html.replace("@@EXCLUDE@@", exclude)
     html = html.replace("@@SLIDENUMBERPREFIX@@", manifest.get("slidenumberprefix", ""))
@@ -162,6 +171,71 @@ def generatefromyaml(manifest, filename):
     html = html.replace("@@SLIDESURL@@", manifest.get("slides", ""))
     html = html.replace("@@BODYCLASS@@", " ".join(bodyclass))
     return html
+
+# Reference deck: copies of the slides with class "reference" (diagrams
+# to refer back to), in deck order, after TOC slides that link to them.
+# Returns a list of (chapter, image titles, slide). Call it before
+# removetitleonly(), which removes the "# Title" lines of the chapters.
+def findreference(markdown):
+    refs = []
+    chapter = ""
+    for slide in markdown.split("\n---\n"):
+        # Lecture titles only; a "# " line in a code block is a comment.
+        for heading in re.findall(r"^# (.+)$", slide, re.MULTILINE):
+            if heading in all_titles:
+                chapter = heading
+        classes = re.split(r"[,\s]+", slideproperties(slide).get("class", ""))
+        if "reference" not in classes:
+            continue
+        images = [(alt or os.path.basename(src)) for alt, src in
+                  re.findall(r"!\[([^\]]*)\]\(([^)\s]+)", slide)]
+        images += [(alt or os.path.basename(src)) for src, alt in
+                   re.findall(r"<img\b[^>]*?src=\"([^\"]+)\"(?:[^>]*?alt=\"([^\"]*)\")?", slide)]
+        if images:
+            refs.append((chapter, images, slide))
+    return refs
+
+
+# A TOC slide holds about REFERENCE_TOC_LINES lines of its 3 columns; a long
+# title that wraps counts as more than one line. A chapter that continues on
+# the next TOC slide repeats its heading there.
+REFERENCE_TOC_LINES = 105
+def genreference(refs):
+    slides, entries = [], []
+    for i, (chapter, images, slide) in enumerate(refs):
+        name = slideproperties(slide).get("name")
+        if not name:
+            # The TOC links need an anchor. Properties are the first lines
+            # of the slide (after blank lines).
+            name = "ref-{}".format(i + 1)
+            lead = len(slide) - len(slide.lstrip("\n"))
+            slide = slide[:lead] + "name: {}\n".format(name) + slide[lead:]
+        slides.append(slide)
+        entries += [(chapter, image, name) for image in images]
+    tocs = []
+    body, lines, chapter = "", 0, None
+    for entry_chapter, image, name in entries:
+        cost = 1 + len(image) // 45
+        if entry_chapter != chapter:
+            cost += 2
+        if body and lines + cost > REFERENCE_TOC_LINES:
+            tocs.append(body)
+            body, lines, chapter = "", 0, None
+            cost = 3 + len(image) // 45
+        if entry_chapter != chapter:
+            chapter = entry_chapter
+            body += "\n**{}**\n\n".format(chapter or "Introduction")
+        label = re.sub(r"([\\\[\]])", r"\\\1", image)
+        body += "- [{}](#{})\n".format(label, name)
+        lines += cost
+    tocs.append(body or "\nThis deck has no slides with class \"reference\".\n")
+    # "toc-section-N" names: the TOC popup of workshop.html shows those slides.
+    tocs = ["name: toc-section-{}\n\n## Reference diagrams{}\n\n.toc-single[\n{}\n]\n\n"
+            ".debug[(auto-generated reference TOC)]"
+            .format(i + 1, " ({}/{})".format(i + 1, len(tocs)) if len(tocs) > 1 else "", body)
+            for i, body in enumerate(tocs)]
+    return "\n---\n".join(tocs + slides)
+
 
 # Remove the slides that have an excluded class, with all their "--" steps.
 # Remark also excludes them (excludedClasses), but it checks each "--" step
@@ -512,10 +586,15 @@ def devfooter(slide, filename):
     text = re.sub(r"([_*])", r"\\\1", text)
     return ".debug[{}]".format(text)
 
-if len(sys.argv) != 2:
-    logging.error("This program takes one and only one argument: the YAML file to process.")
+# "--reference FILE": also write the reference deck (see genreference) to FILE.
+referencefile = None
+args = sys.argv[1:]
+if len(args) == 3 and args[0] == "--reference":
+    referencefile, args = args[1], args[2:]
+if len(args) != 1:
+    logging.error("Usage: markmaker.py [--reference FILE] DECK.yml (the YAML file to process).")
 else:
-    filename = sys.argv[1]
+    filename = args[0]
     if filename == "-":
         filename = "<stdin>"
         manifest = sys.stdin

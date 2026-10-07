@@ -1,0 +1,17 @@
+# Used in slides/k8s/linting-scanning.md: kube-linter lint --config <this file>
+checks:
+  # Start from the default checks, then change them for our team.
+  exclude:
+    - unset-cpu-requirements      # we set CPU requests later, with metrics
+  include:
+    - latest-tag                  # not a default check: we want it
+customChecks:
+  # Our own rule: each Deployment has an "owner" label.
+  - name: team-owner-label
+    template: required-label
+    params:
+      key: owner
+    scope:
+      objectKinds:
+        - DeploymentLike
+    remediation: Add the label "owner" with the name of the team.
