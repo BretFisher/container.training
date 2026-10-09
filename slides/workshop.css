@@ -64,13 +64,49 @@ div.remark-slide-number {
   right: 6px;
 }
 
-/* Step counter under the slide number, on slides with "--" steps
+/* The three numbers show a hover text that explains them. */
+div.remark-slide-number,
+.remark-lecture-number,
+.remark-step-number {
+  cursor: help;
+}
+
+/* Pop-up that explains the three numbers (added by workshop.html). */
+.remark-counter-help {
+  position: fixed;
+  z-index: 1000;
+  max-width: 360px;
+  padding: 8px 12px;
+  border: 1px solid var(--box-border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-family: 'Droid Serif';
+  font-size: 14px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+.remark-counter-help[hidden] { display: none; }
+@media print { .remark-counter-help { display: none; } }
+
+/* Lecture counter under the slide number: slide/total in the current
+   lecture (added by workshop.html). */
+.remark-lecture-number {
+  position: absolute;
+  top: 36px;
+  right: 6px;
+  font-size: 20px;
+  opacity: 0.5;
+}
+
+/* Step counter under the lecture counter, on slides with "--" steps
    (added by workshop.html). Bold and colored on the last step. */
 .remark-step-number {
   position: absolute;
-  top: 34px;
+  top: 60px;
   right: 6px;
-  font-size: 25px;
+  font-size: 20px;
   opacity: 0.5;
 }
 .remark-step-number.last {

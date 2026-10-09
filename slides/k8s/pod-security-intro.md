@@ -10,7 +10,7 @@
 
 - Then we will explain how to avoid this with admission control
 
-  (PodSecurityAdmission, PodSecurityPolicy, or external policy engine)
+  (PodSecurityAdmission, ValidatingAdmissionPolicy, or an external policy engine)
 
 ---
 
@@ -120,25 +120,17 @@
 
   - plugins (compiled in API server; enabled/disabled by reconfiguration)
 
-  - webhooks (registered dynamically)
+  - webhooks (3rd party controllers, registered dynamically)
 
 - Admission control has many other uses
 
-  (enforcing quotas, adding ServiceAccounts automatically, etc.)
+  (enforcing quotas, adding ServiceAccounts or Pod labels automatically, etc.)
 
 ---
 
-## Admission plugins
+## Admission plugins (Built-in to API Server)
 
-- [PodSecurityPolicy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/) (was removed in Kubernetes 1.25)
-
-  - create PodSecurityPolicy resources
-
-  - create Role that can `use` a PodSecurityPolicy
-
-  - create RoleBinding that grants the Role to a user or ServiceAccount
-
-- [PodSecurityAdmission](https://kubernetes.io/docs/concepts/security/pod-security-admission/) (alpha since Kubernetes 1.22, stable since 1.25)
+- [PodSecurityAdmission](https://kubernetes.io/docs/concepts/security/pod-security-admission/)
 
   - use pre-defined policies (privileged, baseline, restricted)
 
@@ -146,11 +138,21 @@
 
   - optionally, define default rules (in the absence of labels)
 
+- [ValidatingAdmissionPolicy](https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/)
+
+  - Validate resouce spec's against CEL policies before they are deployed
+
+- [Mutating Admission Policies](https://kubernetes.io/docs/reference/access-authn-authz/mutating-admission-policy/)
+
+  - Change resources before they hit VAP
+
+.footnote[PodSecurityPolicy (PSP) was removed in Kubernetes 1.25; PSA replaced it.]
+
 ---
 
-## Dynamic admission
+## Dynamic admission (3rd party policy engines)
 
-- Leverage ValidatingWebhookConfigurations
+- Leverage the API servers `ValidatingWebhookConfigurations`
 
   (to register a validating webhook)
 
@@ -162,15 +164,13 @@
 
   [OPA Gatekeeper](https://github.com/open-policy-agent/gatekeeper)
 
-- Pros: available today; very flexible and customizable
+- These policy engines also run a-sync controllers
 
-- Cons: performance and reliability of external webhook
+  (background audit and reports for resources that already exist)
 
 ---
 
-## Validating Admission Policies
-
-- Alternative to validating admission webhooks
+## Validating Admission Policies (VAP)
 
 - Evaluated in the API server
 
@@ -178,11 +178,11 @@
 
 - Written in CEL (Common Expression Language)
 
-- alpha in K8S 1.26; beta in K8S 1.28; GA in K8S 1.30
+- Stable in Kubernetes 1.30
 
-- Can replace validating webhooks at least in simple cases
+- More limited than plugin validators (Kyverno, OPA Gatekeeper...)
 
-- Can extend Pod Security Admission
+- Can extend Pod Security Admission (you *could* use both together)
 
 - Check [the documentation][vapdoc] for examples
 
@@ -190,17 +190,100 @@
 
 ---
 
-## Acronym salad
+## Mutating Admission Policies (MAP)
 
-- PSP = Pod Security Policy **(removed in Kubernetes 1.25; replaced by PSA)**
+- Same model as VAP: CEL rules, evaluated in the API server, no webhook
+
+- Stable since Kubernetes 1.36
+
+- Two objects: `MutatingAdmissionPolicy` + `MutatingAdmissionPolicyBinding`
+
+- Difference with VAP:
+
+  - VAP *checks* an object (deny, warn, or audit)
+
+  - MAP *changes* an object (e.g. add a label, set a default value)
+
+  - MAP runs first; then VAP checks the changed object
+
+- More limited than plugin mutators (Kyverno, OPA Gatekeeper...)
+
+- Check [the documentation][mapdoc] for examples
+
+[mapdoc]: https://kubernetes.io/docs/reference/access-authn-authz/mutating-admission-policy/
+
+---
+
+## Built-in vs. webhook admission
+
+| | Built-in (PSA, VAP, MAP) | Webhooks (Kyverno...) |
+| --- | --- | --- |
+| Runs in | API server | Separate controller |
+| Install | Nothing | Deploy and upgrade it separately |
+| Latency | No network call | Network call per request |
+| Failure | Fails with API server | Blocks or skips requests based on config |
+| Rules | PSA levels or CEL | Any logic; external data |
+| Existing in-cluster resources | Not checked | Audit controllers report |
+
+- You can use just one, or combine them
+
+- Example: Use PSA for basic pod protection and Kyverno for everything else
+
+---
+
+## What policy engines add
+
+| Ability | PSA, VAP, MAP | Kyverno | Gatekeeper |
+| --- | --- | --- | --- |
+| Check or change the request | ✅ | ✅ | ✅ |
+| Read other objects or APIs | Params, Namespace | ✅ | ✅ |
+| Audit existing objects | ❌ | ✅ | ✅ |
+| Create other resources | ❌ | ✅ | ❌ |
+| Delete resources by rule | ❌ | ✅ | ❌ |
+| Verify image signatures | ❌ | ✅ | With Ratify |
+| Test policies with a CLI | `kyverno` | `kyverno` | `gator` |
+
+- PSA checks only Pods, with 3 fixed levels
+
+- VAP and MAP see the request, its Namespace, and one params object
+
+---
+
+## Comparing the policy engines
+
+| | Kyverno | OPA Gatekeeper | Kubewarden |
+| --- | --- | --- | --- |
+| Policy language | YAML + CEL | Rego | WebAssembly (Rust, Go...), also Rego and CEL |
+| Policy format | Kubernetes resource | ConstraintTemplate + Constraint | Wasm module in an OCI registry |
+| CLI for tests | `kyverno` | `gator` | `kwctl` |
+| CNCF maturity | Graduated (2026) | Graduated (OPA, 2021) | Sandbox (2022) |
+| GitHub stars (Oct. 2026) | 8,200 | 4,300 | 240 |
+
+- All three can change requests and audit existing objects
+
+- Gatekeeper runs the policy add-ons of GKE (Policy Controller) and AKS (Azure Policy)
+
+- Kubewarden: a policy is a program; build, sign, and ship it like an image
+
+---
+
+## Acronym salad
 
 - PSA = Pod Security Admission
 
-  - an admission plugin called PodSecurity, enforcing PSS
+  (an admission plugin called PodSecurity, enforcing PSS)
 
 - PSS = Pod Security Standards
 
-  - a set of 3 policies (privileged, baseline, restricted)\
+  (a set of 3 policies: privileged, baseline, restricted)
+
+- VAP = ValidatingAdmissionPolicy (CEL rules that accept or reject objects)
+
+- MAP = MutatingAdmissionPolicy (CEL rules that change objects)
+
+- OPA = Open Policy Agent (policy engine; Gatekeeper runs it as a webhook)
+
+.footnote[Content that mentions PSP is out of date: Kubernetes 1.25 (August 2022) removed it.]
 
 ???
 

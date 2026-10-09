@@ -162,21 +162,25 @@ content:
     #- k8s/argocd.md # potential after-hours lab # slides 34, labs 11
     #- k8s/argocd-advanced.md # optional lecture for the Argo CD lab # slides 8, labs 0
 
-- title: Controlling resources and cluster policies
+- title: Controlling resources
   content:
     - k8s/resource-limits.md # slides 56, labs 1
     # Checking Node and Pod resource usage
     - k8s/metrics-server.md # slides 12, labs 1
-    # COMMENT IN: title is "Restricting Pod Permissions", exact match with
-    # the quote.
+
+- title: Cluster security policies
+  content:
     - k8s/pod-security-intro.md # slides 10, labs 4
     # COMMENT IN: quote "Pod Security Admission"
     - k8s/pod-security-admission.md # slides 18, labs 4
     # Dynamic Admission Control. mechanism behind Kyverno and PSA
-    - k8s/admission.md # slides 23, labs 8
+    # TODO: FIX, or replace with VAP/MAP demo
+    - # k8s/admission.md # slides 23, labs 8
     - k8s/kyverno.md # slides 30, labs 1
     # Hands-on: immutable labels policy lab.
     - k8s/kyverno-colors.md # slides 14, labs 5
+    # Kyverno generates native VAP/MAP; lab tested on 1.37.1 + Kyverno 1.19.1.
+    - k8s/kyverno-vap-map.md
     # intro to network policies
     - k8s/netpol.md # slides 32, labs 8, dockercoins 5
 

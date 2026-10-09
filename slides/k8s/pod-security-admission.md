@@ -1,3 +1,4 @@
+<!-- verified: 2026-10-09 -->
 # Pod Security Admission
 
 - Built-in admission controller that applies the Pod Security Standards
@@ -38,15 +39,16 @@
 
 - `baseline`
 
-  - disables hostNetwork, hostPID, hostIPC, hostPorts, hostPath volumes
-  - limits which SELinux/AppArmor profiles can be used
-  - containers can still run as root and use most capabilities
+  - no privileged pods, hostNetwork, hostPID, hostIPC, hostPorts, hostPath volumes
+  - limits capabilities, SELinux, AppArmor, seccomp (not `Unconfined`), sysctls
+  - containers can still run as root and use the default capabilities
 
-- `restricted`
+- `restricted` (= everything in `baseline`, plus:)
 
-  - limits volumes to configMap, emptyDir, ephemeral, secret, PVC
-  - containers can't run as root, only capability is NET_BIND_SERVICE
-  - `baseline` (can't do privileged pods, hostPath, hostNetwork...)
+  - limits volumes to configMap, emptyDir, ephemeral, secret, PVC, ...
+  - `runAsNonRoot: true`, `allowPrivilegeEscalation: false`
+  - seccomp profile `RuntimeDefault` (or `Localhost`) is mandatory
+  - drop `ALL` capabilities (only `NET_BIND_SERVICE` can be added back)
 
 ---
 
@@ -79,6 +81,10 @@ class: extra-details
 - The values can be: `baseline`, `restricted`, `privileged`
 
   (setting it to `privileged` doesn't really do anything)
+
+- Optional `...-version` labels pin the rules of a Kubernetes version
+
+  (example: `pod-security.kubernetes.io/enforce-version=v1.37`; default: `latest`)
 
 ---
 
@@ -115,7 +121,9 @@ class: extra-details
 
 ]
 
-Note: warnings will be issued for infringing pods, but they won't be affected yet.
+- Running pods that break the new policy get a warning, but they keep running
+
+- Look at the warning about `kube-system` in the output!
 
 ---
 
@@ -137,24 +145,23 @@ class: extra-details
 
 ---
 
-## Relaxing `kube-system`
+## What about `kube-system`?
 
-- We have many system components in `kube-system`
+- We have many system components in `kube-system` (Cilium, kube-proxy...)
 
-- These pods aren't affected yet, but if there is a rolling update or something like that, the new pods won't be able to come up
+- Many of them need `privileged` (host network, host paths, capabilities)
 
-.lab[
+- If `baseline` applied there, their new pods could not start after an update!
 
-- Let's allow `privileged` pods in `kube-system`:
-  ```bash
-  kubectl label namespace kube-system \
-      pod-security.kubernetes.io/enforce=privileged \
-      pod-security.kubernetes.io/audit=privileged \
-      pod-security.kubernetes.io/warn=privileged \
-      --overwrite
-  ```
+- But our output says:
 
-]
+  `namespace "kube-system" is exempt from Pod Security, and the policy ... will be ignored`
+
+- The API server of our cluster has an *exemption* for `kube-system`
+
+  (in its *admission configuration*: we will look at it soon)
+
+- Without that exemption: label `kube-system` with `enforce=privileged`
 
 ---
 
@@ -208,81 +215,113 @@ class: extra-details
 
 ## Admission configuration
 
-- Step 1: write an "admission configuration file"
+- The API server can read an *admission configuration file*
 
-- Step 2: make sure that file is available to the API server
+  (flag: `--admission-control-config-file`)
 
-- Step 3: add a flag to the API server to use that file
+- For Pod Security, this file sets:
 
-*Note: this is done out of the box on some high-end, hardened distribution like Talos.*
+  - the defaults for namespaces with no labels
 
-*If you are attending a live class, it might also have been done on your clusters.*
+  - exemptions (namespaces, users, RuntimeClasses) that Pod Security ignores
 
-*The next slides assume that you're using a vanilla kubeadm cluster.*
+- Our clusters already have one!
 
----
-
-## Admission Configuration
-
-Let's use @@LINK[k8s/admission-configuration.yaml]:
-
-```yaml
-@@INCLUDE[k8s/admission-configuration.yaml]
-```
+  (some hardened distributions, like Talos, have one too)
 
 ---
 
-## Copy the file to the API server
-
-- We need the file to be available from the API server pod
-
-- For convenience, let's copy it do `/etc/kubernetes/pki`
-
-  (it's definitely not where it *should* be, but that'll do!)
+## Looking at our admission configuration
 
 .lab[
 
-- Copy the file:
+- Check the flag in the static pod manifest of the API server:
   ```bash
-    sudo cp ~/container.training/k8s/admission-configuration.yaml \
-            /etc/kubernetes/pki
+  sudo grep admission /etc/kubernetes/manifests/kube-apiserver.yaml
+  ```
+
+- Look at the file:
+  ```bash
+  sudo cat /etc/kubernetes/AdmissionConfiguration.yaml
   ```
 
 ]
 
+- `defaults`: `enforce: privileged`, `audit: baseline`, `warn: baseline`
+
+- `exemptions`: the `kube-system` namespace
+
 ---
 
-## Reconfigure the API server
+## How did it get there?
 
-- We need to add a flag to the API server to use that file
+- We created our clusters with `kubeadm`
+
+- The kubeadm `ClusterConfiguration` adds the flag and mounts the file:
+
+```yaml
+apiServer:
+  extraArgs:
+  - name: admission-control-config-file
+    value: /etc/kubernetes/AdmissionConfiguration.yaml
+  extraVolumes:
+  - name: admission-control-config-file
+    hostPath: /etc/kubernetes/AdmissionConfiguration.yaml
+    mountPath: /etc/kubernetes/AdmissionConfiguration.yaml
+    readOnly: true
+```
+
+- On managed clusters (EKS, AKS, GKE), we cannot change the API server flags
+
+  (we use namespace labels, or a policy engine like Kyverno)
+
+---
+
+## Testing the default policy
 
 .lab[
 
-- Make a backup copy of `/etc/kubernetes/manifests/kube-apiserver.yaml`
+- Create a namespace with no Pod Security labels, then deploy `hacktheplanet` in it:
+  ```bash
+  kubectl create namespace nolabels
+  kubectl apply -n nolabels -f ~/container.training/k8s/hacktheplanet.yaml
+  ```
 
-  (safety first!)
+<!-- ```hide kubectl rollout status -n nolabels daemonset hacktheplanet --timeout=120s``` -->
 
-- Edit the file; in the list of `command` parameters, add:
-
-  `--admission-control-config-file=/etc/kubernetes/pki/admission-configuration.yaml`
-
-- Save the new file and wait until the API server comes back online
+- Check the pods:
+  ```bash
+  kubectl get pods -n nolabels
+  ```
 
 ]
 
+- We get a `baseline` warning (`hostPath volumes`), but the pods run
+
+  (the default is `enforce: privileged`; earlier labs need privileged pods)
+
 ---
 
-## Test the new default policy
+## Changing the default policy
 
-- Create a new Namespace
+- To block these pods, change the defaults to `enforce: baseline`
 
-- Try to create the "hacktheplanet" DaemonSet in the new namespace
+  (in the admission configuration file, on each control plane node)
 
-- We get a warning when creating the DaemonSet
+- The API server reads the file only when it starts
 
-- The DaemonSet is created
+  (kubeadm: move its manifest out of `/etc/kubernetes/manifests`, then back)
 
-- But the Pods don't get created
+- Then, exceptions get a label: `pod-security.kubernetes.io/enforce=privileged`
+
+.lab[
+
+- Delete our test namespace:
+  ```bash
+  kubectl delete namespace nolabels
+  ```
+
+]
 
 ---
 

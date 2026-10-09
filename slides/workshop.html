@@ -68,6 +68,9 @@
       const stepToSlide = [];
       const slideFirstStep = [];
       const slideStepCount = [];
+      // Lecture of each slide number: [position, total], or none for slides
+      // before the first lecture and for interstitial pictures.
+      const slideLecture = [];
       // Remark writes the hash only with history.replaceState("#<step>")
       // (and "#p<step>" in presenter mode). Wrap it, so the URL shows the
       // slide number instead. Our own calls use setHash(), the original.
@@ -130,6 +133,28 @@
           if (slideFirstStep[no] === undefined) slideFirstStep[no] = i;
           slideStepCount[no] = (slideStepCount[no] || 0) + 1;
         });
+        // A lecture starts at its title slide (made by markmaker.py:
+        // "class: title", "name: toc-..."). The picture slide just before
+        // a title slide separates two lectures, so it is in no lecture.
+        const slides = slideshow.getSlides();
+        const isTitle = s => s && /^toc-/.test(s.properties.name || '') &&
+          /\btitle\b/.test(s.properties['class'] || '');
+        const lectures = [];
+        let lecture = null;
+        slides.forEach(function (slide, i) {
+          const no = stepToSlide[i];
+          if (slideFirstStep[no] !== i) return;
+          if (isTitle(slide)) {
+            lecture = [];
+            lectures.push(lecture);
+          } else if (isTitle(slides[slideFirstStep[no + 1]])) {
+            return;
+          }
+          if (lecture && !lecture.includes(no)) lecture.push(no);
+        });
+        lectures.forEach(function (nos) {
+          nos.forEach((no, i) => { slideLecture[no] = [i + 1, nos.length]; });
+        });
       }
       function stepForSlide(no) {
         no = Math.min(Math.max(no, 1), slideFirstStep.length - 1);
@@ -177,7 +202,61 @@
         });
       }
 
-      // Step counter under the slide number: "step/total" on slides with
+      // Pop-up that explains the three numbers in the top-right corner.
+      // A page element, not a "title" tooltip: some browsers do not show
+      // "title" tooltips, and others show them only after a delay.
+      const counterSelector = '.remark-slide-number, .remark-lecture-number, .remark-step-number';
+      const counterHelp = document.createElement('div');
+      counterHelp.className = 'remark-counter-help';
+      counterHelp.setAttribute('role', 'tooltip');
+      counterHelp.hidden = true;
+      counterHelp.innerHTML = `
+        <div><b>Top:</b> slide number in the whole workshop</div>
+        <div><b>Middle:</b> slide number in this lecture</div>
+        <div><b>Bottom:</b> step on this slide (only on slides that show more content step by step)</div>`;
+      document.body.appendChild(counterHelp);
+      document.addEventListener('mouseover', function (event) {
+        const counter = event.target instanceof Element &&
+          event.target.closest(counterSelector);
+        if (!counter) return;
+        // Show it under the lowest number of the slide, right-aligned.
+        const numbers = counter.parentElement.querySelectorAll(counterSelector);
+        const bottom = Math.max(...[...numbers].map(n => n.getBoundingClientRect().bottom));
+        const right = counter.getBoundingClientRect().right;
+        counterHelp.style.top = `${bottom + 6}px`;
+        counterHelp.style.right = `${window.innerWidth - right}px`;
+        counterHelp.hidden = false;
+      });
+      document.addEventListener('mouseout', function (event) {
+        const into = event.relatedTarget instanceof Element &&
+          event.relatedTarget.closest(counterSelector);
+        if (event.target instanceof Element &&
+            event.target.closest(counterSelector) && !into) {
+          counterHelp.hidden = true;
+        }
+      });
+      slideshow.on('beforeHideSlide', () => { counterHelp.hidden = true; });
+
+      // Lecture counter under the slide number: "slide/total" in the
+      // current lecture (a lecture title slide and the slides after it).
+      onSlideShown(function (slide) {
+        const lecture = slideLecture[stepToSlide[slide.getSlideIndex()]];
+        const container = document.querySelector('.remark-visible .remark-slide-content');
+        if (!container) return;
+        let counter = container.querySelector('.remark-lecture-number');
+        if (!lecture) {
+          if (counter) counter.remove();
+          return;
+        }
+        if (!counter) {
+          counter = document.createElement('div');
+          counter.className = 'remark-lecture-number';
+          container.appendChild(counter);
+        }
+        counter.textContent = `${lecture[0]}/${lecture[1]}`;
+      });
+
+      // Step counter under the lecture counter: "step/total" on slides with
       // more than one step. The "last" class marks the final step.
       onSlideShown(function (slide) {
         const index = slide.getSlideIndex();
@@ -226,7 +305,7 @@
       function studentText(node) {
         if (node.nodeType === Node.TEXT_NODE) return node.textContent;
         if (node.nodeType !== Node.ELEMENT_NODE) return '';
-        if (node.matches('script, style, .footer, .debug, .remark-slide-number, button, [hidden], .interstitial') ||
+        if (node.matches('script, style, .footer, .debug, .remark-slide-number, .remark-lecture-number, .remark-step-number, button, [hidden], .interstitial') ||
             getComputedStyle(node).display === 'none') return '';
         // An image has no text: search its title ("![title](file)").
         if (node.matches('img')) return (node.getAttribute('alt') || '') + ' ';
@@ -366,7 +445,7 @@
         canvas.className = 'remark-slide slide-contents-canvas';
         // Keep Remark's original canvas size, classes, columns, and typography.
         canvas.dataset.step = i;
-        section.querySelectorAll('.debug, .footer, .remark-slide-number, button').forEach(node => node.remove());
+        section.querySelectorAll('.debug, .footer, .remark-slide-number, .remark-lecture-number, .remark-step-number, button').forEach(node => node.remove());
         section.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
         canvas.appendChild(section);
         preview.appendChild(canvas);
