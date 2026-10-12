@@ -1,0 +1,42 @@
+# Used in slides/k8s/user-namespace.md.
+# Like hacktheplanet.yaml: two pods on node2 mount /root of the node.
+# Root in "hostroot-hostusers" is root on the node.
+# Root in "hostroot-userns" is an unprivileged user on the node.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostroot-hostusers
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: node2
+  volumes:
+    - name: root
+      hostPath:
+        path: /root
+  containers:
+    - name: shell
+      image: alpine
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - name: root
+          mountPath: /host-root
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostroot-userns
+spec:
+  hostUsers: false
+  nodeSelector:
+    kubernetes.io/hostname: node2
+  volumes:
+    - name: root
+      hostPath:
+        path: /root
+  containers:
+    - name: shell
+      image: alpine
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - name: root
+          mountPath: /host-root

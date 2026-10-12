@@ -1,0 +1,19 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: disallow-nodeport
+spec:
+  # Kyverno creates a native VAP + binding; the API server runs them.
+  autogen:
+    validatingAdmissionPolicy:
+      enabled: true
+  validationActions: [ Deny ]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [ "" ]
+      apiVersions: [ v1 ]
+      operations: [ CREATE, UPDATE ]
+      resources: [ services ]
+  validations:
+  - expression: object.spec.?type.orValue('') != 'NodePort'
+    message: "Services of type NodePort are not allowed."

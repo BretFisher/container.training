@@ -1,0 +1,27 @@
+# Used in slides/k8s/user-namespace.md.
+# From the Kubernetes docs: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+# Two pods on node2: one in the host user namespace, one in its own.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostusers
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: node2
+  containers:
+    - name: shell
+      image: debian
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: userns
+spec:
+  hostUsers: false
+  nodeSelector:
+    kubernetes.io/hostname: node2
+  containers:
+    - name: shell
+      image: debian
+      command: ["sleep", "infinity"]

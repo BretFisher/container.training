@@ -1,4 +1,4 @@
-<!-- verified: 2026-10-05 -->
+<!-- verified: 2026-10-12 -->
 # Network policies
 
 - Namespaces help us to *organize* resources
@@ -351,6 +351,59 @@ spec:
 
 ---
 
+## Is DockerCoins running?
+
+- The next lab needs DockerCoins in the `default` Namespace
+
+.lab[
+
+- Check the Deployments and Services:
+  ```bash
+  kubectl get deployments,services
+  ```
+
+]
+
+- We need 5 Deployments: `hasher`, `redis`, `rng`, `webui`, `worker`
+
+  (and 4 Services: `hasher`, `redis`, `rng`, `webui`)
+
+- If they are there, skip the next slide
+
+---
+
+## Deploying DockerCoins with YAML
+
+.lab[
+
+- Apply the manifest:
+  ```bash
+  kubectl apply -f ~/container.training/k8s/dockercoins.yaml
+  ```
+
+<!-- ```hide
+kubectl wait deploy --all --for condition=available --timeout=120s
+``` -->
+
+- Check what was created:
+  ```bash
+  kubectl get deployments,services
+  ```
+
+- Check that the `worker` is working (Ctrl-C to stop):
+  ```bash
+  kubectl logs deploy/worker --follow
+  ```
+
+<!--
+```wait units of work done```
+```key ^C```
+-->
+
+]
+
+---
+
 ## Applying both network policies
 
 - Both network policies are declared in the file @@LINK[k8s/netpol-dockercoins.yaml]
@@ -387,6 +440,11 @@ troubleshoot easily, without having to poke holes in our firewall.
 - Remove all network policies:
   ```bash
   kubectl delete networkpolicies --all
+  ```
+
+- Remove our test web server:
+  ```bash
+  kubectl delete deployment testweb
   ```
 
 ]
@@ -513,7 +571,7 @@ troubleshoot easily, without having to poke holes in our firewall.
 
 - Platform teams also need rules that Namespace owners can't change
 
-- SIG Network is working on `ClusterNetworkPolicy` (`v1alpha2` in 2026)
+- SIG Network is working on `ClusterNetworkPolicy` (`v1alpha2`, April 2026)
 
   - a cluster-scoped resource, managed by cluster admins
 
@@ -523,7 +581,9 @@ troubleshoot easily, without having to poke holes in our firewall.
 
   - actions: `Accept`, `Deny`, `Pass`
 
-- It's alpha: check that your network plugin supports it before using it
+- It's alpha: Calico 3.32 supports it, Cilium (on our lab) doesn't yet
+
+- It replaces `AdminNetworkPolicy` and `BaselineAdminNetworkPolicy` (`v1alpha1`)
 
 ---
 
@@ -581,6 +641,54 @@ spec:
 - If we block access to the control plane, we might disrupt legitimate code
 
 - ...Without necessarily improving security
+
+- Instead, remove the *credential* from pods that don't use the API
+
+---
+
+## Removing the API credential
+
+- By default, Kubernetes mounts a ServiceAccount token in every container
+
+  (in `/var/run/secrets/kubernetes.io/serviceaccount`)
+
+- An attacker in the pod can use this token to call the API
+
+- Most apps never call the API: they don't need the token
+
+```yaml
+spec:
+  automountServiceAccountToken: false  # no API token in the pod
+```
+
+- We can also set this field on a ServiceAccount (the pod field wins)
+
+- Network policies control *where* a pod connects; the token controls *what* it can do
+
+---
+
+## Testing a pod without a token
+
+.lab[
+
+- Check that a pod gets a token by default:
+  ```bash
+  kubectl run tok1 --rm -i --restart=Never --image=busybox \
+          -- ls /var/run/secrets/kubernetes.io/serviceaccount
+  ```
+
+- Call the API from a pod without a token:
+  ```bash
+  kubectl run tok2 --rm -i --restart=Never --image=curlimages/curl \
+          --overrides='{"spec":{"automountServiceAccountToken":false}}' \
+          -- curl -sk -m3 https://kubernetes.default/api/v1/namespaces/default/secrets
+  ```
+
+]
+
+- The first pod shows the `token` file
+
+- The second pod connects to the API, but as `system:anonymous`, so it gets `403 Forbidden`
 
 ---
 

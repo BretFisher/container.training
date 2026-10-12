@@ -1,0 +1,38 @@
+# Used in slides/k8s/user-namespace.md.
+# Two pods that run as root, with all other "restricted" settings.
+# In a "restricted" namespace, only the pod with hostUsers: false is accepted
+# (Kubernetes 1.35 and later).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: root-userns
+spec:
+  hostUsers: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: shell
+      image: debian
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: root-hostusers
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: shell
+      image: debian
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
