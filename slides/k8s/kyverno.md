@@ -409,6 +409,7 @@ validations:
 
 ## Kubernetes API calls
 
+.small[
 - It's also possible to access arbitrary Kubernetes resources with `resource.Get`:
   ```yaml
     variables:
@@ -430,6 +431,7 @@ validations:
             })
           }}
   ```
+]
 
 ---
 

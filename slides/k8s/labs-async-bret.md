@@ -74,7 +74,8 @@ toc: Running the labs on your own
 
 3. Select **Create cluster**
 
-4. Select **kind**, then set the number of nodes to **3**
+4. Select **kind**, set the number of nodes to **3**,
+   <br/>and select the newest Kubernetes version
 
 5. Select **Create**, then wait until the status is "running"
 

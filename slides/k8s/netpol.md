@@ -631,16 +631,10 @@ spec:
 - But it *shouldn't* be necessary:
 
   - not all network plugins support network policies
+  - mutual TLS and the API permission model already protect the control plane
+  - code in our pods can reasonably expect to contact the API safely
 
-  - the control plane is secured by other methods (mutual TLS, mostly)
-
-  - the code running in our pods can reasonably expect to contact the API
-    <br/>
-    (and it can do so safely thanks to the API permission model)
-
-- If we block access to the control plane, we might disrupt legitimate code
-
-- ...Without necessarily improving security
+- Blocking the control plane can break legitimate code, without improving security
 
 - Instead, remove the *credential* from pods that don't use the API
 

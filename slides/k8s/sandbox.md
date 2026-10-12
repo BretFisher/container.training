@@ -204,9 +204,7 @@ scheduling:
 - @@LINK[k8s/gvisor-demo.yaml] has:
 
   - the `gvisor` RuntimeClass
-
   - a pod `normal` (runc, the default) on node2
-
   - a pod `sandboxed` (`runtimeClassName: gvisor`) on node2
 
 .lab[

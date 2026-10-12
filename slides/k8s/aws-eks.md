@@ -82,7 +82,7 @@ kubectl create rolebinding alice-edit \
 ]
 
 .column-half[
-### EKS (via K8s [webhook token auth][webhook-token-auth])
+### EKS (via K8s [webhook token auth](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#webhook-token-authentication))
 
 ```bash
   # Create Alice's IAM identity (no credentials yet)
@@ -105,8 +105,6 @@ aws eks associate-access-policy \
 ```
 ]
 ]
-
-[webhook-token-auth]: https://kubernetes.io/docs/reference/access-authn-authz/authentication/#webhook-token-authentication
 
 ---
 
