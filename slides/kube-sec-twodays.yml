@@ -184,9 +184,8 @@ content:
     # intro to network policies
     - k8s/netpol.md # slides 36, labs 12, dockercoins 9. labtest 25/25 on 2026-10-12
 
-- title: Kubernetes in the age of AI
+- title: Kubernetes Security in the age of AI
   content:
-    #- k8s/AI.md # slides 24, labs 0
     # Pod spec template from https://github.com/BretFisher/podspec, tested in a restricted namespace. labtest 13/13 on 2026-10-09.
     - k8s/podspec-hardening.md # slides 10, labs 5
     # The k8s docs user namespace demo, a simulated escape, hostPath (not protected), restricted + root. labtest 14/14 on 2026-10-09.
