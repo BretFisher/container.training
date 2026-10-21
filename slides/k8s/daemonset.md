@@ -47,16 +47,6 @@
 
 - They can also be restricted to run [only on some nodes](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#running-pods-on-select-nodes)
 
-.footnote[Review #43: the next diagram may replace this text after review.]
-
----
-
-name: visual-deployment-daemonset-placement-review
-class: pic
-
-<!-- Diagram proposal #43; adjacent text retained for review. -->
-![Deployment and DaemonSet placement](images/k8s-deployment-daemonset-placement-2026.svg)
-
 ---
 
 ## Creating a DaemonSet
@@ -189,6 +179,16 @@ class: pic
 
 - Workaround: fix the YAML and remove these fields
 
+.footnote[Review #44: diagram on the next slide.]
+
+---
+
+name: visual-k8s-deployment-daemonset-conversion-2026-review-44
+class: pic
+
+<!-- Diagram proposal #44; adjacent text retained for review. -->
+![A DaemonSet keeps the Pod template](images/k8s-deployment-daemonset-conversion-2026.svg)
+
 ---
 
 ## Fixing the problem
@@ -305,6 +305,16 @@ The control plane node has [taints](https://kubernetes.io/docs/concepts/scheduli
 
   (We didn't do anything special to add them to the `rng` service load balancer!)
 
+.footnote[Review #45: diagram on the next slide.]
+
+---
+
+name: visual-k8s-rng-two-controllers-one-service-2026-review-45
+class: pic
+
+<!-- Diagram proposal #45; adjacent text retained for review. -->
+![One Service can reach Pods from two controllers](images/k8s-rng-two-controllers-one-service-2026.svg)
+
 ---
 
 # Labels and selectors
@@ -413,6 +423,16 @@ But ... why do these pods (in particular, the *new* ones) have this `app=rng` la
 
  ... The pod "disappears" for its parent, which re-creates another pod to replace it
 
+.footnote[Review #46: diagram on the next slide.]
+
+---
+
+name: visual-k8s-service-membership-controller-ownership-2026-review-46
+class: pic
+
+<!-- Diagram proposal #46; adjacent text retained for review. -->
+![Service membership and ownership are separate](images/k8s-service-membership-controller-ownership-2026.svg)
+
 ---
 
 class: extra-details
@@ -473,6 +493,16 @@ class: extra-details
 
 - We will see later that in other places, we can use more advanced selectors
 
+.footnote[Review #49: diagram on the next slide.]
+
+---
+
+name: visual-k8s-advanced-selector-evaluation-2026-review-49
+class: pic
+
+<!-- Diagram proposal #49; adjacent text retained for review. -->
+![Every label requirement must match](images/k8s-advanced-selector-evaluation-2026.svg)
+
 ---
 
 ## The plan
@@ -491,6 +521,16 @@ during which the service selector won't match any pod.
 During that time, requests to the service will time out.
 By doing things in the order above, we guarantee that there won't
 be any interruption.*
+
+.footnote[Review #47: diagram on the next slide.]
+
+---
+
+name: visual-k8s-safe-service-selector-change-2026-review-47
+class: pic
+
+<!-- Diagram proposal #47; adjacent text retained for review. -->
+![Add Pod labels before tightening the selector](images/k8s-safe-service-selector-change-2026.svg)
 
 ---
 
@@ -646,6 +686,16 @@ If we did everything correctly, the web UI shouldn't show any change.
 There might be a slight change in the web UI (since we removed a bit
 of capacity from the `rng` service). If we remove more pods,
 the effect should be more visible.
+
+.footnote[Review #48: diagram on the next slide.]
+
+---
+
+name: visual-k8s-pod-traffic-removal-2026-review-48
+class: pic
+
+<!-- Diagram proposal #48; adjacent text retained for review. -->
+![Remove traffic without removing controller labels](images/k8s-pod-traffic-removal-2026.svg)
 
 ---
 

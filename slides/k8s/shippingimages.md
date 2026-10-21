@@ -73,6 +73,14 @@
 
 ---
 
+name: visual-k8s-image-distribution-2026-review-38
+class: pic
+
+<!-- Diagram proposal #38; adjacent text retained for review. -->
+![Build once; let each node pull the image](images/k8s-image-distribution-2026.svg)
+
+---
+
 ## Which registry do we want to use?
 
 - There are SAAS products like Docker Hub, Quay ...

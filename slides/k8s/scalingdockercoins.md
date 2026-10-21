@@ -86,6 +86,14 @@ The graph will peak at 10 hashes/second.
 
 ---
 
+name: visual-dockercoins-shared-rng-bottleneck-2026-review-41
+class: pic
+
+<!-- Diagram proposal #41; adjacent text retained for review. -->
+![More workers still share the same rng backend](images/dockercoins-shared-rng-bottleneck-2026.svg)
+
+---
+
 class: extra-details
 
 ## Didn't we briefly exceed 10 hashes/second?

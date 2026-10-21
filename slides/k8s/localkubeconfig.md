@@ -99,6 +99,15 @@ Kustomize Version: v5.8.1
 
 ]
 
+.footnote[Review #67: diagram on the next slide.]
+
+---
+
+name: review-diagram-67
+class: pic
+
+![Kubeconfig record links](images/k8s-kubeconfig-record-links-2026.svg)
+
 ---
 
 ## Copying the configuration file from `node1`
@@ -139,6 +148,15 @@ Kustomize Version: v5.8.1
   kubectl config set-cluster kubernetes --server=https://`X.X.X.X`:6443
   # Make sure to replace X.X.X.X with the IP address of node1!
   ```
+
+.footnote[Review #68: diagram on the next slide.]
+
+---
+
+name: review-diagram-68
+class: pic
+
+![API server TLS verification](images/k8s-api-tls-verification-2026.svg)
 
 ---
 

@@ -56,6 +56,16 @@
 - We have the possibility of rolling back to the previous version
   <br/>(if the update fails or is unsatisfactory in any way)
 
+.footnote[Review #50: diagram on the next slide.]
+
+---
+
+name: visual-review-50
+class: pic
+
+<!-- Diagram proposal #50; adjacent text retained for review. -->
+![A rolling update changes ReplicaSet counts](images/k8s-rollout-steps-2026.svg)
+
 ---
 
 ## Checking current rollout parameters
@@ -71,6 +81,16 @@
   ```
 
 ]
+
+.footnote[Review #53: diagram on the next slide.]
+
+---
+
+name: visual-review-53
+class: pic
+
+<!-- Diagram proposal #53; adjacent text retained for review. -->
+![Rollout settings trade capacity for availability](images/k8s-rollout-capacity-2026.svg)
 
 ---
 
@@ -192,6 +212,16 @@ Our rollout is stuck. However, the app is not dead.
   <br/>
   but the total number of pods being rolled out is allowed to be 25+25=50%
 
+.footnote[Review #51: diagram on the next slide.]
+
+---
+
+name: visual-review-51
+class: pic
+
+<!-- Diagram proposal #51; adjacent text retained for review. -->
+![A failed image can stall a rollout](images/k8s-stalled-rollout-2026.svg)
+
 ---
 
 class: extra-details
@@ -211,22 +241,6 @@ class: extra-details
 - Now we have 8 replicas up and running, and 5 being deployed
 
 - Our rollout is stuck at this point!
-
----
-
-## Checking Headlamp during the bad rollout
-
-If you didn't deploy Headlamp earlier, just skip this slide.
-
-.lab[
-
-- Connect to Headlamp
-
-- Check that we have failures in Deployments, Pods, and ReplicaSets
-
-- Can we see the reason for the failure?
-
-]
 
 ---
 
@@ -299,6 +313,16 @@ If you didn't deploy Headlamp earlier, just skip this slide.
   ```
 
 ]
+
+.footnote[Review #52: diagram on the next slide.]
+
+---
+
+name: visual-review-52
+class: pic
+
+<!-- Diagram proposal #52; adjacent text retained for review. -->
+![Rollback creates a new current revision](images/k8s-rollout-revision-history-2026.svg)
 
 ---
 

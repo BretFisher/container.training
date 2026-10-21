@@ -41,6 +41,16 @@
 
   (See next slides for individual details)
 
+.footnote[Review #59: diagram on the next slide.]
+
+---
+
+name: visual-review-59
+class: pic
+
+<!-- Diagram proposal #59; adjacent text retained for review. -->
+![Design separate liveness and readiness checks](images/k8s-probe-endpoint-design-2026.svg)
+
 ---
 
 - [hasher.rb](https://github.com/jpetazzo/container.training/blob/main/dockercoins/hasher/hasher.rb)
@@ -192,6 +202,16 @@ It will use the default success threshold (1 successful attempt = alive).
   ```
 
 ]
+
+.footnote[Review #60: diagram on the next slide.]
+
+---
+
+name: visual-review-60
+class: pic
+
+<!-- Diagram proposal #60; adjacent text retained for review. -->
+![Load can cause unnecessary liveness restarts](images/k8s-liveness-restart-lab-2026.svg)
 
 ---
 

@@ -96,6 +96,15 @@ installed and set up `kubectl` to communicate with your cluster.
 
 - If only one port number is specified, it is used for both local and remote ports
 
+.footnote[Review #69: diagram on the next slide.]
+
+---
+
+name: review-diagram-69
+class: pic
+
+![Proxy and port-forward access paths](images/k8s-proxy-portforward-paths-2026.svg)
+
 ---
 
 ## `kubectl port-forward` in practice
