@@ -100,6 +100,14 @@ kubectl wait deploy/worker --for condition=available
 
 ---
 
+name: visual-k8s-dockercoins-service-map-2026-review-39
+class: pic
+
+<!-- Diagram proposal #39; adjacent text retained for review. -->
+![DockerCoins connects through Service names](images/k8s-dockercoins-service-map-2026.svg)
+
+---
+
 ## Is this working yet?
 
 - The `worker` has an infinite loop, that retries 10 seconds after an error

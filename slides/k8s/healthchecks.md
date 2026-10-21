@@ -89,16 +89,6 @@
 
 - As soon as the readiness probe succeeds again, everything goes back to normal
 
-.footnote[Review #54: the next diagram may replace this text after review.]
-
----
-
-name: visual-probe-lifecycle-review
-class: pic
-
-<!-- Diagram proposal #54; adjacent text retained for review. -->
-![Probe lifecycle](images/k8s-probe-lifecycle-2026.svg)
-
 ---
 
 ## When to use a readiness probe
@@ -188,6 +178,16 @@ class: pic
   - 200-399 = success
 
   - anything else = failure
+
+.footnote[Review #55: diagram on the next slide.]
+
+---
+
+name: visual-review-55
+class: pic
+
+<!-- Diagram proposal #55; adjacent text retained for review. -->
+![Four probe mechanisms test different things](images/k8s-probe-mechanisms-2026.svg)
 
 ---
 
@@ -323,6 +323,16 @@ class: extra-details
 
 - All these parameters can be set independently for each probe
 
+.footnote[Review #56: diagram on the next slide.]
+
+---
+
+name: visual-review-56
+class: pic
+
+<!-- Diagram proposal #56; adjacent text retained for review. -->
+![Consecutive failures reach the threshold](images/k8s-probe-failure-timeline-2026.svg)
+
 ---
 
 class: extra-details
@@ -411,6 +421,16 @@ class: extra-details
 
   (otherwise the container will fail to start and be killed)
 
+.footnote[Review #57: diagram on the next slide.]
+
+---
+
+name: visual-review-57
+class: pic
+
+<!-- Diagram proposal #57; adjacent text retained for review. -->
+![Slow startup: gate checks or gate traffic](images/k8s-slow-startup-probes-2026.svg)
+
 ---
 
 class: extra-details
@@ -497,6 +517,16 @@ class: extra-details
 - Liveness probes and readiness probes should have different parameters
 
 - For startup probes, remember to increase the `failureThreshold`
+
+.footnote[Review #58: diagram on the next slide.]
+
+---
+
+name: visual-review-58
+class: pic
+
+<!-- Diagram proposal #58; adjacent text retained for review. -->
+![An external failure needs a readiness decision](images/k8s-probe-dependency-failure-2026.svg)
 
 ---
 

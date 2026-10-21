@@ -158,6 +158,13 @@ It expires after one hour (use `--duration` to change that).
 
 ---
 
+name: review-diagram-65
+class: pic
+
+![Headlamp token and RBAC permissions](images/k8s-headlamp-token-permissions-2026.svg)
+
+---
+
 ## Logging in with the read-only token
 
 - Log out of Headlamp, and log in again with the new token
@@ -281,6 +288,15 @@ The token is still valid, but RBAC checks permissions on each request.
 
 --
   - ☠️☠️☠️
+
+.footnote[Review #66: diagram on the next slide.]
+
+---
+
+name: review-diagram-66
+class: pic
+
+![Remote manifests act with your Kubernetes permissions](images/k8s-manifest-trust-path-2026.svg)
 
 ---
 
