@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "slides",
+      "runtimeExecutable": "make",
+      "runtimeArgs": ["-C", "slides", "serve", "SLIDES_DECK=kube-sec-twodays.yml"],
+      "port": 8080
+    }
+  ]
+}
