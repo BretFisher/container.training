@@ -35,7 +35,7 @@
 
 - In that case, we suggest that you run an interactive container, e.g.:
   ```bash
-  kubectl run --rm -ti --image=archlinux myshell
+  kubectl run --rm -ti --image=nicolaka/netshoot myshell
   ```
 
 - ...And each time you see a `curl` or `ping` command run it in that container instead
@@ -321,10 +321,10 @@ class: extra-details
 
 - Get a shell in a Pod:
   ```bash
-  kubectl run --rm -it --image=archlinux test-dns-integration
+  kubectl run --rm -it --image=nicolaka/netshoot test-dns-integration
   ```
 
-<!-- ```longwait root@test-dns-integration``` -->
+<!-- ```longwait test-dns-integration#``` -->
 
 - Try to resolve the `blue` Service from the Pod:
   ```bash
