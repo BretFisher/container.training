@@ -39,9 +39,34 @@ RuntimeClass from `sandbox.md`, and Substrate uses gVisor checkpoint/restore.
 | Needs | Kubernetes 1.29+ recommended | Kubernetes 1.37+, PostgreSQL, object storage (GCS, or `rustfs` in kind) |
 | Clients | Python SDK `k8s-agent-sandbox`, Go SDK, optional `sandbox-router` | `kubectl ate`; kagent (CNCF Sandbox) uses Substrate as its default backend |
 
-Version gap to check on a lab: the README shows `agents.x-k8s.io/v1beta1` for
-`Sandbox`, but the repo `AGENTS.md` still lists the extensions as `v1alpha1`.
-Read the CRDs after the install and use what the cluster serves.
+API versions: checked on k3d on 2026-11-10. v1.0.10 serves all four CRDs as
+`v1beta1` only (`agents.x-k8s.io/v1beta1` and `extensions.agents.x-k8s.io/v1beta1`).
+The repo `AGENTS.md` still says `v1alpha1`; it is out of date.
+
+## Local test on k3d (Claude Code cloud container, 2026-11-10)
+
+Setup: k3d v5.9.0, `rancher/k3s:v1.37.2-k3s1`, 1 server + 1 agent, Docker 29.9.2.
+
+- Agent Sandbox v1.0.10 works with runc: the controller starts, and a `Sandbox`
+  is `Ready` with a running pod after about 20 s.
+- gVisor (`runsc` release-20261102.0) does **not** start in this container:
+  `failed to set OOM Score on shim: write /proc/<pid>/oom_score_adj: permission denied`.
+  The cloud container blocks lowering `oom_score_adj`, even for root. runc
+  pods need `restrict_oom_score_adj = true`, but the runsc shim still fails.
+  This is a limit of the cloud container, not of k3d. A Docker Desktop VM
+  (cgroup v2, full capabilities) or a lab node should not have it; not tested yet.
+- Workarounds this environment needed:
+  - `--kubelet-arg=fail-cgroupv1=false`: the host is cgroup v1, and kubelet 1.37
+    refuses cgroup v1 by default.
+  - Copy the host CA bundle into the nodes: the egress proxy re-signs TLS.
+  - `restrict_oom_score_adj = true` in a containerd `config-v3.toml.tmpl`.
+- The gVisor static download URL (`releases/release/latest/x86_64/runsc`) returns
+  404. The apt repository in `sandbox.md` works; the package now also ships
+  `/usr/bin/gvisor-bin/*` helpers.
+
+So: k3d here is good for the Agent Sandbox CRD labs (template, warm pool,
+claim, NetworkPolicy) with runc. Test the gVisor parts and Agent Substrate
+(which requires gVisor or a microVM) on a lab or on Docker Desktop.
 
 ## Lab fit (our lab: kubeadm 1.37.1 on EC2 `t3`, no `/dev/kvm`, gVisor on node2)
 
