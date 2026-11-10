@@ -194,6 +194,11 @@ content:
     - k8s/catch-up-skill.md # slides 10, labs 0
     # Sandbox runtimes: gVisor lab on node2, Kata/Firecracker concepts. labtest 20/20 on 2026-10-07.
     - k8s/sandbox.md # slides 20, labs 7
+    # TODO NEW: Agent Sandbox (kubernetes-sigs): Sandbox/Template/WarmPool/Claim on our gvisor RuntimeClass.
+    # Scope: docs/research/agent-sandbox-and-substrate.md
+    #- k8s/agent-sandbox.md # slides ~10, labs ~5
+    # TODO NEW: Agent Substrate (CNCF Sandbox, Nov 2026): actors, workers, suspend/resume. Slides first; lab only after a spike.
+    #- k8s/agent-substrate.md # slides ~8, labs TBD
     # TODO: linters and scanners for kubernetes clusters, manifest, chart, and kustomize linting/scanning.
     - k8s/linting-scanning.md # slides 14, labs 6
     # Falco + Talon features and complete ordered lab commands are in k8s/falco.md.
